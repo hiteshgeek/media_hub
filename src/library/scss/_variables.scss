@@ -131,9 +131,11 @@
   --fu-icon-size-md: 20px;
   --fu-icon-size-lg: 40px;
   --fu-icon-size-xl: 48px;
-  --fu-button-size: 32px;
+  --fu-button-size: 40px;
   --fu-spinner-size: 40px;
   --fu-spinner-border-width: 4px;
+  --fu-limit-item-width: 105px;
+  --fu-limit-item-width-large: 150px;
 }
 
 // Dark Mode Theme
@@ -170,7 +172,7 @@ $breakpoints: (
 // Grid
 $grid-columns: 12 !default;
 $grid-gap: 16px !default;
-$grid-min-column-width: 80px !default;
+$grid-min-column-width: 200px !default;
 $grid-min-column-width-mobile: 150px !default;
 
 // Animation Durations
@@ -188,5 +190,5 @@ $ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55) !default;
 // Component Specific SCSS Variables
 $file-uploader-prefix: "file-uploader" !default;
 $file-uploader-enable-dark-mode: true !default;
-$file-uploader-enable-animations: true !default;
+$file-uploader-enable-animations: false !default;
 $file-uploader-enable-bootstrap-compat: true !default;

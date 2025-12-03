@@ -1,0 +1,147 @@
+// ============================================================================
+// Tooltip Component
+// ============================================================================
+
+@use "../variables" as *;
+@use "../mixins" as *;
+
+$component-prefix: $file-uploader-prefix !default;
+
+// ============================================================================
+// Tooltip Wrapper (Circular Button)
+// ============================================================================
+
+.#{$component-prefix}-tooltip-wrapper {
+  right: 8px;
+  top: 8px;
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: transparent;
+  border: 1px solid var(--fu-color-border);
+  @include transition((background-color, border-color, transform));
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--fu-color-primary);
+    border-color: var(--fu-color-primary);
+    transform: scale(1.1);
+
+    .#{$component-prefix}-info-icon {
+      color: white;
+    }
+  }
+
+  &:active {
+    transform: scale(1);
+  }
+}
+
+// ============================================================================
+// Info Icon (SVG Container)
+// ============================================================================
+
+.#{$component-prefix}-info-icon {
+  width: 10px;
+  aspect-ratio: 1;
+  color: var(--fu-color-text-muted);
+  @include transition(color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+}
+
+// ============================================================================
+// Tooltip Popup
+// ============================================================================
+
+.#{$component-prefix}-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  background-color: var(--fu-gray-800);
+  color: white;
+  padding: var(--fu-spacing-sm) var(--fu-spacing-md);
+  border-radius: var(--fu-radius-md);
+  font-size: var(--fu-font-size-xs);
+  font-weight: var(--fu-font-weight-normal);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  @include transition((opacity, visibility, transform));
+  z-index: var(--fu-z-tooltip);
+  @include shadow("lg");
+  transform: translateX(-50%) translateY(4px);
+
+  // Tooltip arrow
+  &::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--fu-gray-800);
+  }
+
+  // Show tooltip on hover
+  .#{$component-prefix}-tooltip-wrapper:hover & {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// ============================================================================
+// Responsive Adjustments
+// ============================================================================
+
+@include respond-below("sm") {
+  .#{$component-prefix}-tooltip {
+    font-size: 10px;
+    padding: var(--fu-spacing-xs) var(--fu-spacing-sm);
+
+    &::after {
+      border-width: 4px;
+    }
+  }
+}
+
+// ============================================================================
+// Dark Mode Support
+// ============================================================================
+
+@if $file-uploader-enable-dark-mode {
+  @media (prefers-color-scheme: dark) {
+    .#{$component-prefix}-tooltip-wrapper {
+      border-color: var(--fu-color-border);
+      background: rgba(255, 255, 255, 0.3);
+
+      &:hover {
+        background-color: var(--fu-color-primary);
+        border-color: var(--fu-color-primary);
+      }
+    }
+
+    .#{$component-prefix}-tooltip {
+      background-color: var(--fu-gray-700);
+
+      &::after {
+        border-top-color: var(--fu-gray-700);
+      }
+    }
+  }
+}

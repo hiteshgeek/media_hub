@@ -5,6 +5,8 @@
  */
 
 import { getIcon } from "../utils/icons.js";
+import ScreenCapture from "../utils/ScreenCapture.js";
+import VideoRecorder from "../utils/VideoRecorder.js";
 
 export default class FileUploader {
   constructor(element, options = {}) {
@@ -59,6 +61,8 @@ export default class FileUploader {
       clearAllButtonClasses: [], // Custom classes for clear-all button (Bootstrap, etc.)
       clearAllButtonElement: null, // External element selector for clear-all (cannot be used with showClearAllButton)
       cleanupOnUnload: true, // Automatically delete uploaded files from server when leaving the page
+      enableScreenCapture: true, // Enable screenshot capture button
+      enableVideoRecording: true, // Enable video recording button
       onUploadStart: null,
       onUploadSuccess: null,
       onUploadError: null,
@@ -88,6 +92,8 @@ export default class FileUploader {
     }
 
     this.files = [];
+    this.screenCapture = null;
+    this.videoRecorder = null;
     this.init();
   }
 
@@ -135,7 +141,9 @@ export default class FileUploader {
     this.dropZoneHeader.innerHTML = `
                 ${getIcon("upload", { class: "file-uploader-icon" })}
                 <p class="file-uploader-text">Drag & drop files here or click to browse</p>
-                <p class="file-uploader-subtext">Maximum file size: ${this.options.maxFileSizeDisplay}</p>
+                <p class="file-uploader-subtext">Maximum file size: ${
+                  this.options.maxFileSizeDisplay
+                }</p>
         `;
 
     // Create file input
@@ -190,6 +198,9 @@ export default class FileUploader {
 
       this.dropZone.appendChild(this.buttonContainer);
     }
+
+    // Create capture buttons container (bottom right corner)
+    this.createCaptureButtons();
 
     // Append dropzone and other elements to wrapper
     this.wrapper.appendChild(this.dropZone);
@@ -293,6 +304,224 @@ export default class FileUploader {
     }
   }
 
+  createCaptureButtons() {
+    // Container for capture buttons (bottom right corner)
+    this.captureButtonContainer = document.createElement("div");
+    this.captureButtonContainer.className = "file-uploader-capture-container";
+
+    // Screenshot button
+    if (this.options.enableScreenCapture && ScreenCapture.isSupported()) {
+      this.screenshotBtn = document.createElement("button");
+      this.screenshotBtn.type = "button";
+      this.screenshotBtn.className = "file-uploader-capture-btn";
+      this.screenshotBtn.title = "Capture Screenshot";
+      this.screenshotBtn.innerHTML = getIcon("camera");
+      this.screenshotBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.captureScreenshot();
+      });
+      this.captureButtonContainer.appendChild(this.screenshotBtn);
+    }
+
+    // Video recording button
+    if (this.options.enableVideoRecording && VideoRecorder.isSupported()) {
+      this.videoRecordBtn = document.createElement("button");
+      this.videoRecordBtn.type = "button";
+      this.videoRecordBtn.className = "file-uploader-capture-btn";
+      this.videoRecordBtn.title = "Record Video";
+      this.videoRecordBtn.innerHTML = getIcon("video");
+      this.videoRecordBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.toggleVideoRecording();
+      });
+      this.captureButtonContainer.appendChild(this.videoRecordBtn);
+
+      // Recording indicator (hidden by default)
+      this.recordingIndicator = document.createElement("div");
+      this.recordingIndicator.className = "file-uploader-recording-indicator";
+      this.recordingIndicator.style.display = "none";
+      this.recordingIndicator.innerHTML = `
+        <span class="file-uploader-recording-dot"></span>
+        <span class="file-uploader-recording-time">00:00</span>
+      `;
+      this.captureButtonContainer.appendChild(this.recordingIndicator);
+    }
+
+    // Append capture buttons to dropzone
+    if (this.captureButtonContainer.children.length > 0) {
+      this.dropZone.appendChild(this.captureButtonContainer);
+    }
+  }
+
+  async captureScreenshot() {
+    try {
+      // Disable button during capture
+      if (this.screenshotBtn) {
+        this.screenshotBtn.disabled = true;
+      }
+
+      // Initialize screen capture if not already done
+      if (!this.screenCapture) {
+        this.screenCapture = new ScreenCapture();
+      }
+
+      // Capture screenshot
+      const file = await this.screenCapture.capture();
+
+      // Add captured file with metadata
+      this.handleCapturedFile(file, "screenshot");
+    } catch (error) {
+      this.showError(error.message);
+    } finally {
+      // Re-enable button
+      if (this.screenshotBtn) {
+        this.screenshotBtn.disabled = false;
+      }
+    }
+  }
+
+  async toggleVideoRecording() {
+    if (this.videoRecorder && this.videoRecorder.getRecordingStatus()) {
+      // Stop recording
+      await this.stopVideoRecording();
+    } else {
+      // Start recording
+      await this.startVideoRecording();
+    }
+  }
+
+  async startVideoRecording() {
+    try {
+      // Disable button during setup
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.disabled = true;
+      }
+
+      // Initialize video recorder if not already done
+      if (!this.videoRecorder) {
+        this.videoRecorder = new VideoRecorder();
+      }
+
+      // Start recording
+      await this.videoRecorder.startRecording();
+
+      // Update UI
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.classList.add("recording");
+        this.videoRecordBtn.innerHTML = getIcon("stop");
+        this.videoRecordBtn.title = "Stop Recording";
+        this.videoRecordBtn.disabled = false;
+      }
+
+      // Show recording indicator
+      if (this.recordingIndicator) {
+        this.recordingIndicator.style.display = "flex";
+        this.startRecordingTimer();
+      }
+    } catch (error) {
+      this.showError(error.message);
+
+      // Re-enable button
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.disabled = false;
+      }
+    }
+  }
+
+  async stopVideoRecording() {
+    try {
+      // Disable button during processing
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.disabled = true;
+        this.videoRecordBtn.innerHTML = getIcon("video");
+      }
+
+      // Stop recording indicator
+      this.stopRecordingTimer();
+
+      // Stop recording and get file
+      const file = await this.videoRecorder.stopRecording();
+
+      // Add recorded file with metadata
+      this.handleCapturedFile(file, "recording");
+
+      // Update UI
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.classList.remove("recording");
+        this.videoRecordBtn.title = "Record Video";
+        this.videoRecordBtn.disabled = false;
+      }
+
+      // Hide recording indicator
+      if (this.recordingIndicator) {
+        this.recordingIndicator.style.display = "none";
+      }
+    } catch (error) {
+      this.showError(error.message);
+
+      // Re-enable button
+      if (this.videoRecordBtn) {
+        this.videoRecordBtn.disabled = false;
+      }
+    }
+  }
+
+  startRecordingTimer() {
+    this.recordingTimerInterval = setInterval(() => {
+      if (this.videoRecorder) {
+        const duration = this.videoRecorder.getRecordingDuration();
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        const timeText = `${String(minutes).padStart(2, "0")}:${String(
+          seconds
+        ).padStart(2, "0")}`;
+
+        const timeElement = this.recordingIndicator.querySelector(
+          ".file-uploader-recording-time"
+        );
+        if (timeElement) {
+          timeElement.textContent = timeText;
+        }
+      }
+    }, 1000);
+  }
+
+  stopRecordingTimer() {
+    if (this.recordingTimerInterval) {
+      clearInterval(this.recordingTimerInterval);
+      this.recordingTimerInterval = null;
+    }
+  }
+
+  handleCapturedFile(file, captureType) {
+    // Create file object with capture metadata
+    const fileObj = {
+      id: Date.now() + Math.random(),
+      file: file,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      extension: this.getFileExtension(file.name),
+      uploaded: false,
+      uploading: false,
+      error: null,
+      serverFilename: null,
+      captureType: captureType, // 'screenshot' or 'recording'
+    };
+
+    // Validate the file
+    const validation = this.validateFile(file);
+
+    if (!validation.valid) {
+      this.showError(validation.error);
+      return;
+    }
+
+    this.files.push(fileObj);
+    this.createPreview(fileObj);
+    this.uploadFile(fileObj);
+  }
+
   updateLimitsDisplay() {
     if (!this.limitsContainer) return;
 
@@ -306,12 +535,33 @@ export default class FileUploader {
     const typeLimits = this.options.fileTypeSizeLimitsDisplay;
     if (typeLimits && Object.keys(typeLimits).length > 0) {
       for (const [type, limit] of Object.entries(typeLimits)) {
+        // Get allowed extensions for this file type
+        const allowedExtensions = this.getAllowedExtensionsForType(type);
+        const tooltipText =
+          allowedExtensions.length > 0
+            ? `Allowed: ${allowedExtensions.map((ext) => `.${ext}`).join(", ")}`
+            : "";
+
+        const tooltip = `${
+          tooltipText
+            ? `
+                                <span class="file-uploader-tooltip-wrapper">
+                                    ${getIcon("info", {
+                                      class: "file-uploader-info-icon",
+                                    })}
+                                    <span class="file-uploader-tooltip">${tooltipText}</span>
+                                </span>
+                            `
+            : ""
+        }`;
+
         limitsHTML += `
                     <div class="file-uploader-limit-item file-uploader-limit-stacked">
-                        <span class="file-uploader-limit-label">${this.capitalizeFirst(
-                          type
-                        )}</span>
+                        <span class="file-uploader-limit-label">
+                            ${this.capitalizeFirst(type)}
+                        </span>
                         <span class="file-uploader-limit-value">${limit}</span>
+                        ${tooltip}
                     </div>
                 `;
       }
@@ -356,6 +606,27 @@ export default class FileUploader {
 
   capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  getAllowedExtensionsForType(type) {
+    // Map file type to its extensions from options
+    const typeMap = {
+      image: this.options.imageExtensions,
+      video: this.options.videoExtensions,
+      document: this.options.documentExtensions,
+      archive: this.options.archiveExtensions,
+    };
+
+    const extensions = typeMap[type.toLowerCase()] || [];
+
+    // Filter by allowed extensions if specified
+    if (this.options.allowedExtensions.length > 0) {
+      return extensions.filter((ext) =>
+        this.options.allowedExtensions.includes(ext)
+      );
+    }
+
+    return extensions;
   }
 
   attachEvents() {
@@ -625,7 +896,7 @@ export default class FileUploader {
       previewContent = `<img src="${objectUrl}" alt="${fileObj.name}" class="file-uploader-preview-image">`;
     } else if (fileType === "video") {
       const objectUrl = URL.createObjectURL(fileObj.file);
-      previewContent = `<video src="${objectUrl}" class="file-uploader-preview-video" controls></video>`;
+      previewContent = `<video src="${objectUrl}" class="file-uploader-preview-video"></video>`;
     } else {
       previewContent = `
                 <div class="file-uploader-preview-file">
@@ -638,28 +909,19 @@ export default class FileUploader {
             `;
     }
 
-    previewInner.innerHTML = `
-            ${previewContent}
-            <div class="file-uploader-preview-overlay">
-                <div class="file-uploader-spinner"></div>
-            </div>
-        `;
+    // Add capture indicator if this is a captured/recorded file
+    const captureIndicator =
+      fileObj.captureType === "screenshot"
+        ? `<div class="file-uploader-capture-indicator" title="Captured Screenshot">
+              ${getIcon("camera")}
+           </div>`
+        : fileObj.captureType === "recording"
+        ? `<div class="file-uploader-capture-indicator" title="Recorded Video">
+              ${getIcon("video")}
+           </div>`
+        : "";
 
-    const info = document.createElement("div");
-    info.className = "file-uploader-info";
-    info.innerHTML = `
-            <div class="file-uploader-info-text">
-                <div class="file-uploader-filename" title="${fileObj.name}">${
-      fileObj.name
-    }</div>
-                <div class="file-uploader-meta">
-                    <span class="file-uploader-type">${fileObj.extension.toUpperCase()}</span>
-                    <span class="file-uploader-size">${this.formatFileSize(
-                      fileObj.size
-                    )}</span>
-                </div>
-            </div>
-            <div class="file-uploader-actions">
+    const actions = `<div class="file-uploader-actions">
                 <button type="button" class="file-uploader-download" data-file-id="${
                   fileObj.id
                 }" title="Download file" style="display: none;">
@@ -670,7 +932,32 @@ export default class FileUploader {
                 }" title="Delete file">
                     ${getIcon("trash")}
                 </button>
+            </div>`;
+
+    previewInner.innerHTML = `
+            ${previewContent}
+            ${captureIndicator}
+            <div class="file-uploader-preview-overlay">
+                <div class="file-uploader-spinner"></div>
             </div>
+        `;
+
+    const info = document.createElement("div");
+    info.className = "file-uploader-info";
+
+    info.innerHTML = `
+            ${actions}            
+            <div class="file-uploader-info-text">            
+                <div class="file-uploader-filename" title="${fileObj.name}">${
+      fileObj.name
+    }</div>
+                <div class="file-uploader-meta">
+                    <span class="file-uploader-type">${fileObj.extension.toUpperCase()}</span>
+                    <span class="file-uploader-size">${this.formatFileSize(
+                      fileObj.size
+                    )}</span>
+                </div>
+            </div>            
         `;
 
     preview.appendChild(previewInner);

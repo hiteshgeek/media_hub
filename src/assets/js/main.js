@@ -2,6 +2,8 @@ if (typeof window !== "undefined") {
   const uploader = new FileUploader("#fileUploader", {
     preventDuplicates: true,
     duplicateCheckBy: "name-size",
+    enableScreenCapture: true,
+    enableVideoRecording: true,
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Upload success:", fileObj, result);

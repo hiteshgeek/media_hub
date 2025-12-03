@@ -19,11 +19,11 @@ return [
         'image/webp',
         // 'image/svg+xml',
         // // Videos
-        // 'video/mp4',
-        // 'video/mpeg',
-        // 'video/quicktime',
-        // 'video/x-msvideo',
-        // 'video/webm',
+        'video/mp4',
+        'video/mpeg',
+        'video/quicktime',
+        'video/x-msvideo',
+        'video/webm',
         // // Documents
         // 'application/pdf',
         // 'application/msword',

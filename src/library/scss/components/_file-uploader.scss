@@ -169,7 +169,9 @@ $component-prefix: $file-uploader-prefix !default;
 }
 
 .#{$component-prefix}-limits-grid {
-  @include grid-auto-fit($grid-min-column-width, var(--fu-spacing-md));
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fu-spacing-md);
 }
 
 .#{$component-prefix}-limit-item {
@@ -178,19 +180,23 @@ $component-prefix: $file-uploader-prefix !default;
   background-color: var(--fu-color-bg);
   border-radius: var(--fu-radius-sm);
   font-size: var(--fu-font-size-sm);
+  width: var(--fu-limit-item-width);
+  flex-shrink: 0;
   @include transition((background-color, transform));
 
-  // Highlight variant
+  // Highlight variant (Total Size item)
   &.#{$component-prefix}-limit-highlight {
     background-color: var(--fu-color-bg-hover);
     border: 1px solid var(--fu-primary-100);
     font-weight: var(--fu-font-weight-medium);
+    width: var(--fu-limit-item-width-large);
   }
 
   // Stacked variant (for two-line layout)
   &.#{$component-prefix}-limit-stacked {
     @include flex(column, flex-start, flex-start);
     gap: var(--fu-spacing-xs);
+    position: relative;
   }
 
   // Hover effect
@@ -204,6 +210,9 @@ $component-prefix: $file-uploader-prefix !default;
 .#{$component-prefix}-limit-label {
   color: var(--fu-color-text-light);
   font-weight: var(--fu-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-xs);
 }
 
 .#{$component-prefix}-limit-value {
@@ -223,6 +232,7 @@ $component-prefix: $file-uploader-prefix !default;
   padding: 0;
   pointer-events: auto; // Allow clicks even though dropzone has pointer-events
   flex-wrap: wrap;
+  cursor: default;
 }
 
 // ============================================================================
@@ -235,7 +245,7 @@ $component-prefix: $file-uploader-prefix !default;
   align-items: center;
   justify-content: center;
   gap: var(--fu-spacing-sm);
-  padding: 10px 20px;
+  padding: 7px 15px;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
@@ -388,6 +398,18 @@ $component-prefix: $file-uploader-prefix !default;
   &:hover {
     @include shadow("md");
 
+    .#{$component-prefix}-actions {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    .#{$component-prefix}-info-text {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
     @if $file-uploader-enable-animations {
       transform: translateY(-2px);
     }
@@ -534,6 +556,11 @@ $component-prefix: $file-uploader-prefix !default;
 .#{$component-prefix}-info-text {
   flex: 1;
   min-width: 0; // Allows text truncation to work
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity $animation-duration-slow ease,
+    visibility $animation-duration-slow ease;
 }
 
 .#{$component-prefix}-filename {
@@ -549,6 +576,10 @@ $component-prefix: $file-uploader-prefix !default;
   gap: var(--fu-spacing-sm);
   font-size: var(--fu-font-size-xs);
   color: var(--fu-color-text-muted);
+
+  span.file-uploader-size {
+    margin-left: auto;
+  }
 }
 
 .#{$component-prefix}-type {
@@ -560,9 +591,16 @@ $component-prefix: $file-uploader-prefix !default;
 // ============================================================================
 
 .#{$component-prefix}-actions {
-  @include flex(row, flex-end, center);
-  gap: var(--fu-spacing-xs);
-  flex-shrink: 0;
+  @include flex(row, center, center);
+  gap: var(--fu-spacing-lg);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: 1;
+  width: calc(100% - var(--fu-spacing-md) * 2);
+  transition: opacity $animation-duration-slow ease,
+    visibility $animation-duration-slow ease;
 }
 
 // ============================================================================
@@ -576,12 +614,14 @@ $component-prefix: $file-uploader-prefix !default;
   width: var(--fu-button-size);
   height: var(--fu-button-size);
   padding: var(--fu-spacing-sm);
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.5) !important;
   border: none;
   border-radius: var(--fu-radius-sm);
   cursor: pointer;
   color: var(--fu-color-text-muted);
+  border-radius: 50%;
   @include transition((background-color, color, transform));
+  box-shadow: 0 0 3px #fff;
 
   svg {
     width: var(--fu-icon-size-md);
@@ -599,7 +639,7 @@ $component-prefix: $file-uploader-prefix !default;
   @extend %action-button;
 
   &:hover {
-    background-color: var(--fu-success-600);
+    background-color: var(--fu-success-600) !important;
     color: #ffffff;
   }
 }
@@ -609,8 +649,139 @@ $component-prefix: $file-uploader-prefix !default;
   @extend %action-button;
 
   &:hover {
-    background-color: var(--fu-error-600);
+    background-color: var(--fu-error-600) !important;
     color: #ffffff;
+  }
+}
+
+// ============================================================================
+// Capture Buttons Container (Bottom Right Corner)
+// ============================================================================
+
+.#{$component-prefix}-capture-container {
+  position: absolute;
+  bottom: var(--fu-spacing-md);
+  right: var(--fu-spacing-md);
+  @include flex(row, flex-end, center);
+  gap: var(--fu-spacing-sm);
+  z-index: var(--fu-z-overlay);
+  pointer-events: auto;
+}
+
+.#{$component-prefix}-capture-btn {
+  @include flex-center;
+  width: 40px;
+  aspect-ratio: 1;
+  border-radius: var(--fu-radius-round);
+  border: none;
+  background-color: var(--fu-color-primary);
+  color: white;
+  cursor: pointer;
+  @include transition((background-color, transform, box-shadow));
+  @include shadow("md");
+
+  svg {
+    width: 18px;
+    aspect-ratio: 1;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--fu-color-primary-hover);
+    @include shadow("lg");
+
+    @if $file-uploader-enable-animations {
+      transform: translateY(-2px);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  // Recording state
+  &.recording {
+    background-color: var(--fu-error-600);
+    animation: #{$component-prefix}-pulse 1.5s ease-in-out infinite;
+
+    &:hover:not(:disabled) {
+      background-color: var(--fu-error-600);
+    }
+  }
+}
+
+// ============================================================================
+// Recording Indicator
+// ============================================================================
+
+.#{$component-prefix}-recording-indicator {
+  @include flex(row, center, center);
+  gap: var(--fu-spacing-sm);
+  padding: var(--fu-spacing-sm) var(--fu-spacing-md);
+  background-color: var(--fu-error-600);
+  color: white;
+  border-radius: var(--fu-radius-lg);
+  font-size: var(--fu-font-size-sm);
+  font-weight: var(--fu-font-weight-medium);
+  @include shadow("md");
+}
+
+.#{$component-prefix}-recording-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+  animation: #{$component-prefix}-blink 1s ease-in-out infinite;
+}
+
+.#{$component-prefix}-recording-time {
+  font-variant-numeric: tabular-nums;
+}
+
+// ============================================================================
+// Capture Indicator Badge (Top Right of Preview)
+// ============================================================================
+
+.#{$component-prefix}-capture-indicator {
+  position: absolute;
+  top: var(--fu-spacing-sm);
+  right: var(--fu-spacing-sm);
+  width: 25px;
+  aspect-ratio: 1;
+  @include flex-center;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: var(--fu-radius-sm);
+  color: white;
+  z-index: 10;
+  @include shadow("sm");
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(5px);
+  }
+
+  svg {
+    width: 15px;
+    aspect-ratio: 1;
+  }
+}
+
+// ============================================================================
+// Animations for Capture Features
+// ============================================================================
+
+@if $file-uploader-enable-animations {
+  @keyframes #{$component-prefix}-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
   }
 }
 
@@ -634,6 +805,26 @@ $component-prefix: $file-uploader-prefix !default;
 
   .#{$component-prefix}-subtext {
     font-size: var(--fu-font-size-xs);
+  }
+
+  .#{$component-prefix}-capture-container {
+    bottom: var(--fu-spacing-sm);
+    right: var(--fu-spacing-sm);
+  }
+
+  .#{$component-prefix}-capture-btn {
+    width: 40px;
+    height: 40px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .#{$component-prefix}-recording-indicator {
+    font-size: var(--fu-font-size-xs);
+    padding: var(--fu-spacing-xs) var(--fu-spacing-sm);
   }
 }
 

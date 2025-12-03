@@ -138,14 +138,14 @@
 
 /// Box shadow with preset levels
 /// @param {String} $level - Shadow level (sm, md, lg, xl)
-@mixin shadow($level: 'md') {
-  @if $level == 'sm' {
+@mixin shadow($level: "md") {
+  @if $level == "sm" {
     box-shadow: var(--fu-shadow-sm);
-  } @else if $level == 'md' {
+  } @else if $level == "md" {
     box-shadow: var(--fu-shadow-md);
-  } @else if $level == 'lg' {
+  } @else if $level == "lg" {
     box-shadow: var(--fu-shadow-lg);
-  } @else if $level == 'xl' {
+  } @else if $level == "xl" {
     box-shadow: var(--fu-shadow-xl);
   }
 }
@@ -214,7 +214,11 @@
 /// @param {List} $properties - Properties to transition
 /// @param {Number} $duration - Transition duration
 /// @param {String} $easing - Easing function
-@mixin transition($properties, $duration: $animation-duration-base, $easing: $ease-in-out) {
+@mixin transition(
+  $properties,
+  $duration: $animation-duration-base,
+  $easing: $ease-in-out
+) {
   $transitions: ();
   @each $property in $properties {
     $transitions: list.append($transitions, $property $duration $easing, comma);
@@ -255,7 +259,7 @@
 
   &:hover:not(:disabled) {
     transform: translateY($distance);
-    @include shadow('md');
+    @include shadow("md");
   }
 }
 
@@ -386,7 +390,10 @@
 /// Scrollbar styling
 /// @param {Color} $thumb-color - Scrollbar thumb color
 /// @param {Color} $track-color - Scrollbar track color
-@mixin scrollbar($thumb-color: var(--fu-gray-400), $track-color: var(--fu-gray-100)) {
+@mixin scrollbar(
+  $thumb-color: var(--fu-gray-400),
+  $track-color: var(--fu-gray-100)
+) {
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
