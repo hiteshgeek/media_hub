@@ -8,6 +8,8 @@ const noop = require("gulp-noop");
 const uglify = require("gulp-uglify-es").default;
 const rollup = require("gulp-better-rollup");
 const rollupBabel = require("@rollup/plugin-babel").default;
+const rollupResolve = require("@rollup/plugin-node-resolve").default;
+const rollupCommonjs = require("@rollup/plugin-commonjs");
 const sass = require("gulp-sass")(require("sass"));
 const javascriptObfuscator = require("gulp-javascript-obfuscator");
 const path = require("path");
@@ -121,10 +123,16 @@ function addAllScriptsESM() {
       .pipe(
         rollup(
           {
-            plugins: [rollupBabel({ babelHelpers: "bundled" })],
-            inlineDynamicImports: true, // Inline dynamic imports to avoid code-splitting
+            plugins: [
+              rollupResolve({ browser: true }),
+              rollupCommonjs(),
+              rollupBabel({ babelHelpers: "bundled", babelrc: false, exclude: 'node_modules/**' })
+            ],
           },
-          { format: "esm" }
+          {
+            format: "esm",
+            inlineDynamicImports: true // Inline dynamic imports to avoid code-splitting
+          }
         )
       )
       .pipe(plugins.concat(outName))
@@ -150,10 +158,17 @@ function addAllScriptsIIFE() {
       .pipe(
         rollup(
           {
-            plugins: [rollupBabel({ babelHelpers: "bundled" })],
-            inlineDynamicImports: true, // Inline dynamic imports for IIFE compatibility
+            plugins: [
+              rollupResolve({ browser: true }),
+              rollupCommonjs(),
+              rollupBabel({ babelHelpers: "bundled", babelrc: false, exclude: 'node_modules/**' })
+            ],
           },
-          { format: "iife", name: "FileUploader" } //provide library name
+          {
+            format: "iife",
+            name: "FileUploader", //provide library name
+            inlineDynamicImports: true // Inline dynamic imports for IIFE compatibility
+          }
         )
       )
       .pipe(plugins.concat(outName.replace(/\.js$/, ".iife.js")))

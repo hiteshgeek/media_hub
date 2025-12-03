@@ -344,6 +344,10 @@ export default class FileUploader {
         <span class="file-uploader-recording-dot"></span>
         <span class="file-uploader-recording-time">00:00</span>
       `;
+      // Prevent recording indicator from triggering file upload
+      this.recordingIndicator.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
       this.captureButtonContainer.appendChild(this.recordingIndicator);
     }
 

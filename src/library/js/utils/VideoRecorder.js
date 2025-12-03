@@ -1,7 +1,13 @@
 /**
  * VideoRecorder Class
  * Records screen video using MediaDevices API (getDisplayMedia)
+ *
+ * Note: For duration metadata fix, use one of these methods:
+ * 1. NPM: npm install @fix-webm-duration/fix
+ * 2. CDN: <script src="https://unpkg.com/fix-webm-duration@1.0.5/fix-webm-duration.js"></script>
  */
+
+import { fixWebmDuration } from "@fix-webm-duration/fix";
 
 export default class VideoRecorder {
   constructor(options = {}) {
@@ -106,9 +112,49 @@ export default class VideoRecorder {
       // Handle stop event
       this.mediaRecorder.onstop = async () => {
         try {
+          // Calculate actual recording duration
+          const durationMs = this.startTime ? Date.now() - this.startTime : 0;
+
           // Create blob from recorded chunks
           const mimeType = this.mediaRecorder.mimeType;
-          const blob = new Blob(this.recordedChunks, { type: mimeType });
+          let blob = new Blob(this.recordedChunks, { type: mimeType });
+
+          console.log('Recording stopped:', { mimeType, durationMs });
+
+          // Helper to find a fixer function (works for global CDN or ESM import)
+          const getFixer = () => {
+            if (typeof window !== 'undefined' && typeof window.fixWebmDuration === 'function') {
+              return window.fixWebmDuration;
+            }
+            // If you used an ESM import, you can reference it directly in scope
+            if (typeof fixWebmDuration === 'function') return fixWebmDuration;
+            return null;
+          };
+
+          const fixer = getFixer();
+
+          if (mimeType.includes('webm') && fixer && durationMs > 0) {
+            try {
+              // fixWebmDuration expects (blob, durationMs, options)
+              const fixed = await fixer(blob, durationMs, { logger: console.debug });
+              if (fixed instanceof Blob) {
+                blob = fixed;
+                console.log('✅ WebM duration fixed:', durationMs + 'ms');
+              } else {
+                console.warn('⚠️ fixer returned non-blob, skipping.');
+              }
+            } catch (err) {
+              console.error('❌ Failed to fix WebM duration:', err);
+              // Fall back to original blob
+            }
+          } else {
+            console.warn('⚠️ WebM duration fix skipped:', {
+              reason:
+                !mimeType.includes('webm') ? 'Not WebM format' :
+                !fixer ? 'fixer not available' :
+                !(durationMs > 0) ? 'No duration recorded' : 'Unknown'
+            });
+          }
 
           // Create File object with timestamp
           const timestamp = new Date().toISOString().replace(/[:.]/g, "-");

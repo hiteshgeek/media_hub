@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploader with Screen Recording - Example</title>
+
+    <!-- File Uploader CSS -->
+    <link rel="stylesheet" href="dist/css/file-uploader.css">
+</head>
+<body>
+    <div class="container">
+        <h1>File Uploader with Screen Capture & Video Recording</h1>
+
+        <!-- File Uploader Element -->
+        <div id="file-uploader"></div>
+    </div>
+
+    <!-- IMPORTANT: Load webm-duration-fix BEFORE the file uploader script -->
+    <!-- This enables WebM duration metadata fixing for recorded videos -->
+    <script src="https://cdn.jsdelivr.net/npm/webm-duration-fix@latest/dist/webm-duration-fix.min.js"></script>
+
+    <!-- File Uploader Script -->
+    <script type="module">
+        import { FileUploader } from './dist/js/file-uploader.js';
+
+        // Initialize File Uploader with screen capture and video recording enabled
+        const uploader = new FileUploader('#file-uploader', {
+            uploadUrl: '/upload',
+            maxFileSize: 10485760, // 10MB
+            multiple: true,
+            enableScreenCapture: true,  // Enable screenshot capture button
+            enableVideoRecording: true, // Enable video recording button
+            imageExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            videoExtensions: ['mp4', 'webm', 'mov', 'avi'],
+            onUploadSuccess: (file, response) => {
+                console.log('File uploaded:', file.name, response);
+            },
+            onUploadError: (file, error) => {
+                console.error('Upload failed:', file.name, error);
+            }
+        });
+    </script>
+</body>
+</html>
