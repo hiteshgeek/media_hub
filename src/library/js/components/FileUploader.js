@@ -362,21 +362,18 @@ export default class FileUploader {
         e.stopPropagation();
       });
 
-      // Make time element clickable for pause/resume toggle
+      // Make time element clickable to toggle time display format
       const timeElement = this.recordingIndicator.querySelector(
         ".file-uploader-recording-time"
       );
       if (timeElement) {
         timeElement.style.cursor = "pointer";
-        timeElement.title = "Click to pause/resume";
+        timeElement.title = "Click to toggle time display";
+        timeElement.dataset.showRemaining = "false";
         timeElement.addEventListener("click", (e) => {
           e.stopPropagation();
-          // Determine which recording type is active and toggle pause
-          if (this.videoRecorder && this.videoRecorder.getRecordingStatus().isRecording) {
-            this.recordingUI.togglePauseRecording();
-          } else if (this.audioRecorder && this.audioRecorder.getRecordingStatus().isRecording) {
-            this.recordingUI.togglePauseAudioRecording();
-          }
+          // Toggle between elapsed/total and remaining time display
+          timeElement.dataset.showRemaining = timeElement.dataset.showRemaining === "false" ? "true" : "false";
         });
       }
 
@@ -414,15 +411,12 @@ export default class FileUploader {
         );
         if (timeElement) {
           timeElement.style.cursor = "pointer";
-          timeElement.title = "Click to pause/resume";
+          timeElement.title = "Click to toggle time display";
+          timeElement.dataset.showRemaining = "false";
           timeElement.addEventListener("click", (e) => {
             e.stopPropagation();
-            // Determine which recording type is active and toggle pause
-            if (this.videoRecorder && this.videoRecorder.getRecordingStatus().isRecording) {
-              this.recordingUI.togglePauseRecording();
-            } else if (this.audioRecorder && this.audioRecorder.getRecordingStatus().isRecording) {
-              this.recordingUI.togglePauseAudioRecording();
-            }
+            // Toggle between elapsed/total and remaining time display
+            timeElement.dataset.showRemaining = timeElement.dataset.showRemaining === "false" ? "true" : "false";
           });
         }
 
@@ -498,9 +492,12 @@ export default class FileUploader {
       // Set up handler for when user stops sharing from system button
       this.recordingUI.setupStreamEndedHandler();
 
-      // Hide screenshot button during recording
+      // Hide screenshot and audio buttons during recording
       if (this.screenshotBtn) {
         this.screenshotBtn.style.display = "none";
+      }
+      if (this.audioRecordBtn) {
+        this.audioRecordBtn.style.display = "none";
       }
 
       // Create recording toolbar
@@ -555,6 +552,10 @@ export default class FileUploader {
       if (this.screenshotBtn) {
         this.screenshotBtn.style.display = "";
       }
+
+      if (this.audioRecordBtn) {
+        this.audioRecordBtn.style.display = "";
+      }
     } catch (error) {
       this.showError(error.message);
 
@@ -568,6 +569,9 @@ export default class FileUploader {
       }
       if (this.screenshotBtn) {
         this.screenshotBtn.style.display = "";
+      }
+      if (this.audioRecordBtn) {
+        this.audioRecordBtn.style.display = "";
       }
     }
   }

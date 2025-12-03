@@ -327,18 +327,31 @@ export default class RecordingUI {
           ".file-uploader-recording-time"
         );
         if (timeElement) {
-          // Show elapsed / total format
           const elapsed = recorder.getRecordingDuration();
           const maxSeconds = this.recordingType === 'audio'
             ? Math.floor(this.uploader.options.maxAudioRecordingDuration)
             : Math.floor(this.uploader.options.maxVideoRecordingDuration);
 
-          const elapsedMinutes = Math.floor(elapsed / 60);
-          const elapsedSeconds = elapsed % 60;
-          const totalMinutes = Math.floor(maxSeconds / 60);
-          const totalSeconds = maxSeconds % 60;
+          // Check if we should show remaining time or elapsed/total
+          const showRemaining = timeElement.dataset.showRemaining === "true";
 
-          const timeText = `${String(elapsedMinutes).padStart(2, "0")}:${String(elapsedSeconds).padStart(2, "0")} / ${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
+          let timeText;
+          if (showRemaining) {
+            // Show remaining time with negative sign and total (e.g., -02:30/05:00)
+            const remaining = maxSeconds - elapsed;
+            const remainingMinutes = Math.floor(remaining / 60);
+            const remainingSeconds = remaining % 60;
+            const totalMinutes = Math.floor(maxSeconds / 60);
+            const totalSeconds = maxSeconds % 60;
+            timeText = `-${String(remainingMinutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")} / ${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
+          } else {
+            // Show elapsed / total format
+            const elapsedMinutes = Math.floor(elapsed / 60);
+            const elapsedSeconds = elapsed % 60;
+            const totalMinutes = Math.floor(maxSeconds / 60);
+            const totalSeconds = maxSeconds % 60;
+            timeText = `${String(elapsedMinutes).padStart(2, "0")}:${String(elapsedSeconds).padStart(2, "0")} / ${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
+          }
 
           timeElement.textContent = timeText;
         }

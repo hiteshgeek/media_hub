@@ -6,7 +6,7 @@ if (typeof window !== "undefined") {
     enableVideoRecording: true,
     enableAudioRecording: true,
     enableMicrophoneAudio: true, // Enable microphone audio recording
-    enableSystemAudio: false, // Disable system audio to avoid screen selection (set to true if you need to record tab audio)
+    enableSystemAudio: true, // Enable system audio recording (allows recording tab audio)
     showFileTypeCount: true, // Show file type counts
     showProgressBar: true, // Show progress bars for Total Size and Files
     multiple: true,
