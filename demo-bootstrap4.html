@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploader - Bootstrap 4 Demo</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="file-uploader.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="jumbotron">
+            <h1 class="display-4">File Uploader</h1>
+            <p class="lead">Bootstrap 4 Integration</p>
+            <hr class="my-4">
+            <p>Fully integrated with Bootstrap 4 forms with drag & drop, file validation, and instant AJAX upload.</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Project Submission Form</h3>
+            </div>
+            <div class="card-body">
+                <form id="submissionForm">
+                    <div class="form-group">
+                        <label for="projectName">Project Name</label>
+                        <input type="text" class="form-control" id="projectName" placeholder="Enter project name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" rows="3" placeholder="Enter project description" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Images</label>
+                        <div id="projectImages"></div>
+                        <small class="form-text text-muted">Upload project screenshots or images (max 10MB each)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Videos</label>
+                        <div id="projectVideos"></div>
+                        <small class="form-text text-muted">Upload demo videos (max 10MB each)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Additional Files</label>
+                        <div id="additionalFiles"></div>
+                        <small class="form-text text-muted">Upload any supporting documents</small>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Submit Project</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                        <a href="index.html" class="btn btn-outline-secondary">Back to Standalone Demo</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                Other Demos
+            </div>
+            <div class="card-body">
+                <a href="index.html" class="btn btn-sm btn-outline-primary">Standalone</a>
+                <a href="demo-bootstrap3.html" class="btn btn-sm btn-outline-primary">Bootstrap 3</a>
+                <a href="demo-bootstrap5.html" class="btn btn-sm btn-outline-primary">Bootstrap 5</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="file-uploader.js"></script>
+    <script>
+        // Initialize uploaders
+        const imagesUploader = new FileUploader('#projectImages', {
+            multiple: true,
+            onUploadSuccess: (fileObj, result) => {
+                console.log('Image uploaded:', result);
+            }
+        });
+
+        const videosUploader = new FileUploader('#projectVideos', {
+            multiple: true,
+            onUploadSuccess: (fileObj, result) => {
+                console.log('Video uploaded:', result);
+            }
+        });
+
+        const filesUploader = new FileUploader('#additionalFiles', {
+            multiple: true,
+            onUploadSuccess: (fileObj, result) => {
+                console.log('File uploaded:', result);
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('submissionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                projectName: document.getElementById('projectName').value,
+                description: document.getElementById('description').value,
+                images: imagesUploader.getUploadedFiles(),
+                videos: videosUploader.getUploadedFiles(),
+                files: filesUploader.getUploadedFiles()
+            };
+
+            console.log('Form submitted with data:', formData);
+
+            alert('Project submitted successfully! Check console for details.');
+        });
+
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form and clear all uploaded files?')) {
+                document.getElementById('submissionForm').reset();
+                imagesUploader.clear();
+                videosUploader.clear();
+                filesUploader.clear();
+            }
+        }
+    </script>
+</body>
+</html>

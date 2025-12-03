@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Uploader - Standalone Demo</title>
+    <link rel="stylesheet" href="file-uploader.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            color: #2d3748;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin: 0 0 30px;
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            margin: 0 0 15px;
+            color: #2d3748;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background-color: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            margin: 0 0 10px;
+            color: #2c5282;
+            font-size: 16px;
+        }
+
+        .info-box ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #2d3748;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3182ce;
+        }
+
+        .btn-secondary {
+            background-color: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4a5568;
+        }
+
+        .btn-danger {
+            background-color: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #e53e3e;
+        }
+
+        #fileInfo {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f7fafc;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+
+        .demo-links {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .demo-links h3 {
+            margin: 0 0 15px;
+            color: #2d3748;
+            font-size: 18px;
+        }
+
+        .demo-links a {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .demo-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Uploader</h1>
+        <p class="subtitle">Standalone implementation with drag & drop, preview, and AJAX upload</p>
+
+        <div class="info-box">
+            <h3>Features:</h3>
+            <ul>
+                <li>Drag & drop file upload</li>
+                <li>File type validation (images, videos, documents, archives)</li>
+                <li>Image and video preview with thumbnails</li>
+                <li>File info display (name, type, size)</li>
+                <li>Instant AJAX upload on file selection</li>
+                <li>Download individual or all files at once</li>
+                <li>Auto-compress multiple files to ZIP</li>
+                <li>Delete uploaded files</li>
+                <li>Maximum file size: 10MB</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Upload Files</h2>
+            <div id="fileUploader"></div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="getUploadedFiles()">Get Uploaded Files</button>
+                <button class="btn btn-secondary" onclick="getAllFiles()">Get All Files</button>
+                <button class="btn btn-danger" onclick="clearFiles()">Clear All</button>
+            </div>
+
+            <div id="fileInfo"></div>
+        </div>
+
+        <div class="demo-links">
+            <h3>Other Demos:</h3>
+            <a href="demo-bootstrap3.html">Bootstrap 3 Demo</a>
+            <a href="demo-bootstrap4.html">Bootstrap 4 Demo</a>
+            <a href="demo-bootstrap5.html">Bootstrap 5 Demo</a>
+        </div>
+    </div>
+
+    <script src="file-uploader.js"></script>
+    <script>
+        // Initialize the file uploader
+        const uploader = new FileUploader('#fileUploader', {
+            multiple: true,
+            onUploadSuccess: (fileObj, result) => {
+                console.log('Upload success:', fileObj, result);
+            },
+            onUploadError: (fileObj, error) => {
+                console.error('Upload error:', fileObj, error);
+            },
+            onDeleteSuccess: (fileObj, result) => {
+                console.log('Delete success:', fileObj, result);
+            }
+        });
+
+        function getUploadedFiles() {
+            const files = uploader.getUploadedFiles();
+            document.getElementById('fileInfo').textContent =
+                'Uploaded Files:\n' + JSON.stringify(files.map(f => ({
+                    name: f.name,
+                    serverFilename: f.serverFilename,
+                    size: f.size,
+                    type: f.type
+                })), null, 2);
+        }
+
+        function getAllFiles() {
+            const files = uploader.getFiles();
+            document.getElementById('fileInfo').textContent =
+                'All Files:\n' + JSON.stringify(files.map(f => ({
+                    name: f.name,
+                    uploaded: f.uploaded,
+                    uploading: f.uploading,
+                    size: f.size,
+                    type: f.type
+                })), null, 2);
+        }
+
+        function clearFiles() {
+            if (confirm('Are you sure you want to clear all files?')) {
+                uploader.clear();
+                document.getElementById('fileInfo').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>
