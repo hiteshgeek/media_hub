@@ -74,6 +74,12 @@ export default class AudioRecorder {
           const videoTracks = this.systemAudioStream.getVideoTracks();
           videoTracks.forEach(track => track.stop());
 
+          // Check if stream has audio tracks
+          const audioTracks = this.systemAudioStream.getAudioTracks();
+          if (audioTracks.length === 0) {
+            console.warn("System audio stream has no audio tracks");
+            this.systemAudioStream = null;
+          }
         } catch (error) {
           console.warn("System audio access failed:", error);
           this.systemAudioStream = null;
@@ -129,6 +135,14 @@ export default class AudioRecorder {
    * @returns {Promise<MediaStream>}
    */
   async mixAudioStreams(stream1, stream2) {
+    // Validate streams have audio tracks
+    if (!stream1 || stream1.getAudioTracks().length === 0) {
+      throw new Error("Stream 1 has no audio tracks");
+    }
+    if (!stream2 || stream2.getAudioTracks().length === 0) {
+      throw new Error("Stream 2 has no audio tracks");
+    }
+
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
     const source1 = this.audioContext.createMediaStreamSource(stream1);

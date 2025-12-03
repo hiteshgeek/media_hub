@@ -213,11 +213,13 @@ $component-prefix: $file-uploader-prefix !default;
   display: flex;
   align-items: center;
   gap: var(--fu-spacing-xs);
+  z-index: 2;
 }
 
 .#{$component-prefix}-limit-value {
   color: var(--fu-color-text);
   font-weight: var(--fu-font-weight-semibold);
+  z-index: 2;
 }
 
 .#{$component-prefix}-limit-count {
@@ -237,6 +239,7 @@ $component-prefix: $file-uploader-prefix !default;
   background-color: rgba(66, 153, 225, 0.15);
   border-radius: 0 0 var(--fu-radius-sm) var(--fu-radius-sm);
   overflow: hidden;
+  z-index: 1;
 }
 
 .#{$component-prefix}-limit-progress-bar {
@@ -557,7 +560,11 @@ $component-prefix: $file-uploader-prefix !default;
   @include flex(column, center, center);
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--fu-color-primary-light) 0%, var(--fu-color-primary) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--fu-color-primary-light) 0%,
+    var(--fu-color-primary) 100%
+  );
   position: relative;
 }
 
@@ -573,6 +580,28 @@ $component-prefix: $file-uploader-prefix !default;
       transform: scale(1.1);
       opacity: 1;
     }
+  }
+}
+
+// Media duration badge (for video and audio files)
+.#{$component-prefix}-media-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 2px 6px;
+  border-radius: var(--fu-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  z-index: 6;
+  pointer-events: none;
+  font-family: var(--fu-font-family-mono, 'Courier New', monospace);
+  letter-spacing: 0.5px;
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(3px);
   }
 }
 

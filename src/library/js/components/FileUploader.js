@@ -7,7 +7,7 @@
 import { getIcon } from "../utils/icons.js";
 import ScreenCapture from "../utils/ScreenCapture.js";
 import VideoRecorder from "../utils/VideoRecorder.js";
-import AudioRecorder from "../utils/AudioRecorder.js";
+import AudioWorkletRecorder from "../utils/AudioWorkletRecorder.js";
 import RecordingUI from "../utils/RecordingUI.js";
 
 export default class FileUploader {
@@ -381,7 +381,7 @@ export default class FileUploader {
     }
 
     // Audio recording button
-    if (this.options.enableAudioRecording && AudioRecorder.isSupported()) {
+    if (this.options.enableAudioRecording && AudioWorkletRecorder.isSupported()) {
       this.audioRecordBtn = document.createElement("button");
       this.audioRecordBtn.type = "button";
       this.audioRecordBtn.className = "file-uploader-capture-btn";
@@ -598,10 +598,13 @@ export default class FileUploader {
 
       // Initialize audio recorder with options
       if (!this.audioRecorder) {
-        this.audioRecorder = new AudioRecorder({
+        this.audioRecorder = new AudioWorkletRecorder({
           enableMicrophoneAudio: this.options.enableMicrophoneAudio,
           enableSystemAudio: this.options.enableSystemAudio,
           maxRecordingDuration: this.options.maxAudioRecordingDuration,
+          sampleRate: 48000, // High quality audio
+          bitDepth: 16,
+          numberOfChannels: 2, // Stereo
         });
       }
 
@@ -1173,12 +1176,16 @@ export default class FileUploader {
         <div class="file-uploader-video-play-overlay">
           ${getIcon("play", { class: "file-uploader-video-play-icon" })}
         </div>
+        <div class="file-uploader-media-duration" data-file-id="${fileObj.id}" style="display: none;"></div>
       `;
     } else if (fileType === "audio") {
       // Audio file preview with icon only (no audio element needed)
+      const objectUrl = URL.createObjectURL(fileObj.file);
       previewContent = `
         <div class="file-uploader-preview-audio">
           ${getIcon("audio", { class: "file-uploader-audio-icon" })}
+          <audio src="${objectUrl}" class="file-uploader-preview-audio-element" data-file-id="${fileObj.id}" style="display: none;"></audio>
+          <div class="file-uploader-media-duration" data-file-id="${fileObj.id}" style="display: none;"></div>
         </div>
       `;
     } else {
@@ -1276,6 +1283,11 @@ export default class FileUploader {
     if (fileType === "video") {
       this.extractVideoThumbnail(fileObj.id);
     }
+
+    // Extract audio duration if this is an audio file
+    if (fileType === "audio") {
+      this.extractAudioDuration(fileObj.id);
+    }
   }
 
   extractVideoThumbnail(fileId) {
@@ -1291,6 +1303,9 @@ export default class FileUploader {
 
     // Wait for video metadata to load
     video.addEventListener("loadedmetadata", () => {
+      // Display video duration
+      this.displayMediaDuration(fileId, video.duration);
+
       // Seek to 1 second (or 10% of duration, whichever is smaller)
       const seekTime = Math.min(1, video.duration * 0.1);
       video.currentTime = seekTime;
@@ -1342,6 +1357,60 @@ export default class FileUploader {
       },
       { once: true }
     );
+  }
+
+  extractAudioDuration(fileId) {
+    const preview = this.previewContainer.querySelector(
+      `[data-file-id="${fileId}"]`
+    );
+    if (!preview) return;
+
+    const audio = preview.querySelector(".file-uploader-preview-audio-element");
+    if (!audio) return;
+
+    // Wait for audio metadata to load
+    audio.addEventListener(
+      "loadedmetadata",
+      () => {
+        // Display audio duration
+        this.displayMediaDuration(fileId, audio.duration);
+      },
+      { once: true }
+    );
+
+    // Handle load errors
+    audio.addEventListener(
+      "error",
+      () => {
+        console.warn("Failed to load audio metadata");
+      },
+      { once: true }
+    );
+  }
+
+  displayMediaDuration(fileId, duration) {
+    const preview = this.previewContainer.querySelector(
+      `[data-file-id="${fileId}"]`
+    );
+    if (!preview) return;
+
+    const durationElement = preview.querySelector(".file-uploader-media-duration");
+    if (!durationElement) return;
+
+    // Format duration as MM:SS or HH:MM:SS
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = Math.floor(duration % 60);
+
+    let formattedDuration;
+    if (hours > 0) {
+      formattedDuration = `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    } else {
+      formattedDuration = `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    durationElement.textContent = formattedDuration;
+    durationElement.style.display = "block";
   }
 
   async uploadFile(fileObj) {

@@ -82,8 +82,19 @@ export default class RecordingUI {
       systemAudioBtn.type = "button";
       systemAudioBtn.className = "file-uploader-capture-btn";
       systemAudioBtn.setAttribute("data-action", "system-audio");
-      systemAudioBtn.title = "Toggle System Audio";
-      systemAudioBtn.innerHTML = getIcon("system_sound");
+
+      // Check if system audio is available
+      const hasSystemAudio = this.uploader.videoRecorder && this.uploader.videoRecorder.systemAudioStream;
+      if (!hasSystemAudio) {
+        systemAudioBtn.disabled = true;
+        systemAudioBtn.classList.add("muted");
+        systemAudioBtn.title = "No System Audio Available";
+        systemAudioBtn.innerHTML = getIcon("system_sound_mute");
+      } else {
+        systemAudioBtn.title = "Toggle System Audio";
+        systemAudioBtn.innerHTML = getIcon("system_sound");
+      }
+
       systemAudioBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.toggleSystemAudio();
@@ -170,8 +181,19 @@ export default class RecordingUI {
       systemAudioBtn.type = "button";
       systemAudioBtn.className = "file-uploader-capture-btn";
       systemAudioBtn.setAttribute("data-action", "system-audio");
-      systemAudioBtn.title = "Toggle System Audio";
-      systemAudioBtn.innerHTML = getIcon("system_sound");
+
+      // Check if system audio is available
+      const hasSystemAudio = this.uploader.audioRecorder && this.uploader.audioRecorder.systemAudioStream;
+      if (!hasSystemAudio) {
+        systemAudioBtn.disabled = true;
+        systemAudioBtn.classList.add("muted");
+        systemAudioBtn.title = "No System Audio Available";
+        systemAudioBtn.innerHTML = getIcon("system_sound_mute");
+      } else {
+        systemAudioBtn.title = "Toggle System Audio";
+        systemAudioBtn.innerHTML = getIcon("system_sound");
+      }
+
       systemAudioBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.toggleAudioSystemAudio();
