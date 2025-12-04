@@ -1,7 +1,10 @@
 if (typeof window !== "undefined") {
   const uploader = new FileUploader("#fileUploader", {
-    showLimitsToggle: true, // Show the toggle button (default: true)
-    defaultLimitsVisible: false, // Start with limits hidden (default: true)
+    showLimits: true, // Show limits section (default: true)
+    showLimitsToggle: true, // Show toggle button in dropzone (default: true)
+    defaultLimitsVisible: true, // Start with limits visible (default: true)
+    allowLimitsViewToggle: true, // Allow concise/detailed toggle (default: true)
+    defaultLimitsView: "detailed", // Default view mode for limits section (detailed/concise)
 
     preventDuplicates: true,
     duplicateCheckBy: "name-size",
@@ -17,7 +20,7 @@ if (typeof window !== "undefined") {
     showTypeGroupCount: true, // Show file count per type group
     multiple: true,
     // defaultLimitsView: "detailed",
-    allowLimitsViewToggle: true,
+    // allowLimitsViewToggle: true, // Duplicate removed - already set on line 6
     onUploadSuccess: (fileObj, result) => {
       console.log("Upload success:", fileObj, result);
     },

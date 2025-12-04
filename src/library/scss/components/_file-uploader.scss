@@ -158,6 +158,86 @@ $component-prefix: $file-uploader-prefix !default;
 }
 
 // ============================================================================
+// Limits Toggle Button (inside dropzone)
+// ============================================================================
+
+.#{$component-prefix}-limits-toggle-container {
+  position: absolute;
+  bottom: var(--fu-spacing-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.#{$component-prefix}-limits-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  font-size: 12px;
+  font-weight: var(--fu-font-weight-medium);
+  color: var(--fu-color-text-muted);
+  background-color: var(--fu-color-bg);
+  border: 1px solid var(--fu-color-border-light);
+  border-radius: var(--fu-radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  @include transition((background-color, color, border-color, box-shadow, transform));
+
+  // Circular chevron icon container
+  .#{$component-prefix}-toggle-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: var(--fu-color-bg-hover);
+    border-radius: 50%;
+    flex-shrink: 0;
+    @include transition((background-color, transform));
+
+    svg {
+      width: 10px;
+      height: 10px;
+      fill: currentColor;
+    }
+  }
+
+  // Chevron rotation when limits are visible (pointing down)
+  &.is-expanded .#{$component-prefix}-toggle-chevron {
+    @if $file-uploader-enable-animations {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:hover {
+    color: var(--fu-color-primary);
+    background-color: rgba(66, 153, 225, 0.08);
+    border-color: rgba(66, 153, 225, 0.3);
+    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
+
+    .#{$component-prefix}-toggle-chevron {
+      background-color: rgba(66, 153, 225, 0.15);
+    }
+
+    @if $file-uploader-enable-animations {
+      transform: translateX(-50%) translateY(-1px);
+    }
+  }
+
+  &:active {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+  }
+}
+
+// ============================================================================
 // Limits Display Section
 // ============================================================================
 
@@ -181,47 +261,6 @@ $component-prefix: $file-uploader-prefix !default;
   font-size: var(--fu-font-size-sm);
   font-weight: var(--fu-font-weight-semibold);
   color: var(--fu-color-text);
-}
-
-// Header actions container (view mode toggle + visibility toggle)
-.#{$component-prefix}-limits-header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--fu-spacing-sm);
-}
-
-// Visibility toggle button (show/hide limits content)
-.#{$component-prefix}-limits-visibility-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0 !important;
-  color: var(--fu-color-text-muted);
-  background-color: transparent;
-  border: 1px solid var(--fu-color-border-light);
-  border-radius: var(--fu-radius-sm);
-  cursor: pointer;
-  @include transition((background-color, color, border-color, transform));
-
-  svg {
-    width: 14px;
-    height: 14px;
-    fill: currentColor;
-    flex-shrink: 0;
-  }
-
-  &:hover {
-    color: var(--fu-color-primary);
-    background-color: rgba(66, 153, 225, 0.08);
-    border-color: rgba(66, 153, 225, 0.3);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
-  }
 }
 
 .#{$component-prefix}-limits-toggle {

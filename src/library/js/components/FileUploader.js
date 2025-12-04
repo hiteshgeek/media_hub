@@ -166,16 +166,15 @@ export default class FileUploader {
     this.dropZoneHeader = document.createElement("div");
     this.dropZoneHeader.className = "file-uploader-dropzone-content";
 
-    // Check if all file types have specific limits
-    const hasPerTypeLimits =
-      Object.keys(this.options.perFileMaxSizePerType || {}).length > 0;
-    const allTypesHaveLimits = this.options.allowedExtensions.every((ext) => {
-      const fileType = this.getFileType(ext);
-      return this.options.perFileMaxSizePerType[fileType] !== undefined;
-    });
+    // Check if ANY type-level limits are defined (per-file size, total size, or file count)
+    // If any type-level limit exists, don't show the fallback "Maximum file size" in dropzone
+    const hasAnyTypeLevelLimits =
+      Object.keys(this.options.perFileMaxSizePerType || {}).length > 0 ||
+      Object.keys(this.options.perTypeMaxTotalSize || {}).length > 0 ||
+      Object.keys(this.options.perTypeMaxFileCount || {}).length > 0;
 
-    // Only show fallback limit if not all types have specific limits
-    const showFallbackLimit = !hasPerTypeLimits || !allTypesHaveLimits;
+    // Only show fallback limit if no type-level limits are defined at all
+    const showFallbackLimit = !hasAnyTypeLevelLimits;
 
     this.dropZoneHeader.innerHTML = `
                 ${getIcon("upload", { class: "file-uploader-icon" })}
@@ -292,9 +291,18 @@ export default class FileUploader {
     // Create capture buttons container (bottom right corner)
     this.createCaptureButtons();
 
+    // Create limits toggle button inside dropzone (if enabled)
+    if (this.options.showLimits && this.options.showLimitsToggle) {
+      this.createLimitsToggleButton();
+    }
+
     // Append dropzone and other elements to wrapper
     this.wrapper.appendChild(this.dropZone);
     if (this.options.showLimits) {
+      // Set initial visibility
+      if (!this.limitsVisible) {
+        this.limitsContainer.style.display = "none";
+      }
       this.wrapper.appendChild(this.limitsContainer);
     }
     this.element.appendChild(this.wrapper);
@@ -542,6 +550,70 @@ export default class FileUploader {
     // Append action container to dropzone if it has children
     if (this.actionContainer.children.length > 0) {
       this.dropZone.appendChild(this.actionContainer);
+    }
+  }
+
+  createLimitsToggleButton() {
+    // Create limits toggle button container
+    this.limitsToggleContainer = document.createElement("div");
+    this.limitsToggleContainer.className = "file-uploader-limits-toggle-container";
+
+    // Create the toggle button
+    this.limitsToggleBtn = document.createElement("button");
+    this.limitsToggleBtn.type = "button";
+    this.limitsToggleBtn.className = "file-uploader-limits-toggle-btn";
+    this.updateLimitsToggleButton();
+
+    this.limitsToggleBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleLimitsVisibility();
+    });
+
+    this.limitsToggleContainer.appendChild(this.limitsToggleBtn);
+    this.dropZone.appendChild(this.limitsToggleContainer);
+
+    // Initialize tooltip
+    Tooltip.initAll(this.limitsToggleContainer);
+  }
+
+  updateLimitsToggleButton() {
+    if (!this.limitsToggleBtn) return;
+
+    // Always use chevron_up icon - rotation is handled by CSS
+    const icon = getIcon("chevron_up", { class: "file-uploader-toggle-icon" });
+
+    this.limitsToggleBtn.innerHTML = `
+      <span class="file-uploader-toggle-chevron">${icon}</span>
+      <span>${this.limitsVisible ? "Hide Limits" : "Show Limits"}</span>
+    `;
+
+    // Toggle expanded class for CSS animation
+    if (this.limitsVisible) {
+      this.limitsToggleBtn.classList.add("is-expanded");
+    } else {
+      this.limitsToggleBtn.classList.remove("is-expanded");
+    }
+
+    this.limitsToggleBtn.setAttribute(
+      "data-tooltip-text",
+      this.limitsVisible ? "Hide upload limits" : "Show upload limits"
+    );
+    this.limitsToggleBtn.setAttribute("data-tooltip-position", "top");
+  }
+
+  toggleLimitsVisibility() {
+    this.limitsVisible = !this.limitsVisible;
+
+    if (this.limitsContainer) {
+      this.limitsContainer.style.display = this.limitsVisible ? "" : "none";
+    }
+
+    this.updateLimitsToggleButton();
+
+    // Re-initialize tooltip after button update
+    if (this.limitsToggleContainer) {
+      Tooltip.initAll(this.limitsToggleContainer);
     }
   }
 
@@ -868,23 +940,8 @@ export default class FileUploader {
     const filePercentage =
       this.options.maxFiles > 0 ? (fileCount / this.options.maxFiles) * 100 : 0;
 
-    // Visibility toggle button (show/hide limits content)
-    const visibilityToggleButton = this.options.showLimitsToggle
-      ? `
-      <button type="button" class="file-uploader-limits-visibility-toggle" data-tooltip-text="${
-        this.limitsVisible ? "Hide limits" : "Show limits"
-      }" data-tooltip-position="top">
-        ${
-          this.limitsVisible
-            ? getIcon("chevron_up", { class: "file-uploader-toggle-icon" })
-            : getIcon("chevron_down", { class: "file-uploader-toggle-icon" })
-        }
-      </button>
-    `
-      : "";
-
     // View mode toggle button (concise/detailed)
-    const viewModeToggleButton = this.options.allowLimitsViewToggle && this.limitsVisible
+    const viewModeToggleButton = this.options.allowLimitsViewToggle
       ? `
       <button type="button" class="file-uploader-limits-toggle" data-tooltip-text="${
         isDetailed ? "Switch to concise view" : "Switch to detailed view"
@@ -902,20 +959,9 @@ export default class FileUploader {
     let limitsHTML = `
       <div class="file-uploader-limits-header">
         <span class="file-uploader-limits-title">Upload Limits</span>
-        <div class="file-uploader-limits-header-actions">
-          ${viewModeToggleButton}
-          ${visibilityToggleButton}
-        </div>
+        ${viewModeToggleButton}
       </div>
     `;
-
-    // Only render content if limits are visible
-    if (!this.limitsVisible) {
-      this.limitsContainer.innerHTML = limitsHTML;
-      this.attachLimitsToggleEvents();
-      Tooltip.initAll(this.limitsContainer);
-      return;
-    }
 
     if (isDetailed) {
       // ===== DETAILED VIEW =====
@@ -1110,7 +1156,6 @@ export default class FileUploader {
         </div>
       `;
 
-      console.log("[DEBUG] generalLimitsHTML:", generalLimitsHTML);
       limitsHTML += generalLimitsHTML;
 
       // Summary Section - Bottom Bar (deprecated, keeping for backwards compatibility)
@@ -1333,19 +1378,6 @@ export default class FileUploader {
         e.stopPropagation();
         this.limitsViewMode =
           this.limitsViewMode === "concise" ? "detailed" : "concise";
-        this.updateLimitsDisplay();
-      });
-    }
-
-    // Attach visibility toggle event (show/hide)
-    const visibilityToggleBtn = this.limitsContainer.querySelector(
-      ".file-uploader-limits-visibility-toggle"
-    );
-    if (visibilityToggleBtn) {
-      visibilityToggleBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.limitsVisible = !this.limitsVisible;
         this.updateLimitsDisplay();
       });
     }

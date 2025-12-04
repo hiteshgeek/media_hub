@@ -86,26 +86,27 @@ if (in_array($extension, $config['image_extensions'])) {
     $fileType = 'archive';
 }
 
-// Validate per-file max size per type (for a SINGLE file)
+// Validate per-file max size (use per-type limit if available, otherwise use general limit)
 if (isset($config['per_file_max_size_per_type'][$fileType])) {
+    // Use per-type limit for this file type
     $perFileLimit = $config['per_file_max_size_per_type'][$fileType];
+    $limitDisplay = $config['per_file_max_size_per_type_display'][$fileType] ?? 'unknown';
     if ($file['size'] > $perFileLimit) {
-        $limitDisplay = $config['per_file_max_size_per_type_display'][$fileType] ?? 'unknown';
         echo json_encode([
             'success' => false,
             'error' => "\"{$originalName}\" exceeds the maximum {$fileType} file size of {$limitDisplay}"
         ]);
         exit;
     }
-}
-
-// Validate general per-file max size (fallback)
-if ($file['size'] > $config['per_file_max_size']) {
-    echo json_encode([
-        'success' => false,
-        'error' => "\"{$originalName}\" exceeds maximum file size of " . $config['per_file_max_size_display']
-    ]);
-    exit;
+} else {
+    // Fallback to general per-file max size (for types without specific limit)
+    if ($file['size'] > $config['per_file_max_size']) {
+        echo json_encode([
+            'success' => false,
+            'error' => "\"{$originalName}\" exceeds maximum file size of " . $config['per_file_max_size_display']
+        ]);
+        exit;
+    }
 }
 
 // Validate MIME type
