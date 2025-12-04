@@ -816,9 +816,11 @@ export default class FileUploader {
 
     let limitsHTML = '<div class="file-uploader-limits-grid">';
 
-    // File type specific limits
+    // File type specific limits - Top Section (Card Grid)
     const typeLimits = this.options.fileTypeSizeLimitsDisplay;
     if (typeLimits && Object.keys(typeLimits).length > 0) {
+      limitsHTML += '<div class="file-uploader-limits-types">';
+
       for (const [type, limit] of Object.entries(typeLimits)) {
         // Get allowed extensions for this file type
         const allowedExtensions = this.getAllowedExtensionsForType(type);
@@ -832,98 +834,83 @@ export default class FileUploader {
         const typeSize = this.getFileTypeSize(type);
         const typeSizeFormatted = this.formatFileSize(typeSize);
         const typeLimitBytes = this.options.fileTypeSizeLimits[type] || 0;
+        const sizePercentage = typeLimitBytes > 0 ? (typeSize / typeLimitBytes) * 100 : 0;
 
-        // Build detailed information sections
-        let detailsHtml = "";
-
-        // Per file limit - display as "size / file"
-        if (this.options.showPerFileLimit && this.options.maxFileSizeDisplay) {
-          detailsHtml += `<div class="file-uploader-limit-detail">
-            <span class="file-uploader-limit-detail-value">${this.options.maxFileSizeDisplay} / file</span>
-          </div>`;
-        }
-
-        // Type group size - display as "current size / limit"
-        if (this.options.showTypeGroupSize && typeLimitBytes > 0) {
-          const sizePercentage = (typeSize / typeLimitBytes) * 100;
-          detailsHtml += `<div class="file-uploader-limit-detail">
-            <span class="file-uploader-limit-detail-value">${typeSizeFormatted} / ${limit}</span>
-            ${this.options.showProgressBar ? `<div class="file-uploader-limit-progress-mini"><div class="file-uploader-limit-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div></div>` : ""}
-          </div>`;
-        }
-
-        // Type group file count
-        if (this.options.showTypeGroupCount) {
-          detailsHtml += `<div class="file-uploader-limit-detail">
-            <span class="file-uploader-limit-detail-label">Files:</span>
-            <span class="file-uploader-limit-detail-value">${typeCount}</span>
-          </div>`;
-        }
+        // Get icon for file type
+        const typeIcon = getIcon(type, { class: "file-uploader-type-icon" });
 
         limitsHTML += `
-                    <div class="file-uploader-limit-item file-uploader-limit-detailed" ${
-                      tooltipText ? `data-tooltip-text="${tooltipText}" data-tooltip-position="top"` : ""
-                    }>
-                        <div class="file-uploader-limit-header">
-                            <span class="file-uploader-limit-label">
-                                ${this.capitalizeFirst(type)}
-                            </span>
-                        </div>
-                        ${detailsHtml ? `<div class="file-uploader-limit-details">${detailsHtml}</div>` : ""}
-                    </div>
-                `;
+          <div class="file-uploader-type-card" ${tooltipText ? `data-tooltip-text="${tooltipText}" data-tooltip-position="top"` : ""}>
+            <div class="file-uploader-type-card-header">
+              <div class="file-uploader-type-icon-wrapper">
+                ${typeIcon}
+              </div>
+              <span class="file-uploader-type-name">${this.capitalizeFirst(type)}</span>
+            </div>
+            <div class="file-uploader-type-card-body">
+              ${this.options.showPerFileLimit && this.options.maxFileSizeDisplay ? `
+                <div class="file-uploader-type-stat">
+                  <span class="file-uploader-type-stat-label">Per file</span>
+                  <span class="file-uploader-type-stat-value">${this.options.maxFileSizeDisplay}</span>
+                </div>
+              ` : ""}
+              ${this.options.showTypeGroupSize && typeLimitBytes > 0 ? `
+                <div class="file-uploader-type-stat">
+                  <span class="file-uploader-type-stat-label">Used</span>
+                  <span class="file-uploader-type-stat-value">${typeSizeFormatted} / ${limit}</span>
+                </div>
+                <div class="file-uploader-type-progress">
+                  <div class="file-uploader-type-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div>
+                </div>
+              ` : ""}
+              ${this.options.showTypeGroupCount ? `
+                <div class="file-uploader-type-stat">
+                  <span class="file-uploader-type-stat-label">Files</span>
+                  <span class="file-uploader-type-stat-value">${typeCount}</span>
+                </div>
+              ` : ""}
+            </div>
+          </div>
+        `;
       }
+
+      limitsHTML += '</div>';
     }
 
-    // Total size limit with optional progress bar
+    // Summary Section - Bottom Bar
     const sizePercentage =
       this.options.totalSizeLimit > 0
         ? (totalSize / this.options.totalSizeLimit) * 100
         : 0;
-    const sizeProgressBar = this.options.showProgressBar
-      ? `<div class="file-uploader-limit-progress"><div class="file-uploader-limit-progress-bar" style="width: ${Math.min(
-          100,
-          sizePercentage
-        )}%"></div></div>`
-      : "";
-
-    limitsHTML += `
-            <div class="file-uploader-limit-item file-uploader-total-size-limit-item file-uploader-limit-highlight file-uploader-limit-stacked ${
-              this.options.showProgressBar
-                ? "file-uploader-limit-with-progress"
-                : ""
-            }" data-tooltip-text="Combined size of all uploaded files" data-tooltip-position="top">
-                <span class="file-uploader-limit-label">Total Size</span>
-                <span class="file-uploader-limit-value">${totalSizeFormatted} / ${
-      this.options.totalSizeLimitDisplay
-    }</span>
-                ${sizeProgressBar}
-            </div>
-        `;
-
-    // Max files limit with optional progress bar
     const filePercentage =
       this.options.maxFiles > 0 ? (fileCount / this.options.maxFiles) * 100 : 0;
-    const fileProgressBar = this.options.showProgressBar
-      ? `<div class="file-uploader-limit-progress"><div class="file-uploader-limit-progress-bar" style="width: ${Math.min(
-          100,
-          filePercentage
-        )}%"></div></div>`
-      : "";
 
     limitsHTML += `
-            <div class="file-uploader-limit-item file-uploader-file-count-limit-item file-uploader-limit-highlight file-uploader-limit-stacked ${
-              this.options.showProgressBar
-                ? "file-uploader-limit-with-progress"
-                : ""
-            }" data-tooltip-text="Number of files uploaded" data-tooltip-position="top">
-                <span class="file-uploader-limit-label">Files</span>
-                <span class="file-uploader-limit-value">${fileCount} / ${
-      this.options.maxFiles
-    }</span>
-                ${fileProgressBar}
+      <div class="file-uploader-limits-summary">
+        <div class="file-uploader-summary-item" data-tooltip-text="Combined size of all uploaded files" data-tooltip-position="top">
+          <div class="file-uploader-summary-header">
+            <span class="file-uploader-summary-label">Total Size</span>
+            <span class="file-uploader-summary-value">${totalSizeFormatted} / ${this.options.totalSizeLimitDisplay}</span>
+          </div>
+          ${this.options.showProgressBar ? `
+            <div class="file-uploader-summary-progress">
+              <div class="file-uploader-summary-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div>
             </div>
-        `;
+          ` : ""}
+        </div>
+        <div class="file-uploader-summary-item" data-tooltip-text="Number of files uploaded" data-tooltip-position="top">
+          <div class="file-uploader-summary-header">
+            <span class="file-uploader-summary-label">Files</span>
+            <span class="file-uploader-summary-value">${fileCount} / ${this.options.maxFiles}</span>
+          </div>
+          ${this.options.showProgressBar ? `
+            <div class="file-uploader-summary-progress">
+              <div class="file-uploader-summary-progress-bar" style="width: ${Math.min(100, filePercentage)}%"></div>
+            </div>
+          ` : ""}
+        </div>
+      </div>
+    `;
 
     limitsHTML += "</div>";
 
@@ -1099,9 +1086,9 @@ export default class FileUploader {
   }
 
   validateFile(file) {
-    // Check max files limit
-    const uploadedCount = this.files.filter((f) => f.uploaded).length;
-    if (uploadedCount >= this.options.maxFiles) {
+    // Check max files limit - count all files (uploaded + uploading + pending)
+    const totalFileCount = this.files.length;
+    if (totalFileCount >= this.options.maxFiles) {
       return {
         valid: false,
         error: `Maximum number of files (${this.options.maxFiles}) reached. Please delete some files before uploading more.`,
