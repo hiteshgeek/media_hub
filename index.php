@@ -49,9 +49,9 @@ include_once __DIR__ . '/includes/functions.php';
 
         <div class="demo-links">
             <h3>Other Demos:</h3>
-            <a href="demo-bootstrap3.php">Bootstrap 3 Demo</a>
-            <a href="demo-bootstrap4.php">Bootstrap 4 Demo</a>
-            <a href="demo-bootstrap5.php">Bootstrap 5 Demo</a>
+            <a href="usage/demo-bootstrap3.php">Bootstrap 3 Demo</a>
+            <a href="usage/demo-bootstrap4.php">Bootstrap 4 Demo</a>
+            <a href="usage/demo-bootstrap5.php">Bootstrap 5 Demo</a>
         </div>
     </div>
 

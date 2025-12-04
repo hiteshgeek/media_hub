@@ -1,0 +1,838 @@
+// ============================================================================
+// File Carousel Component
+// Carousel preview modal for file uploader
+// ============================================================================
+
+@use "../../variables" as *;
+@use "../../mixins" as *;
+
+// ============================================================================
+// Carousel Variables
+// ============================================================================
+
+$fc-prefix: "fc";
+$fc-transition-fast: 0.2s;
+$fc-transition-normal: 0.3s;
+$fc-border-radius: var(--fu-radius-lg);
+$fc-border-radius-sm: var(--fu-radius-md);
+
+// Modal colors (dark theme for better media viewing)
+$fc-modal-bg: rgba(0, 0, 0, 0.95);
+$fc-modal-content-bg: var(--fu-gray-800);
+$fc-modal-header-bg: rgba(30, 41, 59, 0.9);
+$fc-modal-text: var(--fu-gray-200);
+$fc-modal-text-muted: var(--fu-gray-400);
+$fc-modal-border: rgba(71, 85, 105, 0.5);
+
+// ============================================================================
+// Mixins
+// ============================================================================
+
+@mixin fc-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin fc-glass-effect {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid $fc-modal-border;
+}
+
+// ============================================================================
+// Modal Container
+// ============================================================================
+
+.#{$fc-prefix}-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--fu-z-modal);
+  background: $fc-modal-bg;
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  transition: opacity $fc-transition-normal;
+
+  &.#{$fc-prefix}-active {
+    display: flex;
+    opacity: 1;
+  }
+}
+
+.#{$fc-prefix}-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--fu-spacing-lg);
+}
+
+// ============================================================================
+// Modal Header
+// ============================================================================
+
+.#{$fc-prefix}-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--fu-spacing-lg);
+  flex-shrink: 0;
+}
+
+.#{$fc-prefix}-modal-title-section {
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-md);
+  min-width: 0;
+}
+
+.#{$fc-prefix}-modal-file-name {
+  font-size: var(--fu-font-size-lg);
+  font-weight: var(--fu-font-weight-semibold);
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.#{$fc-prefix}-file-badge {
+  padding: var(--fu-spacing-xs) var(--fu-spacing-md);
+  background: rgba(30, 41, 59, 0.8);
+  color: $fc-modal-text-muted;
+  border-radius: 9999px;
+  font-size: var(--fu-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+// ============================================================================
+// Modal Action Buttons
+// ============================================================================
+
+.#{$fc-prefix}-modal-actions {
+  display: flex;
+  gap: var(--fu-spacing-sm);
+}
+
+.#{$fc-prefix}-modal-btn {
+  height: 40px;
+  @include fc-flex-center;
+  gap: var(--fu-spacing-sm);
+  padding: 0 var(--fu-spacing-lg);
+  @include fc-glass-effect;
+  border-radius: $fc-border-radius-sm;
+  color: white;
+  cursor: pointer;
+  transition: all $fc-transition-fast;
+  font-size: var(--fu-font-size-sm);
+  font-weight: var(--fu-font-weight-medium);
+  white-space: nowrap;
+
+  .#{$fc-prefix}-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba(51, 65, 85, 0.8);
+  }
+
+  // Download button
+  &.#{$fc-prefix}-download-btn {
+    padding: 0;
+    width: 40px;
+
+    .#{$fc-prefix}-btn-text {
+      display: none;
+    }
+
+    .#{$fc-prefix}-icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover {
+      background: var(--fu-color-primary);
+    }
+  }
+
+  // Close button
+  &.#{$fc-prefix}-close-btn {
+    padding: 0;
+    width: 40px;
+
+    .#{$fc-prefix}-btn-text {
+      display: none;
+    }
+
+    .#{$fc-prefix}-icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover {
+      background: var(--fu-color-error);
+    }
+  }
+
+  // Preload toggle button
+  &.#{$fc-prefix}-preload-toggle-btn {
+    padding: 0 var(--fu-spacing-xl);
+    height: 44px;
+    min-width: 120px;
+    font-weight: var(--fu-font-weight-semibold);
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+
+    .#{$fc-prefix}-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    &.#{$fc-prefix}-preloading {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.3);
+        border-color: rgba(245, 158, 11, 0.5);
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Modal Content Area
+// ============================================================================
+
+.#{$fc-prefix}-modal-content-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 0;
+  margin-bottom: var(--fu-spacing-lg);
+}
+
+.#{$fc-prefix}-modal-content {
+  width: 100%;
+  height: 100%;
+  @include fc-flex-center;
+  overflow: hidden;
+  border-radius: $fc-border-radius;
+}
+
+// ============================================================================
+// Navigation Buttons
+// ============================================================================
+
+.#{$fc-prefix}-nav-button {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  @include fc-flex-center;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--fu-shadow-lg);
+  border-radius: 50%;
+  color: var(--fu-gray-800);
+  cursor: pointer;
+  transition: all $fc-transition-fast;
+  z-index: 10;
+
+  .#{$fc-prefix}-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover:not(:disabled) {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: var(--fu-shadow-xl);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  &.#{$fc-prefix}-prev {
+    left: var(--fu-spacing-lg);
+  }
+
+  &.#{$fc-prefix}-next {
+    right: var(--fu-spacing-lg);
+  }
+}
+
+// ============================================================================
+// Media Preview Styles
+// ============================================================================
+
+.#{$fc-prefix}-modal-image,
+.#{$fc-prefix}-modal-video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  animation: fcFadeIn $fc-transition-normal;
+}
+
+@keyframes fcFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Audio Container
+.#{$fc-prefix}-audio-container {
+  @include fc-flex-center;
+  flex-direction: column;
+  gap: var(--fu-spacing-xl);
+  padding: var(--fu-spacing-4xl);
+  background: $fc-modal-content-bg;
+  border-radius: $fc-border-radius;
+  min-width: 400px;
+
+  .#{$fc-prefix}-audio-icon {
+    width: 80px;
+    height: 80px;
+    color: var(--fu-color-primary);
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .#{$fc-prefix}-audio-filename {
+    font-size: var(--fu-font-size-md);
+    color: $fc-modal-text;
+    text-align: center;
+    margin: 0;
+  }
+
+  .#{$fc-prefix}-modal-audio {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+// PDF Embed
+.#{$fc-prefix}-pdf-embed {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: $fc-border-radius;
+  background: white;
+}
+
+// Text Preview
+.#{$fc-prefix}-text-preview {
+  width: 100%;
+  height: 100%;
+  background: $fc-modal-content-bg;
+  border-radius: $fc-border-radius;
+  padding: var(--fu-spacing-2xl);
+  overflow-y: auto;
+  font-family: "Courier New", monospace;
+  color: $fc-modal-text;
+  font-size: var(--fu-font-size-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--fu-gray-900);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--fu-gray-600);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--fu-gray-500);
+    }
+  }
+}
+
+// ============================================================================
+// Table Styles (CSV/Excel)
+// ============================================================================
+
+%fc-table-base {
+  width: 100%;
+  height: 100%;
+  background: $fc-modal-content-bg;
+  border-radius: $fc-border-radius;
+  padding: var(--fu-spacing-lg);
+  overflow: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fu-font-size-sm);
+    background: var(--fu-gray-900);
+    border-radius: $fc-border-radius-sm;
+    overflow: hidden;
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--fu-color-primary);
+  }
+
+  th {
+    padding: var(--fu-spacing-md);
+    text-align: left;
+    font-weight: var(--fu-font-weight-semibold);
+    color: white;
+    border-bottom: 2px solid var(--fu-gray-600);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: var(--fu-spacing-md);
+    color: $fc-modal-text;
+    border-bottom: 1px solid var(--fu-gray-700);
+    white-space: nowrap;
+  }
+
+  tbody tr:hover {
+    background: var(--fu-gray-700);
+  }
+
+  tbody tr:nth-child(even) {
+    background: rgba(30, 41, 59, 0.3);
+  }
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--fu-gray-900);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--fu-gray-600);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--fu-gray-500);
+    }
+  }
+}
+
+.#{$fc-prefix}-csv-preview {
+  @extend %fc-table-base;
+}
+
+.#{$fc-prefix}-excel-preview {
+  @extend %fc-table-base;
+
+  thead {
+    background: var(--fu-success-600);
+  }
+
+  th {
+    border-bottom-color: var(--fu-success-500);
+  }
+}
+
+.#{$fc-prefix}-table-info {
+  padding: var(--fu-spacing-md);
+  margin-bottom: var(--fu-spacing-lg);
+  background: rgba(66, 153, 225, 0.1);
+  border: 1px solid rgba(66, 153, 225, 0.3);
+  border-radius: $fc-border-radius-sm;
+  color: var(--fu-primary-300);
+  font-size: var(--fu-font-size-sm);
+
+  &.#{$fc-prefix}-excel-info {
+    background: rgba(72, 187, 120, 0.1);
+    border-color: rgba(72, 187, 120, 0.3);
+    color: var(--fu-success-100);
+  }
+}
+
+// ============================================================================
+// Placeholder Content (No Preview / Loading)
+// ============================================================================
+
+.#{$fc-prefix}-placeholder-content {
+  @include fc-flex-center;
+  flex-direction: column;
+  gap: var(--fu-spacing-lg);
+  text-align: center;
+  padding: var(--fu-spacing-4xl);
+}
+
+.#{$fc-prefix}-placeholder-icon {
+  width: 64px;
+  height: 64px;
+  color: $fc-modal-text-muted;
+  opacity: 0.5;
+}
+
+.#{$fc-prefix}-placeholder-title {
+  font-size: var(--fu-font-size-xl);
+  font-weight: var(--fu-font-weight-semibold);
+  color: white;
+  margin: 0;
+}
+
+.#{$fc-prefix}-placeholder-desc {
+  color: $fc-modal-text-muted;
+  max-width: 28rem;
+  margin: 0;
+}
+
+.#{$fc-prefix}-placeholder-load-btn,
+.#{$fc-prefix}-placeholder-download-btn {
+  margin-top: var(--fu-spacing-lg);
+  padding: var(--fu-spacing-md) var(--fu-spacing-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-sm);
+  background: var(--fu-color-primary);
+  color: white;
+  border: none;
+  border-radius: $fc-border-radius-sm;
+  font-weight: var(--fu-font-weight-medium);
+  cursor: pointer;
+  transition: background $fc-transition-fast;
+
+  .#{$fc-prefix}-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: var(--fu-color-primary-hover);
+  }
+}
+
+.#{$fc-prefix}-placeholder-load-btn {
+  background: var(--fu-success-500);
+
+  &:hover {
+    background: var(--fu-success-600);
+  }
+}
+
+// ============================================================================
+// Loading State
+// ============================================================================
+
+.#{$fc-prefix}-loading-container {
+  @include fc-flex-center;
+  flex-direction: column;
+  gap: var(--fu-spacing-lg);
+  width: 100%;
+  height: 100%;
+}
+
+.#{$fc-prefix}-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--fu-color-primary);
+  border-radius: 50%;
+  animation: fcSpin 1s linear infinite;
+}
+
+@keyframes fcSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.#{$fc-prefix}-loading-text {
+  color: $fc-modal-text-muted;
+  font-size: var(--fu-font-size-sm);
+  margin: 0;
+}
+
+.#{$fc-prefix}-progress-bar-container {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.#{$fc-prefix}-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fu-color-primary), var(--fu-primary-600));
+  border-radius: 2px;
+  transition: width $fc-transition-normal ease;
+}
+
+// ============================================================================
+// Thumbnail Strip
+// ============================================================================
+
+.#{$fc-prefix}-thumbnail-strip {
+  display: flex;
+  gap: var(--fu-spacing-sm);
+  overflow-x: auto;
+  padding: var(--fu-spacing-sm) var(--fu-spacing-lg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--fu-gray-600) var(--fu-gray-900);
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--fu-gray-900);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--fu-gray-600);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--fu-gray-500);
+    }
+  }
+}
+
+.#{$fc-prefix}-strip-thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border: 2px solid $fc-modal-border;
+  border-radius: $fc-border-radius-sm;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all $fc-transition-fast;
+  position: relative;
+  background: var(--fu-gray-800);
+
+  &:hover {
+    opacity: 1;
+    border-color: var(--fu-gray-500);
+  }
+
+  &.#{$fc-prefix}-active {
+    opacity: 1;
+    border-color: var(--fu-color-primary);
+    transform: scale(1.1);
+  }
+
+  &.#{$fc-prefix}-loaded {
+    .#{$fc-prefix}-preload-indicator::before {
+      display: none !important;
+      animation: none;
+    }
+  }
+}
+
+.#{$fc-prefix}-thumb-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  @include fc-flex-center;
+  background: var(--fu-gray-700);
+}
+
+.#{$fc-prefix}-thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Video icon overlay
+.#{$fc-prefix}-video-icon-wrapper {
+  position: absolute;
+  inset: 0;
+  @include fc-flex-center;
+  z-index: 2;
+
+  .#{$fc-prefix}-video-icon {
+    width: 24px;
+    height: 24px;
+    color: white;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    padding: 4px;
+  }
+}
+
+// File type icon for non-image/video files
+.#{$fc-prefix}-type-icon-wrapper {
+  @include fc-flex-center;
+  width: 100%;
+  height: 100%;
+  background: var(--fu-gray-700);
+}
+
+.#{$fc-prefix}-type-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--fu-gray-400);
+}
+
+// ============================================================================
+// Progress Indicator (on thumbnails)
+// ============================================================================
+
+.#{$fc-prefix}-preload-indicator {
+  position: absolute;
+  inset: 0;
+  display: none;
+  @include fc-flex-center;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 5;
+
+  &.#{$fc-prefix}-active {
+    display: flex;
+  }
+}
+
+.#{$fc-prefix}-progress-circle {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  @include fc-flex-center;
+
+  svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .#{$fc-prefix}-circle-bg {
+    stroke-width: 3;
+    stroke: rgba(255, 255, 255, 0.2);
+    fill: none;
+  }
+
+  .#{$fc-prefix}-circle-progress {
+    stroke-width: 3;
+    stroke: var(--fu-color-primary);
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset $fc-transition-normal;
+  }
+}
+
+.#{$fc-prefix}-progress-text {
+  color: white;
+  font-size: 10px;
+  font-weight: var(--fu-font-weight-semibold);
+  line-height: 1;
+}
+
+// ============================================================================
+// Icon
+// ============================================================================
+
+.#{$fc-prefix}-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+// ============================================================================
+// Responsive
+// ============================================================================
+
+@media (max-width: 768px) {
+  .#{$fc-prefix}-modal-container {
+    padding: var(--fu-spacing-sm);
+  }
+
+  .#{$fc-prefix}-modal-file-name {
+    font-size: var(--fu-font-size-md);
+  }
+
+  .#{$fc-prefix}-modal-btn {
+    &.#{$fc-prefix}-download-btn,
+    &.#{$fc-prefix}-close-btn {
+      width: 36px;
+      height: 36px;
+
+      .#{$fc-prefix}-icon {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    &.#{$fc-prefix}-preload-toggle-btn {
+      padding: 0 var(--fu-spacing-md);
+      height: 36px;
+      min-width: 100px;
+      font-size: var(--fu-font-size-xs);
+    }
+  }
+
+  .#{$fc-prefix}-nav-button {
+    width: 40px;
+    height: 40px;
+
+    .#{$fc-prefix}-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    &.#{$fc-prefix}-prev {
+      left: var(--fu-spacing-sm);
+    }
+
+    &.#{$fc-prefix}-next {
+      right: var(--fu-spacing-sm);
+    }
+  }
+
+  .#{$fc-prefix}-strip-thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
+  .#{$fc-prefix}-audio-container {
+    min-width: auto;
+    width: 100%;
+    padding: var(--fu-spacing-2xl);
+  }
+}
+
+// Safety rule for loaded thumbnails
+.#{$fc-prefix}-strip-thumbnail.#{$fc-prefix}-loaded .#{$fc-prefix}-preload-indicator {
+  display: none !important;
+}

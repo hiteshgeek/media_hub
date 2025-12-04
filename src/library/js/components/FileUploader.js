@@ -10,6 +10,7 @@ import VideoRecorder from "../utils/VideoRecorder.js";
 import AudioWorkletRecorder from "../utils/AudioWorkletRecorder.js";
 import RecordingUI from "../utils/RecordingUI.js";
 import Tooltip from "./tooltip/index.js";
+import { FileCarousel } from "./carousel/index.js";
 
 export default class FileUploader {
   constructor(element, options = {}) {
@@ -86,6 +87,14 @@ export default class FileUploader {
       recordingCountdownDuration: 3, // Countdown duration before recording starts in seconds (default 3)
       enableMicrophoneAudio: false, // Enable microphone audio recording
       enableSystemAudio: false, // Enable system audio recording
+      // Carousel preview options
+      enableCarouselPreview: true, // Enable carousel preview modal on file click
+      carouselAutoPreload: true, // Auto-preload files in carousel (true, false, or array of types like ['image', 'video'])
+      carouselEnableManualLoading: true, // Show "Load All" button in carousel
+      carouselVisibleTypes: ["image", "video", "audio", "pdf", "excel", "csv", "text"], // File types visible in carousel
+      carouselPreviewableTypes: ["image", "video", "audio", "pdf", "csv", "excel", "text"], // File types that can be previewed
+      carouselMaxPreviewRows: 100, // Max rows to show for CSV/Excel preview
+      carouselMaxTextPreviewChars: 50000, // Max characters for text file preview
       onUploadStart: null,
       onUploadSuccess: null,
       onUploadError: null,
@@ -122,6 +131,8 @@ export default class FileUploader {
     this.videoRecorder = null;
     this.audioRecorder = null;
     this.recordingUI = new RecordingUI(this);
+    this.carousel = null;
+    this.carouselContainer = null;
     this.init();
   }
 
@@ -134,6 +145,7 @@ export default class FileUploader {
     this.createStructure();
     this.attachEvents();
     this.attachBeforeUnloadHandler();
+    this.initCarousel();
   }
 
   async fetchConfig() {
@@ -1901,6 +1913,29 @@ export default class FileUploader {
     fileObj.previewElement = preview;
     fileObj.downloadBtn = downloadBtn;
 
+    // Attach click event to open carousel preview (only on the preview inner area)
+    if (this.options.enableCarouselPreview) {
+      previewInner.addEventListener("click", (e) => {
+        // Don't open carousel if clicking on checkbox, buttons, or overlays
+        if (
+          e.target.closest(".file-uploader-checkbox") ||
+          e.target.closest(".file-uploader-actions") ||
+          e.target.closest(".file-uploader-preview-overlay") ||
+          e.target.closest(".file-uploader-success-overlay")
+        ) {
+          return;
+        }
+
+        // Only open carousel if file is uploaded
+        if (fileObj.uploaded) {
+          this.openCarousel(fileObj.id);
+        }
+      });
+
+      // Add cursor pointer style to indicate clickability
+      previewInner.style.cursor = "pointer";
+    }
+
     // Extract video thumbnail if this is a video file
     if (fileType === "video") {
       this.extractVideoThumbnail(fileObj.id);
@@ -2112,6 +2147,9 @@ export default class FileUploader {
         // Update limits display
         this.updateLimitsDisplay();
 
+        // Update carousel with new file
+        this.updateCarousel();
+
         if (this.options.onUploadSuccess) {
           this.options.onUploadSuccess(fileObj, result);
         }
@@ -2279,6 +2317,9 @@ export default class FileUploader {
 
     // Update limits display
     this.updateLimitsDisplay();
+
+    // Update carousel after file deletion
+    this.updateCarousel();
   }
 
   downloadFile(fileId) {
@@ -2508,6 +2549,9 @@ export default class FileUploader {
       window.removeEventListener("beforeunload", this.beforeUnloadHandler);
     }
 
+    // Cleanup carousel
+    this.destroyCarousel();
+
     this.wrapper.remove();
     this.files = [];
   }
@@ -2648,6 +2692,146 @@ export default class FileUploader {
     // Clear selection
     this.selectedFiles.clear();
     this.updateSelectionUI();
+  }
+
+  // ============================================================================
+  // Carousel Preview Methods
+  // ============================================================================
+
+  /**
+   * Initialize the carousel preview component
+   */
+  initCarousel() {
+    if (!this.options.enableCarouselPreview) return;
+
+    // Create carousel container (appended to body for proper z-index stacking)
+    this.carouselContainer = document.createElement("div");
+    this.carouselContainer.className = "file-uploader-carousel-container";
+    document.body.appendChild(this.carouselContainer);
+
+    // Initialize carousel with empty files (will update when files are uploaded)
+    this.carousel = new FileCarousel({
+      container: this.carouselContainer,
+      files: [],
+      autoPreload: this.options.carouselAutoPreload,
+      enableManualLoading: this.options.carouselEnableManualLoading,
+      visibleTypes: this.options.carouselVisibleTypes,
+      previewableTypes: this.options.carouselPreviewableTypes,
+      maxPreviewRows: this.options.carouselMaxPreviewRows,
+      maxTextPreviewChars: this.options.carouselMaxTextPreviewChars,
+      onFileDownload: (file) => {
+        // Use the file uploader's download logic
+        const fileObj = this.files.find((f) => f.id === file.originalId);
+        if (fileObj) {
+          this.downloadFile(fileObj.id);
+        }
+      },
+    });
+  }
+
+  /**
+   * Convert file uploader files to carousel format
+   * @returns {Array} Files in carousel format
+   */
+  getCarouselFiles() {
+    return this.files
+      .filter((f) => f.uploaded && f.serverFilename)
+      .map((f) => {
+        const fileType = this.getFileType(f.extension);
+        const carouselType = this.mapToCarouselType(f.extension, fileType);
+        const url = f.serverData?.url || `uploads/${f.serverFilename}`;
+
+        // Get thumbnail for images/videos
+        let thumbnail = null;
+        if (fileType === "image") {
+          thumbnail = url;
+        } else if (fileType === "video" && f.previewElement) {
+          const thumbImg = f.previewElement.querySelector(
+            ".file-uploader-video-thumbnail-img"
+          );
+          if (thumbImg) {
+            thumbnail = thumbImg.src;
+          }
+        }
+
+        return {
+          originalId: f.id,
+          name: f.name,
+          carouselType: carouselType,
+          url: url,
+          thumbnail: thumbnail,
+          size: f.size,
+          extension: f.extension,
+        };
+      });
+  }
+
+  /**
+   * Map file extension to carousel type
+   * @param {string} extension - File extension
+   * @param {string} fileType - File type from getFileType()
+   * @returns {string} Carousel type
+   */
+  mapToCarouselType(extension, fileType) {
+    const ext = extension.toLowerCase();
+
+    // Direct mapping for known types
+    if (fileType === "image") return "image";
+    if (fileType === "video") return "video";
+    if (fileType === "audio") return "audio";
+
+    // Document types with specific carousel support
+    if (ext === "pdf") return "pdf";
+    if (ext === "xlsx" || ext === "xls") return "excel";
+    if (ext === "csv") return "csv";
+    if (ext === "txt" || ext === "md" || ext === "log" || ext === "json" || ext === "xml")
+      return "text";
+
+    // Default to text for other document types (won't have preview)
+    return "text";
+  }
+
+  /**
+   * Update carousel with current files
+   */
+  updateCarousel() {
+    if (!this.carousel || !this.options.enableCarouselPreview) return;
+
+    const carouselFiles = this.getCarouselFiles();
+    this.carousel.updateFiles(carouselFiles);
+  }
+
+  /**
+   * Open carousel at specific file
+   * @param {string} fileId - File ID to open
+   */
+  openCarousel(fileId) {
+    if (!this.carousel || !this.options.enableCarouselPreview) return;
+
+    // Update carousel files first
+    this.updateCarousel();
+
+    // Find index of file in carousel
+    const carouselFiles = this.getCarouselFiles();
+    const index = carouselFiles.findIndex((f) => f.originalId === fileId);
+
+    if (index !== -1) {
+      this.carousel.open(index);
+    }
+  }
+
+  /**
+   * Destroy carousel instance
+   */
+  destroyCarousel() {
+    if (this.carousel) {
+      this.carousel.destroy();
+      this.carousel = null;
+    }
+    if (this.carouselContainer) {
+      this.carouselContainer.remove();
+      this.carouselContainer = null;
+    }
   }
 }
 

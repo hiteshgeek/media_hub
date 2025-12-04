@@ -1,20 +1,20 @@
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined") {
   // Initialize uploaders
-  const resumeUploader = new FileUploader("#resume", {
+  const resumeUploader = new window.FileUploader("#resume", {
     multiple: false, // Only one resume
     onUploadSuccess: (fileObj, result) => {
       console.log("Resume uploaded:", result);
     },
   });
 
-  const coverLetterUploader = new FileUploader("#coverLetter", {
+  const coverLetterUploader = new window.FileUploader("#coverLetter", {
     multiple: false, // Only one cover letter
     onUploadSuccess: (fileObj, result) => {
       console.log("Cover letter uploaded:", result);
     },
   });
 
-  const portfolioUploader = new FileUploader("#portfolio", {
+  const portfolioUploader = new window.FileUploader("#portfolio", {
     multiple: true, // Multiple portfolio items
     onUploadSuccess: (fileObj, result) => {
       console.log("Portfolio item uploaded:", result);

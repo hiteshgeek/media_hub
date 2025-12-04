@@ -1,8 +1,8 @@
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined") {
   //bootstrap 3 example
 
   // Initialize profile picture uploader (single image only)
-  const profileUploader = new FileUploader("#profilePicture", {
+  const profileUploader = new window.FileUploader("#profilePicture", {
     multiple: false,
     onUploadSuccess: (fileObj, result) => {
       console.log("Profile picture uploaded:", result);
@@ -10,7 +10,7 @@ if (typeof window !== "undefined") {
   });
 
   // Initialize documents uploader (multiple files)
-  const documentsUploader = new FileUploader("#documents", {
+  const documentsUploader = new window.FileUploader("#documents", {
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Document uploaded:", result);

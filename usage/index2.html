@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Gallery Library - Demo</title>
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <!-- Compiled CSS (or use the SCSS compiled version) -->
+    <link rel="stylesheet" href="dist/media-gallery.css" />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e293b 50%,
+          #0f172a 100%
+        );
+        min-height: 100vh;
+        color: #e2e8f0;
+      }
+
+      .demo-header {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+      }
+
+      .demo-header h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          #60a5fa 0%,
+          #a78bfa 50%,
+          #ec4899 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+      }
+
+      .demo-header p {
+        color: #94a3b8;
+        font-size: 1.125rem;
+      }
+
+      .demo-section {
+        margin: 3rem auto;
+        max-width: 1400px;
+        padding: 0 2rem;
+      }
+
+      .demo-section h2 {
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .demo-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .demo-btn {
+        padding: 0.75rem 1.5rem;
+        background: rgba(59, 130, 246, 0.8);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .demo-btn:hover {
+        background: rgba(59, 130, 246, 1);
+        transform: translateY(-2px);
+      }
+
+      .demo-btn.secondary {
+        background: rgba(100, 116, 139, 0.8);
+      }
+
+      .demo-btn.secondary:hover {
+        background: rgba(100, 116, 139, 1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-header">
+      <h1>📸 Media Gallery Library</h1>
+      <p>
+        A modern, feature-rich media carousel with preloading & preview support
+      </p>
+    </div>
+
+    <div class="demo-section">
+      <h2>Demo 1: Full Featured Gallery</h2>
+      <div class="demo-controls">
+        <button class="demo-btn" onclick="initGallery1()">
+          Initialize Gallery
+        </button>
+        <button class="demo-btn secondary" onclick="destroyGallery1()">
+          Destroy Gallery
+        </button>
+      </div>
+      <div id="gallery-1"></div>
+    </div>
+
+    <div class="demo-section">
+      <h2>Demo 2: Images Only (No Auto-Preload)</h2>
+      <div class="demo-controls">
+        <button class="demo-btn" onclick="initGallery2()">
+          Initialize Gallery
+        </button>
+        <button class="demo-btn" onclick="manualPreload2()">
+          Manual Preload
+        </button>
+      </div>
+      <div id="gallery-2"></div>
+    </div>
+
+    <div class="demo-section">
+      <h2>Demo 3: Mixed - Show All, Preview Images/Videos Only</h2>
+      <div id="gallery-3"></div>
+    </div>
+
+    <!-- XLSX library for Excel support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- MediaGallery Library -->
+    <script type="module">
+      import MediaGallery from "./MediaGallery.js";
+
+      // Sample files
+      const sampleFiles = [
+        {
+          id: 1,
+          type: "image",
+          thumbnail:
+            "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=150&h=150&fit=crop",
+          url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=800&fit=crop",
+          name: "Mountain_Landscape.jpg",
+        },
+        {
+          id: 2,
+          type: "image",
+          thumbnail:
+            "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=150&h=150&fit=crop",
+          url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&h=800&fit=crop",
+          name: "Nature_View.jpg",
+        },
+        {
+          id: 3,
+          type: "video",
+          thumbnail:
+            "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=150&h=150&fit=crop",
+          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+          name: "BigBuckBunny.mp4",
+        },
+        {
+          id: 4,
+          type: "pdf",
+          thumbnail: "https://cdn-icons-png.flaticon.com/512/337/337946.png",
+          url: "https://pdfobject.com/pdf/sample.pdf",
+          name: "Sample_Document.pdf",
+        },
+        {
+          id: 5,
+          type: "text",
+          thumbnail: "https://cdn-icons-png.flaticon.com/512/337/337932.png",
+          url: "https://raw.githubusercontent.com/minimaxir/big-list-of-naughty-strings/master/blns.txt",
+          name: "Sample_Text.txt",
+        },
+        {
+          id: 6,
+          type: "image",
+          thumbnail:
+            "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=150&h=150&fit=crop",
+          url: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1200&h=800&fit=crop",
+          name: "Ocean_Sunset.jpg",
+        },
+      ];
+
+      let gallery1, gallery2, gallery3;
+
+      // Demo 1: Full featured
+      window.initGallery1 = () => {
+        if (gallery1) gallery1.destroy();
+
+        gallery1 = new MediaGallery({
+          container: document.getElementById("gallery-1"),
+          files: sampleFiles,
+          autoPreload: true,
+          visibleTypes: ["image", "video", "pdf", "text"],
+          previewableTypes: ["image", "video", "pdf", "text"],
+          onFileDownload: (file, index) => {
+            console.log("Downloading:", file.name);
+          },
+        });
+      };
+
+      window.destroyGallery1 = () => {
+        if (gallery1) {
+          gallery1.destroy();
+          gallery1 = null;
+          document.getElementById("gallery-1").innerHTML =
+            '<p style="color: #94a3b8;">Gallery destroyed</p>';
+        }
+      };
+
+      // Demo 2: Images only, manual preload
+      window.initGallery2 = () => {
+        if (gallery2) gallery2.destroy();
+
+        gallery2 = new MediaGallery({
+          container: document.getElementById("gallery-2"),
+          files: sampleFiles,
+          autoPreload: false,
+          visibleTypes: ["image"],
+          previewableTypes: ["image"],
+        });
+      };
+
+      window.manualPreload2 = () => {
+        if (gallery2) {
+          gallery2.preloadFiles();
+          alert("Preloading started!");
+        }
+      };
+
+      // Demo 3: Show all, preview select
+      gallery3 = new MediaGallery({
+        container: document.getElementById("gallery-3"),
+        files: sampleFiles,
+        autoPreload: true,
+        visibleTypes: ["image", "video", "pdf", "text"],
+        previewableTypes: ["image", "video"], // Only preview images & videos
+      });
+
+      // Auto-init first gallery
+      window.initGallery1();
+    </script>
+  </body>
+</html>

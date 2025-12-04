@@ -148,6 +148,10 @@ function addAllScriptsESM() {
 }
 
 // IIFE output (for <script nomodule>)
+// Map entry names to IIFE global names (only libraries need a name, app entries don't)
+const iifeNames = {
+  "file-uploader.js": "FileUploaderLib", // Library bundle - expose as global
+};
 
 function addAllScriptsIIFE() {
   const entries = scriptEntries.map(([srcArr, outName]) =>
@@ -166,7 +170,7 @@ function addAllScriptsIIFE() {
           },
           {
             format: "iife",
-            name: "FileUploader", //provide library name
+            name: iifeNames[outName] || undefined, // Only use name for library entries
             inlineDynamicImports: true // Inline dynamic imports for IIFE compatibility
           }
         )

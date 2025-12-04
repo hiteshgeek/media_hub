@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/includes/functions.php';
+include_once __DIR__ . '/../includes/functions.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,9 +69,9 @@ include_once __DIR__ . '/includes/functions.php';
                 Other Demos
             </div>
             <div class="card-body">
-                <a href="index.php" class="btn btn-sm btn-outline-primary">Standalone</a>
-                <a href="demo-bootstrap3.php" class="btn btn-sm btn-outline-primary">Bootstrap 3</a>
-                <a href="demo-bootstrap5.php" class="btn btn-sm btn-outline-primary">Bootstrap 5</a>
+                <a href="../index.php" class="btn btn-sm btn-outline-primary">Standalone</a>
+                <a href="../demo-bootstrap3.php" class="btn btn-sm btn-outline-primary">Bootstrap 3</a>
+                <a href="../demo-bootstrap5.php" class="btn btn-sm btn-outline-primary">Bootstrap 5</a>
             </div>
         </div>
     </div>

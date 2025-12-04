@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/includes/functions.php';
+include_once __DIR__ . '/../includes/functions.php';
 ?>
 
 <!DOCTYPE html>
@@ -70,9 +70,9 @@ include_once __DIR__ . '/includes/functions.php';
                 <h3 class="panel-title">Other Demos</h3>
             </div>
             <div class="panel-body">
-                <a href="index.php" class="btn btn-default btn-sm">Standalone</a>
-                <a href="demo-bootstrap4.php" class="btn btn-default btn-sm">Bootstrap 4</a>
-                <a href="demo-bootstrap5.php" class="btn btn-default btn-sm">Bootstrap 5</a>
+                <a href="../index.php" class="btn btn-default btn-sm">Standalone</a>
+                <a href="../demo-bootstrap4.php" class="btn btn-default btn-sm">Bootstrap 4</a>
+                <a href="../demo-bootstrap5.php" class="btn btn-default btn-sm">Bootstrap 5</a>
             </div>
         </div>
     </div>

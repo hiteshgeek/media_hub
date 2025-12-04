@@ -1,20 +1,20 @@
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined") {
   // Initialize uploaders
-  const imagesUploader = new FileUploader("#projectImages", {
+  const imagesUploader = new window.FileUploader("#projectImages", {
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Image uploaded:", result);
     },
   });
 
-  const videosUploader = new FileUploader("#projectVideos", {
+  const videosUploader = new window.FileUploader("#projectVideos", {
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Video uploaded:", result);
     },
   });
 
-  const filesUploader = new FileUploader("#additionalFiles", {
+  const filesUploader = new window.FileUploader("#additionalFiles", {
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("File uploaded:", result);

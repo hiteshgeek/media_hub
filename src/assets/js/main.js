@@ -1,5 +1,8 @@
-if (typeof window !== "undefined") {
-  const uploader = new FileUploader("#fileUploader", {
+if (
+  typeof window !== "undefined" &&
+  typeof window.FileUploader !== "undefined"
+) {
+  const uploader = new window.FileUploader("#fileUploader", {
     showLimits: true, // Show limits section (default: true)
     showLimitsToggle: true, // Show toggle button in dropzone (default: true)
     defaultLimitsVisible: true, // Start with limits visible (default: true)
@@ -21,6 +24,10 @@ if (typeof window !== "undefined") {
     multiple: true,
     // defaultLimitsView: "detailed",
     // allowLimitsViewToggle: true, // Duplicate removed - already set on line 6
+
+    carouselAutoPreload: true,
+    carouselEnableManualLoading: false,
+
     onUploadSuccess: (fileObj, result) => {
       console.log("Upload success:", fileObj, result);
     },
