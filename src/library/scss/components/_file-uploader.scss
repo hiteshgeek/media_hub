@@ -29,6 +29,8 @@ $component-prefix: $file-uploader-prefix !default;
   border: var(--fu-dropzone-border-width) dashed var(--fu-color-border);
   border-radius: var(--fu-radius-lg);
   padding: var(--fu-dropzone-padding);
+
+  padding-bottom: var(--fu-spacing-xl);
   background-color: var(--fu-color-bg-light);
   cursor: pointer;
   @include transition((border-color, background-color));
@@ -158,82 +160,67 @@ $component-prefix: $file-uploader-prefix !default;
 }
 
 // ============================================================================
-// Limits Toggle Button (inside dropzone)
+// Limits Toggle Button (in action container - styled exactly like Download All)
 // ============================================================================
-
-.#{$component-prefix}-limits-toggle-container {
-  position: absolute;
-  bottom: var(--fu-spacing-sm);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-}
 
 .#{$component-prefix}-limits-toggle-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 6px 14px 6px 8px;
-  font-size: 12px;
-  font-weight: var(--fu-font-weight-medium);
-  color: var(--fu-color-text-muted);
-  background-color: var(--fu-color-bg);
-  border: 1px solid var(--fu-color-border-light);
-  border-radius: var(--fu-radius-pill);
+  gap: var(--fu-spacing-sm);
+  padding: 7px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  pointer-events: auto;
+  @include transition((background-color, transform, box-shadow));
+  text-decoration: none;
   white-space: nowrap;
   user-select: none;
-  @include transition((background-color, color, border-color, box-shadow, transform));
 
-  // Circular chevron icon container
-  .#{$component-prefix}-toggle-chevron {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    background-color: var(--fu-color-bg-hover);
-    border-radius: 50%;
+  // Gray color scheme (differentiated from Download All blue)
+  background-color: #718096;
+  color: white;
+
+  // Icon inside button (same as Download All)
+  svg {
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
-    @include transition((background-color, transform));
-
-    svg {
-      width: 10px;
-      height: 10px;
-      fill: currentColor;
-    }
+    @include transition((transform));
   }
 
   // Chevron rotation when limits are visible (pointing down)
-  &.is-expanded .#{$component-prefix}-toggle-chevron {
+  &.is-expanded svg {
     @if $file-uploader-enable-animations {
       transform: rotate(180deg);
     }
   }
 
-  &:hover {
-    color: var(--fu-color-primary);
-    background-color: rgba(66, 153, 225, 0.08);
-    border-color: rgba(66, 153, 225, 0.3);
-    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
-
-    .#{$component-prefix}-toggle-chevron {
-      background-color: rgba(66, 153, 225, 0.15);
-    }
-
-    @if $file-uploader-enable-animations {
-      transform: translateX(-50%) translateY(-1px);
-    }
+  &:hover:not(:disabled) {
+    background-color: #4a5568;
   }
 
-  &:active {
-    transform: translateX(-50%) translateY(0);
+  // Active state
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
+  // Focus state
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  }
+
+  // Disabled state
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
   }
 }
 
@@ -263,51 +250,55 @@ $component-prefix: $file-uploader-prefix !default;
   color: var(--fu-color-text);
 }
 
+// View mode toggle button (concise/detailed) - simple text button
 .#{$component-prefix}-limits-toggle {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 12px !important;
-  font-size: 12px !important;
+  gap: var(--fu-spacing-xs);
+  padding: var(--fu-spacing-xs) var(--fu-spacing-sm);
+  font-size: var(--fu-font-size-xs);
   font-weight: var(--fu-font-weight-medium);
   color: var(--fu-color-primary);
-  background-color: rgba(66, 153, 225, 0.08);
-  border: 1px solid rgba(66, 153, 225, 0.3);
+  background-color: transparent;
+  border: 1px solid var(--fu-color-primary);
   border-radius: var(--fu-radius-sm);
   cursor: pointer;
-  white-space: nowrap;
-  user-select: none;
-  @include transition(
-    (background-color, color, border-color, box-shadow, transform)
-  );
+  @include transition((background-color, color, border-color));
 
-  svg {
-    width: 14px;
-    height: 14px;
-    fill: currentColor;
-    flex-shrink: 0;
-  }
+  // Chevron icon
+  .#{$component-prefix}-limits-toggle-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    @include transition((transform));
 
-  &:hover {
-    color: white;
-    background-color: var(--fu-color-primary);
-    border-color: var(--fu-color-primary);
-    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
-
-    @if $file-uploader-enable-animations {
-      transform: translateY(-1px);
+    svg {
+      width: 10px;
+      height: 10px;
+      fill: currentColor;
     }
   }
 
+  // Chevron rotation when expanded (detailed view)
+  &.is-expanded .#{$component-prefix}-limits-toggle-chevron {
+    @if $file-uploader-enable-animations {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:hover {
+    background-color: var(--fu-color-primary);
+    color: white;
+  }
+
   &:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(66, 153, 225, 0.2);
+    background-color: var(--fu-color-primary-hover);
+    border-color: var(--fu-color-primary-hover);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.3);
   }
 }
 
@@ -879,7 +870,7 @@ $component-prefix: $file-uploader-prefix !default;
 .#{$component-prefix}-action-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--fu-spacing-md);
   padding-top: var(--fu-spacing-lg);
   border-top: 1px solid var(--fu-color-border);
@@ -926,6 +917,7 @@ $component-prefix: $file-uploader-prefix !default;
 // Download All & Clear All Buttons (Standalone styles - no Bootstrap)
 // ============================================================================
 
+.file-uploader-limits-toggle-btn:not([class*="btn"]),
 .#{$component-prefix}-download-all:not([class*="btn"]),
 .#{$component-prefix}-clear-all:not([class*="btn"]) {
   display: inline-flex;
@@ -1716,14 +1708,12 @@ $component-prefix: $file-uploader-prefix !default;
 // ============================================================================
 
 .#{$component-prefix}-capture-container {
-  position: absolute;
-  bottom: var(--fu-spacing-md);
-  right: var(--fu-spacing-md);
   @include flex(row, flex-end, center);
   gap: var(--fu-spacing-sm);
   z-index: var(--fu-z-overlay);
   justify-content: center;
   pointer-events: auto;
+  margin-left: auto;
 }
 
 .#{$component-prefix}-capture-btn {

@@ -225,6 +225,11 @@ export default class FileUploader {
     this.actionContainer.className = "file-uploader-action-container";
     // Action container is always visible (for capture buttons)
 
+    // Create limits toggle button inside action container (if enabled) - before button container
+    if (this.options.showLimits && this.options.showLimitsToggle) {
+      this.createLimitsToggleButton();
+    }
+
     // Create button container for both buttons inside dropzone
     if (
       (this.downloadAllBtn && this.options.showDownloadAllButton) ||
@@ -290,11 +295,6 @@ export default class FileUploader {
 
     // Create capture buttons container (bottom right corner)
     this.createCaptureButtons();
-
-    // Create limits toggle button inside dropzone (if enabled)
-    if (this.options.showLimits && this.options.showLimitsToggle) {
-      this.createLimitsToggleButton();
-    }
 
     // Append dropzone and other elements to wrapper
     this.wrapper.appendChild(this.dropZone);
@@ -554,11 +554,7 @@ export default class FileUploader {
   }
 
   createLimitsToggleButton() {
-    // Create limits toggle button container
-    this.limitsToggleContainer = document.createElement("div");
-    this.limitsToggleContainer.className = "file-uploader-limits-toggle-container";
-
-    // Create the toggle button
+    // Create the toggle button (styled exactly like Download All button)
     this.limitsToggleBtn = document.createElement("button");
     this.limitsToggleBtn.type = "button";
     this.limitsToggleBtn.className = "file-uploader-limits-toggle-btn";
@@ -570,22 +566,22 @@ export default class FileUploader {
       this.toggleLimitsVisibility();
     });
 
-    this.limitsToggleContainer.appendChild(this.limitsToggleBtn);
-    this.dropZone.appendChild(this.limitsToggleContainer);
+    // Add directly to action container (before button container)
+    this.actionContainer.appendChild(this.limitsToggleBtn);
 
     // Initialize tooltip
-    Tooltip.initAll(this.limitsToggleContainer);
+    Tooltip.initAll(this.limitsToggleBtn);
   }
 
   updateLimitsToggleButton() {
     if (!this.limitsToggleBtn) return;
 
-    // Always use chevron_up icon - rotation is handled by CSS
+    // Use chevron icon directly (no container) - matches Download All/Clear All style
     const icon = getIcon("chevron_up", { class: "file-uploader-toggle-icon" });
 
     this.limitsToggleBtn.innerHTML = `
-      <span class="file-uploader-toggle-chevron">${icon}</span>
-      <span>${this.limitsVisible ? "Hide Limits" : "Show Limits"}</span>
+      ${icon}
+      <span>${this.limitsVisible ? "Limits" : "Limits"}</span>
     `;
 
     // Toggle expanded class for CSS animation
@@ -612,8 +608,8 @@ export default class FileUploader {
     this.updateLimitsToggleButton();
 
     // Re-initialize tooltip after button update
-    if (this.limitsToggleContainer) {
-      Tooltip.initAll(this.limitsToggleContainer);
+    if (this.limitsToggleBtn) {
+      Tooltip.initAll(this.limitsToggleBtn);
     }
   }
 
@@ -940,28 +936,35 @@ export default class FileUploader {
     const filePercentage =
       this.options.maxFiles > 0 ? (fileCount / this.options.maxFiles) * 100 : 0;
 
-    // View mode toggle button (concise/detailed)
-    const viewModeToggleButton = this.options.allowLimitsViewToggle
-      ? `
-      <button type="button" class="file-uploader-limits-toggle" data-tooltip-text="${
-        isDetailed ? "Switch to concise view" : "Switch to detailed view"
-      }" data-tooltip-position="top">
-        ${
-          isDetailed
-            ? getIcon("list_view", { class: "file-uploader-toggle-icon" })
-            : getIcon("grid_view", { class: "file-uploader-toggle-icon" })
-        }
+    // Check if there are any type-level limits to display
+    const hasTypeLimits = typeLimits && Object.keys(typeLimits).length > 0;
+
+    // View mode toggle button (concise/detailed) - styled like download button with circular chevron
+    const viewModeToggleButton =
+      this.options.allowLimitsViewToggle && hasTypeLimits
+        ? `
+      <button type="button" class="file-uploader-limits-toggle${
+        isDetailed ? " is-expanded" : ""
+      }" data-tooltip-text="${
+            isDetailed ? "Switch to concise view" : "Switch to detailed view"
+          }" data-tooltip-position="top">
+        <span class="file-uploader-limits-toggle-chevron">
+          ${getIcon("chevron_up", { class: "file-uploader-toggle-icon" })}
+        </span>
         <span>${isDetailed ? "Concise" : "Details"}</span>
       </button>
     `
-      : "";
+        : "";
 
-    let limitsHTML = `
+    // Only show the header if there are type limits to display
+    let limitsHTML = hasTypeLimits
+      ? `
       <div class="file-uploader-limits-header">
         <span class="file-uploader-limits-title">Upload Limits</span>
         ${viewModeToggleButton}
       </div>
-    `;
+    `
+      : "";
 
     if (isDetailed) {
       // ===== DETAILED VIEW =====
