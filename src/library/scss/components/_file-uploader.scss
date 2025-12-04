@@ -35,6 +35,7 @@ $component-prefix: $file-uploader-prefix !default;
   min-height: 200px;
   display: flex;
   flex-direction: column;
+  gap: 15px;
 
   // Hover state
   &:hover {
@@ -199,12 +200,51 @@ $component-prefix: $file-uploader-prefix !default;
     position: relative;
   }
 
+  // Detailed variant (for multi-section layout)
+  &.#{$component-prefix}-limit-detailed {
+    @include flex(column, flex-start, flex-start);
+    gap: var(--fu-spacing-sm);
+    position: relative;
+    padding: var(--fu-spacing-md);
+  }
+
   // Hover effect
   // &:hover {
   //   @if $file-uploader-enable-animations {
   //     transform: translateY(-1px);
   //   }
   // }
+}
+
+.#{$component-prefix}-limit-header {
+  @include flex-between;
+  width: 100%;
+}
+
+.#{$component-prefix}-limit-details {
+  @include flex(column, flex-start, flex-start);
+  gap: var(--fu-spacing-xs);
+  width: 100%;
+  padding-top: var(--fu-spacing-xs);
+  border-top: 1px solid var(--fu-color-border-light);
+}
+
+.#{$component-prefix}-limit-detail {
+  @include flex-between;
+  width: 100%;
+  font-size: var(--fu-font-size-xs);
+  gap: var(--fu-spacing-xs);
+}
+
+.#{$component-prefix}-limit-detail-label {
+  color: var(--fu-color-text-muted);
+  font-weight: var(--fu-font-weight-normal);
+}
+
+.#{$component-prefix}-limit-detail-value {
+  color: var(--fu-color-text);
+  font-weight: var(--fu-font-weight-medium);
+  white-space: nowrap;
 }
 
 .#{$component-prefix}-limit-label {
@@ -260,19 +300,73 @@ $component-prefix: $file-uploader-prefix !default;
   padding-bottom: calc(var(--fu-spacing-sm) + 5px);
 }
 
+// Mini progress bar for detailed limit items
+.#{$component-prefix}-limit-progress-mini {
+  width: 100%;
+  height: 4px;
+  background-color: var(--fu-color-bg-hover);
+  border-radius: var(--fu-radius-xs);
+  overflow: hidden;
+  margin-top: 4px;
+
+  .#{$component-prefix}-limit-progress-bar {
+    height: 100%;
+    border-radius: var(--fu-radius-xs);
+  }
+}
+
 // ============================================================================
 // Button Container (Download & Clear buttons inside dropzone)
 // ============================================================================
+
+// ============================================================================
+// Action Container (wraps button container and capture container)
+// ============================================================================
+
+.#{$component-prefix}-action-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fu-spacing-md);
+  padding-top: var(--fu-spacing-lg);
+  border-top: 1px solid var(--fu-color-border);
+  pointer-events: none;
+  cursor: default;
+
+  // Allow child elements to receive pointer events
+  > * {
+    pointer-events: auto;
+  }
+}
 
 .#{$component-prefix}-button-container {
   display: flex;
   align-items: center;
   gap: var(--fu-spacing-md);
-  margin-top: var(--fu-spacing-xl);
   padding: 0;
-  pointer-events: auto; // Allow clicks even though dropzone has pointer-events
   flex-wrap: wrap;
-  cursor: default;
+}
+
+// ============================================================================
+// Selected Files Action Container
+// ============================================================================
+
+.#{$component-prefix}-selected-action-container {
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-md);
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.#{$component-prefix}-selection-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fu-color-primary);
+  padding: 7px 12px;
+  background-color: rgba(66, 153, 225, 0.1);
+  border-radius: var(--fu-radius-md);
+  border: 1px solid var(--fu-color-primary);
 }
 
 // ============================================================================
@@ -349,6 +443,92 @@ $component-prefix: $file-uploader-prefix !default;
 
 // Clear button specific styles (Standalone)
 .#{$component-prefix}-clear-all:not([class*="btn"]) {
+  background-color: #f56565;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #e53e3e;
+  }
+
+  &:active:not(:disabled) {
+    background-color: #c53030;
+  }
+}
+
+// ============================================================================
+// Selected Files Action Buttons (Download Selected & Delete Selected)
+// ============================================================================
+
+.#{$component-prefix}-download-selected:not([class*="btn"]),
+.#{$component-prefix}-delete-selected:not([class*="btn"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fu-spacing-sm);
+  padding: 7px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  @include transition((background-color, transform, box-shadow));
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+
+  // Icon inside button
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  // Hover state
+  // &:hover:not(:disabled) {
+  //   @if $file-uploader-enable-animations {
+  //     transform: translateY(-1px);
+  //     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  //   }
+  // }
+
+  // Active state
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  // Focus state
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  }
+
+  // Disabled state
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
+// Download selected button specific styles (Standalone)
+.#{$component-prefix}-download-selected:not([class*="btn"]) {
+  background-color: #4299e1;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #3182ce;
+  }
+
+  &:active:not(:disabled) {
+    background-color: #2c5aa0;
+  }
+}
+
+// Delete selected button specific styles (Standalone)
+.#{$component-prefix}-delete-selected:not([class*="btn"]) {
   background-color: #f56565;
   color: white;
 
@@ -468,6 +648,18 @@ $component-prefix: $file-uploader-prefix !default;
     border-color: var(--fu-color-error);
     background-color: var(--fu-error-50);
   }
+
+  // Selected state
+  &.selected {
+    border-color: var(--fu-color-primary);
+    border-width: 2px;
+    @include shadow("md");
+
+    .#{$component-prefix}-selection-checkbox input {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
 }
 
 // ============================================================================
@@ -485,6 +677,76 @@ $component-prefix: $file-uploader-prefix !default;
   // Responsive
   @include respond-below("sm") {
     height: var(--fu-preview-height-mobile);
+  }
+}
+
+// ============================================================================
+// Selection Checkbox - Modern Custom Design
+// ============================================================================
+
+.#{$component-prefix}-selection-checkbox {
+  position: absolute;
+  top: var(--fu-spacing-sm);
+  left: var(--fu-spacing-sm);
+  z-index: 10;
+  pointer-events: auto;
+
+  input[type="checkbox"] {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    outline: none;
+    @include transition(
+      (border-color, background-color, transform, box-shadow)
+    );
+    opacity: 0.8;
+
+    // Hover state
+    &:hover {
+      opacity: 1;
+      border-color: var(--fu-color-primary);
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+      @if $file-uploader-enable-animations {
+        transform: scale(1.1);
+      }
+    }
+
+    // Checked state
+    &:checked {
+      opacity: 1;
+      background-color: var(--fu-color-primary);
+      border-color: var(--fu-color-primary);
+
+      // Checkmark icon
+      &::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(45deg);
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+      }
+    }
+
+    // Focus state
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+    }
+  }
+
+  // Show checkbox on preview hover
+  .#{$component-prefix}-preview:hover & input {
+    opacity: 1;
   }
 }
 
@@ -623,6 +885,21 @@ $component-prefix: $file-uploader-prefix !default;
       }
       color: var(--fu-color-primary);
     }
+  }
+}
+
+.#{$component-prefix}-file-icon {
+  width: var(--fu-icon-size-xl);
+  height: var(--fu-icon-size-xl);
+  margin-bottom: var(--fu-spacing-sm);
+  fill: currentColor;
+  @include transition((transform, color));
+
+  .#{$component-prefix}-preview:hover & {
+    @if $file-uploader-enable-animations {
+      transform: scale(1.1);
+    }
+    color: var(--fu-color-primary);
   }
 }
 
@@ -892,6 +1169,7 @@ $component-prefix: $file-uploader-prefix !default;
   @include flex(row, flex-end, center);
   gap: var(--fu-spacing-sm);
   z-index: var(--fu-z-overlay);
+  justify-content: center;
   pointer-events: auto;
 }
 

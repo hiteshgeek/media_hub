@@ -50,12 +50,15 @@ export default class FileUploader {
         "txt",
         "csv",
       ],
-      archiveExtensions: ["zip", "rar", "7z"],
+      archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
       multiple: true,
       autoFetchConfig: true,
       showLimits: true,
       showFileTypeCount: false, // Show count of files per type (image, video, document)
       showProgressBar: false, // Show progress bar background for Total Size and File Count
+      showPerFileLimit: true, // Show per file size limit in type groups
+      showTypeGroupSize: true, // Show total uploaded size per type group
+      showTypeGroupCount: true, // Show file count per type group
       preventDuplicates: false, // Prevent uploading the same file again
       duplicateCheckBy: "name-size", // How to check duplicates: 'name', 'size', 'name-size', 'hash'
       showDownloadAllButton: true, // Show internal download-all button
@@ -104,6 +107,7 @@ export default class FileUploader {
     }
 
     this.files = [];
+    this.selectedFiles = new Set(); // Track selected file IDs
     this.screenCapture = null;
     this.videoRecorder = null;
     this.audioRecorder = null;
@@ -194,6 +198,11 @@ export default class FileUploader {
     this.dropZone.appendChild(this.dropZoneHeader);
     this.dropZone.appendChild(this.previewContainer);
 
+    // Create action container wrapper for both button and capture containers
+    this.actionContainer = document.createElement("div");
+    this.actionContainer.className = "file-uploader-action-container";
+    // Action container is always visible (for capture buttons)
+
     // Create button container for both buttons inside dropzone
     if (
       (this.downloadAllBtn && this.options.showDownloadAllButton) ||
@@ -201,7 +210,7 @@ export default class FileUploader {
     ) {
       this.buttonContainer = document.createElement("div");
       this.buttonContainer.className = "file-uploader-button-container";
-      this.buttonContainer.style.display = "none"; // Initially hidden
+      this.buttonContainer.style.display = "none"; // Initially hidden until files are added
 
       if (this.downloadAllBtn && this.options.showDownloadAllButton) {
         this.buttonContainer.appendChild(this.downloadAllBtn);
@@ -210,8 +219,51 @@ export default class FileUploader {
         this.buttonContainer.appendChild(this.clearAllBtn);
       }
 
-      this.dropZone.appendChild(this.buttonContainer);
+      this.actionContainer.appendChild(this.buttonContainer);
     }
+
+    // Create selected files action buttons container
+    this.selectedActionContainer = document.createElement("div");
+    this.selectedActionContainer.className = "file-uploader-selected-action-container";
+    this.selectedActionContainer.style.display = "none"; // Initially hidden until files are selected
+
+    // Create selection info text
+    const selectionInfo = document.createElement("span");
+    selectionInfo.className = "file-uploader-selection-info";
+    selectionInfo.textContent = "0 selected";
+    this.selectedActionContainer.appendChild(selectionInfo);
+
+    // Create download selected button
+    const downloadSelectedBtn = document.createElement("button");
+    downloadSelectedBtn.type = "button";
+    downloadSelectedBtn.className = "file-uploader-download-selected";
+    downloadSelectedBtn.innerHTML = `
+      ${getIcon("download")}
+      <span>Download</span>
+    `;
+    downloadSelectedBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.downloadSelected();
+    });
+    this.selectedActionContainer.appendChild(downloadSelectedBtn);
+
+    // Create delete selected button
+    const deleteSelectedBtn = document.createElement("button");
+    deleteSelectedBtn.type = "button";
+    deleteSelectedBtn.className = "file-uploader-delete-selected";
+    deleteSelectedBtn.innerHTML = `
+      ${getIcon("trash")}
+      <span>Delete</span>
+    `;
+    deleteSelectedBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.deleteSelected();
+    });
+    this.selectedActionContainer.appendChild(deleteSelectedBtn);
+
+    this.actionContainer.appendChild(this.selectedActionContainer);
 
     // Create capture buttons container (bottom right corner)
     this.createCaptureButtons();
@@ -267,7 +319,11 @@ export default class FileUploader {
             ${getIcon("download")}
             <span>${this.options.downloadAllButtonText}</span>
         `;
-      this.downloadAllBtn.addEventListener("click", () => this.downloadAll());
+      this.downloadAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.downloadAll();
+      });
     }
   }
 
@@ -292,7 +348,11 @@ export default class FileUploader {
       this.clearAllBtn.disabled = true;
 
       // Attach click handler
-      this.clearAllBtn.addEventListener("click", () => this.clearAll());
+      this.clearAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.clearAll();
+      });
     }
     // Create internal button
     else if (this.options.showClearAllButton) {
@@ -314,7 +374,11 @@ export default class FileUploader {
             ${getIcon("trash")}
             <span>${this.options.clearAllButtonText}</span>
         `;
-      this.clearAllBtn.addEventListener("click", () => this.clearAll());
+      this.clearAllBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.clearAll();
+      });
     }
   }
 
@@ -430,11 +494,16 @@ export default class FileUploader {
       }
     }
 
-    // Append capture buttons to dropzone
+    // Append capture buttons to action container
     if (this.captureButtonContainer.children.length > 0) {
-      this.dropZone.appendChild(this.captureButtonContainer);
+      this.actionContainer.appendChild(this.captureButtonContainer);
       // Initialize tooltips for capture buttons
       Tooltip.initAll(this.captureButtonContainer);
+    }
+
+    // Append action container to dropzone if it has children
+    if (this.actionContainer.children.length > 0) {
+      this.dropZone.appendChild(this.actionContainer);
     }
   }
 
@@ -758,24 +827,49 @@ export default class FileUploader {
             ? `Allowed: ${allowedExtensions.map((ext) => `.${ext}`).join(", ")}`
             : "";
 
-        // Calculate file count for this type if enabled
-        let typeCountHtml = "";
-        if (this.options.showFileTypeCount) {
-          const typeCount = this.getFileTypeCount(type);
-          typeCountHtml = `<span class="file-uploader-limit-count">${typeCount} file${
-            typeCount !== 1 ? "s" : ""
-          }</span>`;
+        // Get type statistics
+        const typeCount = this.getFileTypeCount(type);
+        const typeSize = this.getFileTypeSize(type);
+        const typeSizeFormatted = this.formatFileSize(typeSize);
+        const typeLimitBytes = this.options.fileTypeSizeLimits[type] || 0;
+
+        // Build detailed information sections
+        let detailsHtml = "";
+
+        // Per file limit - display as "size / file"
+        if (this.options.showPerFileLimit && this.options.maxFileSizeDisplay) {
+          detailsHtml += `<div class="file-uploader-limit-detail">
+            <span class="file-uploader-limit-detail-value">${this.options.maxFileSizeDisplay} / file</span>
+          </div>`;
+        }
+
+        // Type group size - display as "current size / limit"
+        if (this.options.showTypeGroupSize && typeLimitBytes > 0) {
+          const sizePercentage = (typeSize / typeLimitBytes) * 100;
+          detailsHtml += `<div class="file-uploader-limit-detail">
+            <span class="file-uploader-limit-detail-value">${typeSizeFormatted} / ${limit}</span>
+            ${this.options.showProgressBar ? `<div class="file-uploader-limit-progress-mini"><div class="file-uploader-limit-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div></div>` : ""}
+          </div>`;
+        }
+
+        // Type group file count
+        if (this.options.showTypeGroupCount) {
+          detailsHtml += `<div class="file-uploader-limit-detail">
+            <span class="file-uploader-limit-detail-label">Files:</span>
+            <span class="file-uploader-limit-detail-value">${typeCount}</span>
+          </div>`;
         }
 
         limitsHTML += `
-                    <div class="file-uploader-limit-item file-uploader-limit-stacked" ${
+                    <div class="file-uploader-limit-item file-uploader-limit-detailed" ${
                       tooltipText ? `data-tooltip-text="${tooltipText}" data-tooltip-position="top"` : ""
                     }>
-                        <span class="file-uploader-limit-label">
-                            ${this.capitalizeFirst(type)}
-                        </span>
-                        <span class="file-uploader-limit-value">${limit}</span>
-                        ${typeCountHtml}
+                        <div class="file-uploader-limit-header">
+                            <span class="file-uploader-limit-label">
+                                ${this.capitalizeFirst(type)}
+                            </span>
+                        </div>
+                        ${detailsHtml ? `<div class="file-uploader-limit-details">${detailsHtml}</div>` : ""}
                     </div>
                 `;
       }
@@ -841,7 +935,7 @@ export default class FileUploader {
     // Show/hide button container based on file count
     const hasFiles = fileCount > 0;
 
-    // For internal button container
+    // For internal button container (download/clear buttons)
     if (this.buttonContainer) {
       this.buttonContainer.style.display = hasFiles ? "flex" : "none";
     }
@@ -862,6 +956,17 @@ export default class FileUploader {
       const fileType = this.getFileType(f.extension);
       return fileType === type.toLowerCase();
     }).length;
+  }
+
+  getFileTypeSize(type) {
+    // Calculate total size of uploaded files by type
+    return this.files
+      .filter((f) => {
+        if (!f.uploaded) return false;
+        const fileType = this.getFileType(f.extension);
+        return fileType === type.toLowerCase();
+      })
+      .reduce((total, file) => total + file.size, 0);
   }
 
   capitalizeFirst(str) {
@@ -900,6 +1005,9 @@ export default class FileUploader {
       const isButtonContainer = e.target.closest(
         ".file-uploader-button-container"
       );
+      const isActionContainer = e.target.closest(
+        ".file-uploader-action-container"
+      );
       const isInput = e.target === this.fileInput;
 
       if (
@@ -907,6 +1015,7 @@ export default class FileUploader {
         !isDownloadBtn &&
         !isClearBtn &&
         !isButtonContainer &&
+        !isActionContainer &&
         !isInput
       ) {
         this.fileInput.click();
@@ -1188,12 +1297,29 @@ export default class FileUploader {
         </div>
       `;
     } else {
+      // Determine icon based on file extension
+      let iconName = "text_file"; // Default icon
+      const ext = fileObj.extension.toLowerCase();
+
+      if (ext === "pdf") {
+        iconName = "pdf_file";
+      } else if (ext === "zip" || ext === "rar" || ext === "7z" || ext === "tar" || ext === "gz") {
+        iconName = "zip_file";
+      } else if (ext === "xlsx" || ext === "xls") {
+        iconName = "excel";
+      } else if (ext === "csv") {
+        iconName = "csv_file";
+      } else if (ext === "doc" || ext === "docx") {
+        iconName = "word_file";
+      } else if (ext === "ppt" || ext === "pptx") {
+        iconName = "ppt_file";
+      } else if (ext === "txt" || ext === "md" || ext === "log") {
+        iconName = "text_file";
+      }
+
       previewContent = `
                 <div class="file-uploader-preview-file">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                        <polyline points="13 2 13 9 20 9"></polyline>
-                    </svg>
+                    ${getIcon(iconName, { class: "file-uploader-file-icon" })}
                     <span class="file-uploader-extension">.${fileObj.extension}</span>
                 </div>
             `;
@@ -1229,6 +1355,9 @@ export default class FileUploader {
             </div>`;
 
     previewInner.innerHTML = `
+            <div class="file-uploader-selection-checkbox">
+              <input type="checkbox" class="file-uploader-checkbox" data-file-id="${fileObj.id}">
+            </div>
             ${previewContent}
             ${captureIndicator}
             <div class="file-uploader-preview-overlay">
@@ -1274,6 +1403,19 @@ export default class FileUploader {
     // Attach download event (will be shown after upload completes)
     const downloadBtn = preview.querySelector(".file-uploader-download");
     downloadBtn.addEventListener("click", () => this.downloadFile(fileObj.id));
+
+    // Attach checkbox selection event
+    const checkbox = preview.querySelector(".file-uploader-checkbox");
+    checkbox.addEventListener("change", (e) => {
+      if (e.target.checked) {
+        this.selectedFiles.add(fileObj.id);
+        preview.classList.add("selected");
+      } else {
+        this.selectedFiles.delete(fileObj.id);
+        preview.classList.remove("selected");
+      }
+      this.updateSelectionUI();
+    });
 
     fileObj.previewElement = preview;
     fileObj.downloadBtn = downloadBtn;
@@ -1645,6 +1787,10 @@ export default class FileUploader {
     // Remove from files array
     this.files = this.files.filter((f) => f.id !== fileId);
 
+    // Remove from selected files if present
+    this.selectedFiles.delete(fileId);
+    this.updateSelectionUI();
+
     // Update limits display
     this.updateLimitsDisplay();
   }
@@ -1876,6 +2022,138 @@ export default class FileUploader {
 
     this.wrapper.remove();
     this.files = [];
+  }
+
+  // Update selection UI (show/hide selected action buttons and update count)
+  updateSelectionUI() {
+    const selectedCount = this.selectedFiles.size;
+    const selectionInfo = this.selectedActionContainer.querySelector(".file-uploader-selection-info");
+
+    if (selectedCount > 0) {
+      selectionInfo.textContent = `${selectedCount} selected`;
+      this.selectedActionContainer.style.display = "flex";
+      // Hide regular button container when selection is active
+      if (this.buttonContainer) {
+        this.buttonContainer.style.display = "none";
+      }
+    } else {
+      this.selectedActionContainer.style.display = "none";
+      // Show regular button container if files exist
+      const hasFiles = this.files.length > 0;
+      if (this.buttonContainer) {
+        this.buttonContainer.style.display = hasFiles ? "flex" : "none";
+      }
+    }
+  }
+
+  // Download selected files
+  async downloadSelected() {
+    const selectedFilesData = this.files
+      .filter(f => this.selectedFiles.has(f.id) && f.uploaded)
+      .map(f => ({
+        originalName: f.name,
+        serverFilename: f.serverFilename,
+        size: f.size,
+        type: f.type,
+        extension: f.extension,
+        url: f.serverData?.url || `uploads/${f.serverFilename}`,
+      }));
+
+    if (selectedFilesData.length === 0) {
+      console.warn("No uploaded files selected to download");
+      return;
+    }
+
+    // If only one file is selected, download it directly
+    if (selectedFilesData.length === 1) {
+      const file = selectedFilesData[0];
+      const link = document.createElement("a");
+      link.href = file.url;
+      link.download = file.originalName;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // For multiple files, create a zip (use existing downloadAll infrastructure)
+    try {
+      const response = await fetch(this.options.downloadAllUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ files: selectedFilesData }),
+      });
+
+      const responseText = await response.text();
+      let result;
+
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error("Invalid JSON response: " + responseText.substring(0, 200));
+      }
+
+      if (!result.success) {
+        throw new Error(result.error || "Download failed");
+      }
+
+      // Download the file using result.url (not downloadUrl)
+      const link = document.createElement("a");
+      link.href = result.url;
+      link.download = result.filename || "selected-files.zip";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Cleanup temporary zip file if created
+      if (result.type === "zip" && result.cleanup) {
+        setTimeout(async () => {
+          try {
+            await fetch(this.options.cleanupZipUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                filename: result.cleanup,
+              }),
+            });
+          } catch (error) {
+            console.warn("Failed to cleanup temporary zip:", error);
+          }
+        }, 2000); // Wait 2 seconds for download to start
+      }
+    } catch (error) {
+      console.error("Download selected failed:", error);
+      this.showError(`Download failed: ${error.message}`);
+    }
+  }
+
+  // Delete selected files
+  async deleteSelected() {
+    const selectedFileIds = Array.from(this.selectedFiles);
+
+    if (selectedFileIds.length === 0) {
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm(`Delete ${selectedFileIds.length} selected file(s)?`)) {
+      return;
+    }
+
+    // Delete each selected file
+    for (const fileId of selectedFileIds) {
+      await this.deleteFile(fileId);
+    }
+
+    // Clear selection
+    this.selectedFiles.clear();
+    this.updateSelectionUI();
   }
 }
 

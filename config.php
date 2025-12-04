@@ -48,8 +48,17 @@ return [
         'text/csv',
         // Archives
         'application/zip',
+        'application/x-zip-compressed',
+        'application/x-zip',
+        'application/octet-stream', // Generic binary, used by some systems for archives
         'application/x-rar-compressed',
+        'application/x-rar',
+        'application/rar',
         'application/x-7z-compressed',
+        'application/x-compressed',
+        'application/x-gzip',
+        'application/gzip',
+        'application/x-tar',
     ],
 
     // Allowed file extensions
@@ -82,7 +91,9 @@ return [
         'csv',
         'zip',
         'rar',
-        '7z'
+        '7z',
+        'tar',
+        'gz'
     ],
 
     // Maximum file size in bytes (10MB default)
@@ -134,5 +145,5 @@ return [
     'document_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv'],
 
     // Archive file extensions
-    'archive_extensions' => ['zip', 'rar', '7z'],
+    'archive_extensions' => ['zip', 'rar', '7z', 'tar', 'gz'],
 ];

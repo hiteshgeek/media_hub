@@ -7,8 +7,11 @@ if (typeof window !== "undefined") {
     enableAudioRecording: true,
     enableMicrophoneAudio: true, // Enable microphone audio recording
     enableSystemAudio: true, // Enable system audio recording (allows recording tab audio)
-    showFileTypeCount: true, // Show file type counts
+    showFileTypeCount: true, // Show file type counts (deprecated, use showTypeGroupCount instead)
     showProgressBar: true, // Show progress bars for Total Size and Files
+    showPerFileLimit: true, // Show per file size limit in type groups
+    showTypeGroupSize: true, // Show total uploaded size per type group
+    showTypeGroupCount: true, // Show file count per type group
     multiple: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Upload success:", fileObj, result);
