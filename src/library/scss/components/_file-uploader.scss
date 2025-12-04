@@ -169,6 +169,68 @@ $component-prefix: $file-uploader-prefix !default;
   border-radius: var(--fu-radius-md);
 }
 
+// Limits Header with Title and Toggle
+.#{$component-prefix}-limits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--fu-spacing-md);
+}
+
+.#{$component-prefix}-limits-title {
+  font-size: var(--fu-font-size-sm);
+  font-weight: var(--fu-font-weight-semibold);
+  color: var(--fu-color-text);
+}
+
+.#{$component-prefix}-limits-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: var(--fu-font-weight-medium);
+  color: var(--fu-color-primary);
+  background-color: rgba(66, 153, 225, 0.08);
+  border: 1px solid rgba(66, 153, 225, 0.3);
+  border-radius: var(--fu-radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  @include transition(
+    (background-color, color, border-color, box-shadow, transform)
+  );
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    color: white;
+    background-color: var(--fu-color-primary);
+    border-color: var(--fu-color-primary);
+    box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
+
+    @if $file-uploader-enable-animations {
+      transform: translateY(-1px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(66, 153, 225, 0.2);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+  }
+}
+
 // ============================================================================
 // Limits Grid - Two Section Layout
 // ============================================================================
@@ -177,6 +239,11 @@ $component-prefix: $file-uploader-prefix !default;
   display: flex;
   flex-direction: column;
   gap: var(--fu-spacing-lg);
+
+  // Concise view has smaller gap
+  &.#{$component-prefix}-limits-concise {
+    gap: var(--fu-spacing-sm);
+  }
 }
 
 // Top Section: File Type Cards Grid
@@ -261,11 +328,11 @@ $component-prefix: $file-uploader-prefix !default;
 
 .#{$component-prefix}-type-progress {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background-color: var(--fu-color-bg-hover);
   border-radius: var(--fu-radius-xs);
   overflow: hidden;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .#{$component-prefix}-type-progress-bar {
@@ -321,8 +388,8 @@ $component-prefix: $file-uploader-prefix !default;
 
 .#{$component-prefix}-summary-progress {
   width: 100%;
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.5);
+  height: 15px;
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: var(--fu-radius-sm);
   overflow: hidden;
 }
@@ -337,6 +404,164 @@ $component-prefix: $file-uploader-prefix !default;
   border-radius: var(--fu-radius-sm);
   @include transition((width));
   transition-duration: 0.5s;
+}
+
+// ============================================================================
+// Concise View Styles
+// ============================================================================
+
+// File type chips container
+.#{$component-prefix}-type-chips {
+  display: flex;
+  align-items: stretch;
+  gap: var(--fu-spacing-sm);
+  flex-wrap: wrap;
+}
+
+// Expanded type chip with info
+.#{$component-prefix}-type-chip-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background-color: var(--fu-color-bg);
+  border: 1px solid var(--fu-color-border-light);
+  border-radius: var(--fu-radius-md);
+  cursor: default;
+  min-width: 100px;
+  @include transition((border-color, background-color, box-shadow, transform));
+
+  &:hover {
+    border-color: var(--fu-color-primary);
+    background-color: rgba(66, 153, 225, 0.04);
+    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.12);
+
+    @if $file-uploader-enable-animations {
+      transform: translateY(-1px);
+    }
+
+    .#{$component-prefix}-chip-header svg {
+      fill: var(--fu-color-primary);
+    }
+
+    .#{$component-prefix}-chip-name {
+      color: var(--fu-color-primary);
+    }
+  }
+}
+
+.#{$component-prefix}-chip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--fu-color-text-muted);
+    flex-shrink: 0;
+    @include transition((fill));
+  }
+}
+
+.#{$component-prefix}-chip-name {
+  font-size: 13px;
+  font-weight: var(--fu-font-weight-semibold);
+  color: var(--fu-color-text);
+  @include transition((color));
+}
+
+.#{$component-prefix}-chip-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: var(--fu-font-weight-semibold);
+  color: white;
+  background-color: var(--fu-color-primary);
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+.#{$component-prefix}-chip-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--fu-color-text-muted);
+}
+
+.#{$component-prefix}-chip-limit,
+.#{$component-prefix}-chip-max {
+  font-weight: var(--fu-font-weight-normal);
+}
+
+.#{$component-prefix}-chip-separator {
+  opacity: 0.5;
+}
+
+// Compact summary section
+.#{$component-prefix}-compact-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-md);
+  padding: 8px 12px;
+  background-color: var(--fu-color-bg);
+  border: 1px solid var(--fu-color-border-light);
+  border-radius: var(--fu-radius-sm);
+}
+
+.#{$component-prefix}-compact-progress-wrapper {
+  flex: 1;
+  min-width: 80px;
+}
+
+// Compact progress bar
+.#{$component-prefix}-compact-progress {
+  width: 100%;
+  height: 6px;
+  background-color: var(--fu-color-bg-hover);
+  border-radius: var(--fu-radius-xs);
+  overflow: hidden;
+}
+
+.#{$component-prefix}-compact-progress-bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--fu-color-primary) 0%,
+    var(--fu-success-500) 100%
+  );
+  border-radius: var(--fu-radius-xs);
+  @include transition((width));
+  transition-duration: 0.5s;
+}
+
+// Compact stats section
+.#{$component-prefix}-compact-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--fu-spacing-sm);
+  flex-shrink: 0;
+}
+
+.#{$component-prefix}-compact-stat {
+  font-size: 11px;
+  color: var(--fu-color-text-muted);
+  white-space: nowrap;
+
+  strong {
+    color: var(--fu-color-text);
+    font-weight: var(--fu-font-weight-semibold);
+  }
+}
+
+.#{$component-prefix}-compact-divider {
+  color: var(--fu-color-border);
+  font-size: 11px;
 }
 
 // ============================================================================

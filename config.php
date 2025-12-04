@@ -120,6 +120,15 @@ return [
         'archive' => '20MB',
     ],
 
+    // Maximum number of files allowed per type
+    'file_type_count_limits' => [
+        'image' => 5,
+        'video' => 3,
+        'audio' => 3,
+        'document' => 5,
+        'archive' => 2,
+    ],
+
     // Total upload size limit across all files (in bytes)
     'total_size_limit' => 1000 * 1024 * 1024,
 

@@ -13,6 +13,8 @@ if (typeof window !== "undefined") {
     showTypeGroupSize: true, // Show total uploaded size per type group
     showTypeGroupCount: true, // Show file count per type group
     multiple: true,
+    // defaultLimitsView: "detailed",
+    allowLimitsViewToggle: true,
     onUploadSuccess: (fileObj, result) => {
       console.log("Upload success:", fileObj, result);
     },

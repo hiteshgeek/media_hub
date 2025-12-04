@@ -16,6 +16,7 @@ $jsConfig = [
     'maxFileSizeDisplay' => $config['max_file_size_display'],
     'fileTypeSizeLimits' => $config['file_type_size_limits'],
     'fileTypeSizeLimitsDisplay' => $config['file_type_size_limits_display'],
+    'fileTypeCountLimits' => $config['file_type_count_limits'] ?? [],
     'totalSizeLimit' => $config['total_size_limit'],
     'totalSizeLimitDisplay' => $config['total_size_limit_display'],
     'maxFiles' => $config['max_files'],
