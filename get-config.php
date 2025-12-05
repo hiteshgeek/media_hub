@@ -26,9 +26,9 @@ $jsConfig = [
     'videoExtensions' => $config['video_extensions'],
     'audioExtensions' => $config['audio_extensions'],
     'documentExtensions' => $config['document_extensions'],
-    'archiveExtensions' => $config['archive_extensions'],
-    'uploadUrl' => 'upload.php',
-    'deleteUrl' => 'delete.php'
+    'archiveExtensions' => $config['archive_extensions']
+    // Note: URL options (uploadUrl, deleteUrl, etc.) are NOT included here
+    // because they should be set by the user based on their project structure
 ];
 
 echo json_encode($jsConfig);

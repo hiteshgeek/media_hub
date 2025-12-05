@@ -18,17 +18,18 @@ export default class FileUploader {
       typeof element === "string" ? document.querySelector(element) : element;
 
     if (!this.element) {
-      console.error("FileUploader: Element not found");
+      console.error("FileUploader: Element not found:", element);
       return;
     }
 
     // Default options
+    // URLs default to current directory - override with absolute paths if needed
     this.options = {
-      uploadUrl: "upload.php",
-      deleteUrl: "delete.php",
-      downloadAllUrl: "download-all.php",
-      cleanupZipUrl: "cleanup-zip.php",
-      configUrl: "get-config.php",
+      uploadUrl: "./upload.php",
+      deleteUrl: "./delete.php",
+      downloadAllUrl: "./download-all.php",
+      cleanupZipUrl: "./cleanup-zip.php",
+      configUrl: "./get-config.php",
       allowedExtensions: [],
       perFileMaxSize: 10 * 1024 * 1024, // 10MB (fallback)
       perFileMaxSizeDisplay: "10MB",
@@ -91,8 +92,24 @@ export default class FileUploader {
       enableCarouselPreview: true, // Enable carousel preview modal on file click
       carouselAutoPreload: true, // Auto-preload files in carousel (true, false, or array of types like ['image', 'video'])
       carouselEnableManualLoading: true, // Show "Load All" button in carousel
-      carouselVisibleTypes: ["image", "video", "audio", "pdf", "excel", "csv", "text"], // File types visible in carousel
-      carouselPreviewableTypes: ["image", "video", "audio", "pdf", "csv", "excel", "text"], // File types that can be previewed
+      carouselVisibleTypes: [
+        "image",
+        "video",
+        "audio",
+        "pdf",
+        "excel",
+        "csv",
+        "text",
+      ], // File types visible in carousel
+      carouselPreviewableTypes: [
+        "image",
+        "video",
+        "audio",
+        "pdf",
+        "csv",
+        "excel",
+        "text",
+      ], // File types that can be previewed
       carouselMaxPreviewRows: 100, // Max rows to show for CSV/Excel preview
       carouselMaxTextPreviewChars: 50000, // Max characters for text file preview
       onUploadStart: null,
@@ -134,6 +151,8 @@ export default class FileUploader {
     this.carousel = null;
     this.carouselContainer = null;
     this.init();
+
+    console.log(this.options);
   }
 
   async init() {
@@ -574,7 +593,9 @@ export default class FileUploader {
     // Create icon element once (will be rotated via CSS)
     const iconWrapper = document.createElement("span");
     iconWrapper.className = "file-uploader-toggle-icon-wrapper";
-    iconWrapper.innerHTML = getIcon("chevron_up", { class: "file-uploader-toggle-icon" });
+    iconWrapper.innerHTML = getIcon("chevron_up", {
+      class: "file-uploader-toggle-icon",
+    });
     this.limitsToggleBtn.appendChild(iconWrapper);
 
     // Create text element
@@ -965,7 +986,9 @@ export default class FileUploader {
       }" data-tooltip-text="${
             isDetailed ? "Switch to concise view" : "Switch to detailed view"
           }" data-tooltip-position="top">
-        ${getIcon(isDetailed ? "grid_view" : "list_view", { class: "file-uploader-toggle-icon" })}
+        ${getIcon(isDetailed ? "grid_view" : "list_view", {
+          class: "file-uploader-toggle-icon",
+        })}
         <span>${isDetailed ? "Concise" : "Details"}</span>
       </button>
     `
@@ -2784,7 +2807,13 @@ export default class FileUploader {
     if (ext === "pdf") return "pdf";
     if (ext === "xlsx" || ext === "xls") return "excel";
     if (ext === "csv") return "csv";
-    if (ext === "txt" || ext === "md" || ext === "log" || ext === "json" || ext === "xml")
+    if (
+      ext === "txt" ||
+      ext === "md" ||
+      ext === "log" ||
+      ext === "json" ||
+      ext === "xml"
+    )
       return "text";
 
     // Default to text for other document types (won't have preview)

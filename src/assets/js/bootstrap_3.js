@@ -4,6 +4,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
   // Initialize profile picture uploader (single image only)
   const profileUploader = new window.FileUploader("#profilePicture", {
     multiple: false,
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Profile picture uploaded:", result);
     },
@@ -12,6 +17,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
   // Initialize documents uploader (multiple files)
   const documentsUploader = new window.FileUploader("#documents", {
     multiple: true,
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Document uploaded:", result);
     },

@@ -2,6 +2,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
   // Initialize uploaders
   const imagesUploader = new window.FileUploader("#projectImages", {
     multiple: true,
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Image uploaded:", result);
     },
@@ -9,6 +14,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
 
   const videosUploader = new window.FileUploader("#projectVideos", {
     multiple: true,
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Video uploaded:", result);
     },
@@ -16,6 +26,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
 
   const filesUploader = new window.FileUploader("#additionalFiles", {
     multiple: true,
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("File uploaded:", result);
     },

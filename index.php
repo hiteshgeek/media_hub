@@ -52,6 +52,7 @@ include_once __DIR__ . '/includes/functions.php';
             <a href="usage/demo-bootstrap3.php">Bootstrap 3 Demo</a>
             <a href="usage/demo-bootstrap4.php">Bootstrap 4 Demo</a>
             <a href="usage/demo-bootstrap5.php">Bootstrap 5 Demo</a>
+            <a href="modal_file_uploader.php">Modal Demo</a>
         </div>
     </div>
 

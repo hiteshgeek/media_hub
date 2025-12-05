@@ -7,7 +7,7 @@ if (
     showLimitsToggle: true, // Show toggle button in dropzone (default: true)
     defaultLimitsVisible: true, // Start with limits visible (default: true)
     allowLimitsViewToggle: true, // Allow concise/detailed toggle (default: true)
-    defaultLimitsView: "detailed", // Default view mode for limits section (detailed/concise)
+    defaultLimitsView: "concise", // Default view mode for limits section (detailed/concise)
 
     preventDuplicates: true,
     duplicateCheckBy: "name-size",

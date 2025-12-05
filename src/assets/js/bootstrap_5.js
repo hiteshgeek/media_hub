@@ -2,6 +2,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
   // Initialize uploaders
   const resumeUploader = new window.FileUploader("#resume", {
     multiple: false, // Only one resume
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Resume uploaded:", result);
     },
@@ -9,6 +14,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
 
   const coverLetterUploader = new window.FileUploader("#coverLetter", {
     multiple: false, // Only one cover letter
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Cover letter uploaded:", result);
     },
@@ -16,6 +26,11 @@ if (typeof window !== "undefined" && typeof window.FileUploader !== "undefined")
 
   const portfolioUploader = new window.FileUploader("#portfolio", {
     multiple: true, // Multiple portfolio items
+    uploadUrl: "/file_uploader/upload.php",
+    deleteUrl: "/file_uploader/delete.php",
+    downloadAllUrl: "/file_uploader/download-all.php",
+    cleanupZipUrl: "/file_uploader/cleanup-zip.php",
+    configUrl: "/file_uploader/get-config.php",
     onUploadSuccess: (fileObj, result) => {
       console.log("Portfolio item uploaded:", result);
     },

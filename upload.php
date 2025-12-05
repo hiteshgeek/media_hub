@@ -6,8 +6,12 @@
 
 header('Content-Type: application/json');
 
-// Load configuration
+// Load configuration and functions
 $config = require_once 'config.php';
+require_once __DIR__ . '/includes/functions.php';
+
+// Get base path for URLs (e.g., /file_uploader)
+$basePath = get_base_path();
 
 // Create uploads directory if it doesn't exist
 if (!is_dir($config['upload_dir'])) {
@@ -165,7 +169,7 @@ echo json_encode([
         'type' => $mimeType,
         'extension' => $extension,
         'fileType' => $fileType,
-        'url' => 'uploads/' . $filename,
+        'url' => $basePath . '/uploads/' . $filename,
         'path' => $destination
     ]
 ]);

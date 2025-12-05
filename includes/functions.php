@@ -1,5 +1,22 @@
 <?php
 
+/**
+ * Get the base URL path for the file_uploader project
+ * Works regardless of where the project is hosted
+ */
+function get_base_path()
+{
+    // Get the directory of the current script relative to document root
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+
+    // If we're in a subdirectory like 'usage', go up one level
+    if (basename($scriptDir) === 'usage') {
+        return dirname($scriptDir);
+    }
+
+    return $scriptDir;
+}
+
 function asset_manifest($type = 'css')
 {
       static $manifests = ['css' => null, 'js' => null];
@@ -22,21 +39,20 @@ function asset_manifest($type = 'css')
 
 function asset($logical, $variant = null)
 {
-      // Remove known prefixes (main., file_uploader.)
-      // $logical = preg_replace('/^(main\.|file_uploader\.)/', '', $logical);
+      $basePath = get_base_path();
       $isJs = substr($logical, -3) === '.js';
       $isCss = substr($logical, -4) === '.css';
       $type = $isJs ? 'js' : ($isCss ? 'css' : null);
       if (!$type) {
             error_log("[asset] Unknown asset type for: $logical");
-            return '/file_uploader/dist/' . $logical;
+            return $basePath . '/dist/' . $logical;
       }
       $manifestKey = $logical;
       // Support nomodule variant for JS (IIFE build)
       if ($type === 'js' && $variant === 'nomodule') {
             $manifestKey = preg_replace('/\.js$/', '.iife.js', $manifestKey);
       }
-      $baseUrl = $type === 'js' ? '/file_uploader/dist/js/' : '/file_uploader/dist/css/';
+      $baseUrl = $type === 'js' ? $basePath . '/dist/js/' : $basePath . '/dist/css/';
       $manifest = asset_manifest($type);
 
       if (isset($manifest[$manifestKey])) {
