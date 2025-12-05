@@ -23,11 +23,43 @@ $builder-prefix: "fu-config-builder";
 
 // Header
 .#{$builder-prefix}-header {
-  text-align: center;
-  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 24px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0; // Don't shrink header
+}
+
+.#{$builder-prefix}-home-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    background: #6366f1;
+    color: #ffffff;
+  }
+}
+
+.#{$builder-prefix}-header-text {
+  text-align: center;
 
   h1 {
     font-size: 24px;

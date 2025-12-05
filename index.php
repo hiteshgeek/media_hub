@@ -124,14 +124,14 @@ include_once __DIR__ . '/usage/demos-config.php';
 
         .demo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
         }
 
         .demo-card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 10px;
+            padding: 16px;
             text-decoration: none;
             color: inherit;
             transition: all 0.3s;
@@ -141,103 +141,128 @@ include_once __DIR__ . '/usage/demos-config.php';
         }
 
         .demo-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .demo-card-icon {
-            width: 48px;
-            height: 48px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .demo-card-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             fill: white;
             stroke: white;
         }
 
         .demo-card h3 {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
             color: #1a202c;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .demo-card p {
-            font-size: 14px;
+            font-size: 12px;
             color: #718096;
-            line-height: 1.5;
+            line-height: 1.4;
             flex: 1;
         }
 
         .demo-card-arrow {
-            margin-top: 16px;
+            margin-top: 12px;
             color: #667eea;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .demo-card-arrow svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             fill: currentColor;
             transition: transform 0.2s;
         }
 
         .demo-card:hover .demo-card-arrow svg {
-            transform: translateX(4px);
+            transform: translateX(3px);
         }
 
         .tools-section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 30px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 30px;
             margin-top: 40px;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
         }
 
         .tools-section h2 {
-            color: white;
-            font-size: 20px;
-            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0;
+            white-space: nowrap;
         }
 
         .tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+            flex: 1;
         }
 
         .tool-link {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.1);
+            gap: 10px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            color: white;
+            color: rgba(255, 255, 255, 0.85);
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
+            font-size: 13px;
         }
 
         .tool-link:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
         }
 
         .tool-link svg {
-            width: 24px;
-            height: 24px;
+            width: 16px;
+            height: 16px;
             fill: currentColor;
             stroke: currentColor;
+            opacity: 0.8;
+        }
+
+        .tool-link:hover svg {
+            opacity: 1;
         }
 
         .tool-link span {
@@ -258,6 +283,37 @@ include_once __DIR__ . '/usage/demos-config.php';
 
         footer a:hover {
             text-decoration: underline;
+        }
+
+        /* Responsive tools section */
+        @media (max-width: 768px) {
+            .tools-section {
+                flex-direction: column;
+                gap: 12px;
+                padding: 14px 20px;
+            }
+
+            .tools-section h2 {
+                text-align: center;
+            }
+
+            .tools-grid {
+                justify-content: center;
+            }
+
+            .tool-link {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .tool-link span {
+                display: none;
+            }
+
+            .tool-link svg {
+                width: 18px;
+                height: 18px;
+            }
         }
     </style>
 </head>
