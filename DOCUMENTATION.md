@@ -1,6 +1,6 @@
 # FileUploader Documentation
 
-A flexible, feature-rich file uploader component with drag & drop, preview, AJAX upload, screen capture, video/audio recording, and comprehensive file management capabilities. Compatible with Bootstrap 3-5 and standalone usage.
+A flexible, feature-rich file uploader component with drag & drop, preview, AJAX upload, screen capture, video/audio recording, carousel preview, cross-uploader drag-drop, alert notifications, and comprehensive file management capabilities. Compatible with Bootstrap 3-5 and standalone usage.
 
 ---
 
@@ -9,17 +9,24 @@ A flexible, feature-rich file uploader component with drag & drop, preview, AJAX
 1. [Quick Start](#quick-start)
 2. [Configuration Options](#configuration-options)
    - [URL Configuration](#url-configuration)
+   - [Upload Directory](#upload-directory)
    - [File Size Limits](#file-size-limits)
    - [File Type Configuration](#file-type-configuration)
    - [Upload Behavior](#upload-behavior)
+   - [Alert Notification Options](#alert-notification-options)
    - [Limits Display Options](#limits-display-options)
    - [Button Configuration](#button-configuration)
    - [Media Capture Options](#media-capture-options)
+   - [Carousel Preview Options](#carousel-preview-options)
    - [Callback Functions](#callback-functions)
 3. [Usage Examples](#usage-examples)
-4. [Server-Side Configuration](#server-side-configuration)
-5. [Public Methods](#public-methods)
-6. [Styling & Customization](#styling--customization)
+4. [Cross-Uploader Drag & Drop](#cross-uploader-drag--drop)
+5. [Multiple Config Files](#multiple-config-files)
+6. [Server-Side Configuration](#server-side-configuration)
+7. [Server-Side Endpoints](#server-side-endpoints)
+8. [Public Methods](#public-methods)
+9. [Alert Notification System](#alert-notification-system)
+10. [Styling & Customization](#styling--customization)
 
 ---
 
@@ -56,11 +63,12 @@ const uploader = new FileUploader('#fileUploader', {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `uploadUrl` | `string` | `"upload.php"` | Server endpoint for file uploads |
-| `deleteUrl` | `string` | `"delete.php"` | Server endpoint for file deletion |
-| `downloadAllUrl` | `string` | `"download-all.php"` | Server endpoint for downloading all files as ZIP |
-| `cleanupZipUrl` | `string` | `"cleanup-zip.php"` | Server endpoint for cleaning up temporary ZIP files |
-| `configUrl` | `string` | `"get-config.php"` | Server endpoint to fetch configuration (used with `autoFetchConfig`) |
+| `uploadUrl` | `string` | `"./upload.php"` | Server endpoint for file uploads |
+| `deleteUrl` | `string` | `"./delete.php"` | Server endpoint for file deletion |
+| `downloadAllUrl` | `string` | `"./download-all.php"` | Server endpoint for downloading all files as ZIP |
+| `cleanupZipUrl` | `string` | `"./cleanup-zip.php"` | Server endpoint for cleaning up temporary ZIP files |
+| `copyFileUrl` | `string` | `"./copy-file.php"` | Server endpoint for copying files between directories (cross-uploader) |
+| `configUrl` | `string` | `"./get-config.php"` | Server endpoint to fetch configuration (used with `autoFetchConfig`) |
 
 #### Example: Custom URLs
 
@@ -69,9 +77,44 @@ const uploader = new FileUploader('#fileUploader', {
   uploadUrl: '/api/files/upload',
   deleteUrl: '/api/files/delete',
   downloadAllUrl: '/api/files/download-all',
+  copyFileUrl: '/api/files/copy',
   configUrl: '/api/files/config'
 });
 ```
+
+---
+
+### Upload Directory
+
+The `uploadDir` option allows you to specify a target subdirectory for uploaded files. This is useful when you have multiple uploaders that should save files to different locations.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `uploadDir` | `string` | `""` | Target folder for uploads (relative to server's base upload directory) |
+
+#### Example: Custom Upload Directory
+
+```javascript
+// Profile pictures go to uploads/profile_pictures/
+const profileUploader = new FileUploader('#profilePicture', {
+  uploadDir: 'profile_pictures',
+  uploadUrl: '/file_uploader/upload.php',
+  deleteUrl: '/file_uploader/delete.php'
+});
+
+// Documents go to uploads/documents/
+const documentsUploader = new FileUploader('#documents', {
+  uploadDir: 'documents',
+  uploadUrl: '/file_uploader/upload.php',
+  deleteUrl: '/file_uploader/delete.php'
+});
+```
+
+The `uploadDir` is automatically included in:
+- Upload requests (sent as POST parameter)
+- Delete requests (sent in JSON body)
+- Page unload cleanup (when `cleanupOnUnload` is enabled)
+- Cross-uploader copy/move operations
 
 ---
 
@@ -218,6 +261,52 @@ const uploader = new FileUploader('#fileUploader', {
 const uploader = new FileUploader('#fileUploader', {
   multiple: false,
   maxFiles: 1
+});
+```
+
+#### Example: Delete Confirmation
+
+```javascript
+const uploader = new FileUploader('#fileUploader', {
+  confirmBeforeDelete: true  // Shows a modal dialog before deleting files
+});
+```
+
+---
+
+### Alert Notification Options
+
+The FileUploader uses a toast-like alert notification system for displaying errors and messages. Alerts appear at the top center of the page with animations.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `alertAnimation` | `string` | `"shake"` | Animation for alerts: `'fade'`, `'shake'`, `'bounce'`, `'slideDown'`, `'pop'`, `'flip'` |
+| `alertDuration` | `number` | `5000` | Auto-dismiss duration in milliseconds (0 = no auto-dismiss) |
+
+#### Available Animations
+
+- `fade` - Simple fade in/out
+- `shake` - Slides in then shakes (good for errors)
+- `bounce` - Bouncy entrance effect
+- `slideDown` - Slides down from top
+- `pop` - Pop/scale effect
+- `flip` - 3D flip animation
+
+#### Example: Custom Alert Animation
+
+```javascript
+const uploader = new FileUploader('#fileUploader', {
+  alertAnimation: 'bounce',
+  alertDuration: 3000  // Dismiss after 3 seconds
+});
+```
+
+#### Example: Persistent Alerts
+
+```javascript
+const uploader = new FileUploader('#fileUploader', {
+  alertAnimation: 'slideDown',
+  alertDuration: 0  // Never auto-dismiss, user must click close
 });
 ```
 
@@ -382,6 +471,30 @@ const uploader = new FileUploader('#fileUploader', {
 
 ---
 
+### Carousel Preview Options
+
+The FileUploader includes a carousel modal for previewing uploaded files with support for images, videos, audio, PDFs, and more.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enableCarouselPreview` | `boolean` | `true` | Enable carousel preview modal on file click |
+| `carouselAutoPreload` | `boolean` | `true` | Auto-preload files in carousel |
+| `carouselEnableManualLoading` | `boolean` | `true` | Show "Load All" button in carousel |
+| `carouselVisibleTypes` | `array` | `['image', 'video', 'audio', 'pdf', 'excel', 'csv', 'text']` | File types visible in carousel |
+| `carouselPreviewableTypes` | `array` | `['image', 'video', 'audio', 'pdf', 'excel', 'csv', 'text']` | File types that can be previewed |
+
+#### Example: Images and Videos Only in Carousel
+
+```javascript
+const uploader = new FileUploader('#fileUploader', {
+  enableCarouselPreview: true,
+  carouselVisibleTypes: ['image', 'video'],
+  carouselPreviewableTypes: ['image', 'video']
+});
+```
+
+---
+
 ### Callback Functions
 
 | Option | Type | Default | Description |
@@ -526,10 +639,138 @@ const supportUploader = new FileUploader('#supportAttachments', {
   defaultLimitsVisible: false,  // Hidden by default
   showLimitsToggle: true,       // But can be shown
 
+  alertAnimation: 'shake',
+  alertDuration: 4000,
+
   onUploadSuccess: (fileObj, result) => {
     // Add file reference to ticket form
     addAttachmentToTicket(result.file.filename);
   }
+});
+```
+
+---
+
+## Cross-Uploader Drag & Drop
+
+The FileUploader supports dragging files between different uploader instances on the same page. When you drag a file from one uploader to another, a dialog appears asking whether to **Move** or **Copy** the file.
+
+### How It Works
+
+1. Each FileUploader instance is automatically registered with a unique ID
+2. When dragging a file preview, it carries metadata about its source uploader
+3. When dropped on a different uploader, validation checks are performed:
+   - File type compatibility (allowed extensions)
+   - File count limits
+   - File size limits (per-file and total)
+   - Duplicate check (if enabled)
+4. User chooses Move or Copy
+5. If uploaders have different `uploadDir`, the file is physically copied on the server
+6. For Move operations, the file is removed from the source uploader
+
+### Example: Profile and Documents Uploaders
+
+```javascript
+// Profile pictures uploader - only images, single file
+const profileUploader = new FileUploader('#profilePicture', {
+  uploadDir: 'profile_pictures',
+  configUrl: '/file_uploader/get-config-profile.php',
+  copyFileUrl: '/file_uploader/copy-file.php',
+  allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+  maxFiles: 1,
+  multiple: false
+});
+
+// Documents uploader - multiple file types
+const documentsUploader = new FileUploader('#documents', {
+  uploadDir: 'documents',
+  configUrl: '/file_uploader/get-config-documents.php',
+  copyFileUrl: '/file_uploader/copy-file.php',
+  allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+  maxFiles: 10,
+  multiple: true
+});
+
+// Now users can drag an image from documents to profile picture (if it passes validation)
+// or drag from profile to documents
+```
+
+### Server-Side Copy Endpoint (copy-file.php)
+
+When copying between uploaders with different `uploadDir`, the `copyFileUrl` endpoint is called:
+
+```php
+<?php
+header('Content-Type: application/json');
+
+$config = require_once 'config.php';
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Required parameters:
+// - sourceFilename: The server filename of the source file
+// - sourceUploadDir: The source uploader's uploadDir
+// - targetUploadDir: The target uploader's uploadDir
+
+// The endpoint copies the file and returns the new file info
+// If a file with the same name exists, it automatically renames (file.jpg -> file_1.jpg)
+```
+
+---
+
+## Multiple Config Files
+
+You can create separate configuration files for different uploaders, each returning different settings including `uploadDir`.
+
+### Example: Profile Config (get-config-profile.php)
+
+```php
+<?php
+header('Content-Type: application/json');
+
+$config = require 'config.php';
+
+$jsConfig = [
+    'allowedExtensions' => $config['image_extensions'],
+    'perFileMaxSize' => $config['per_file_max_size_per_type']['image'],
+    'perFileMaxSizeDisplay' => $config['per_file_max_size_per_type_display']['image'],
+    'maxFiles' => 1,
+    'uploadDir' => 'profile_pictures',  // Files go to uploads/profile_pictures/
+    // ... other settings
+];
+
+echo json_encode($jsConfig);
+```
+
+### Example: Documents Config (get-config-documents.php)
+
+```php
+<?php
+header('Content-Type: application/json');
+
+$config = require 'config.php';
+
+$jsConfig = [
+    'allowedExtensions' => array_merge(
+        $config['document_extensions'],
+        $config['image_extensions']
+    ),
+    'maxFiles' => 10,
+    'uploadDir' => 'documents',  // Files go to uploads/documents/
+    // ... other settings
+];
+
+echo json_encode($jsConfig);
+```
+
+### Using Different Configs
+
+```javascript
+const profileUploader = new FileUploader('#profile', {
+  configUrl: '/file_uploader/get-config-profile.php'
+});
+
+const docsUploader = new FileUploader('#documents', {
+  configUrl: '/file_uploader/get-config-documents.php'
 });
 ```
 
@@ -638,7 +879,13 @@ return [
 ];
 ```
 
-### Config API Endpoint (get-config.php)
+---
+
+## Server-Side Endpoints
+
+### upload.php
+
+Handles file uploads. Accepts `uploadDir` as a POST parameter to specify the target subdirectory.
 
 ```php
 <?php
@@ -646,28 +893,47 @@ header('Content-Type: application/json');
 
 $config = require_once 'config.php';
 
-$jsConfig = [
-    'allowedExtensions' => $config['allowed_extensions'],
-    'perFileMaxSize' => $config['per_file_max_size'],
-    'perFileMaxSizeDisplay' => $config['per_file_max_size_display'],
-    'perFileMaxSizePerType' => $config['per_file_max_size_per_type'] ?? [],
-    'perFileMaxSizePerTypeDisplay' => $config['per_file_max_size_per_type_display'] ?? [],
-    'perTypeMaxTotalSize' => $config['per_type_max_total_size'],
-    'perTypeMaxTotalSizeDisplay' => $config['per_type_max_total_size_display'],
-    'perTypeMaxFileCount' => $config['per_type_max_file_count'] ?? [],
-    'totalMaxSize' => $config['total_max_size'],
-    'totalMaxSizeDisplay' => $config['total_max_size_display'],
-    'maxFiles' => $config['max_files'],
-    'imageExtensions' => $config['image_extensions'],
-    'videoExtensions' => $config['video_extensions'],
-    'audioExtensions' => $config['audio_extensions'],
-    'documentExtensions' => $config['document_extensions'],
-    'archiveExtensions' => $config['archive_extensions'],
-    'uploadUrl' => 'upload.php',
-    'deleteUrl' => 'delete.php'
-];
+// Get custom upload directory
+$uploadSubDir = '';
+if (isset($_POST['uploadDir']) && !empty($_POST['uploadDir'])) {
+    $uploadSubDir = trim($_POST['uploadDir'], '/\\');
+    $uploadSubDir = str_replace(['..', '\\'], ['', '/'], $uploadSubDir);
+    $uploadSubDir = rtrim($uploadSubDir, '/') . '/';
+}
 
-echo json_encode($jsConfig);
+$uploadDir = $config['upload_dir'] . $uploadSubDir;
+
+// ... validation and file handling
+```
+
+### delete.php
+
+Handles file deletion. Accepts `uploadDir` in JSON body.
+
+```php
+<?php
+header('Content-Type: application/json');
+
+$config = require_once 'config.php';
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Supports single file: { filename: "...", uploadDir: "..." }
+// Supports bulk: { files: [...], uploadDir: "..." }
+```
+
+### copy-file.php
+
+Handles copying files between directories for cross-uploader operations.
+
+```php
+<?php
+header('Content-Type: application/json');
+
+$config = require_once 'config.php';
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Required: sourceFilename, sourceUploadDir, targetUploadDir
+// Returns: { success, file: {...}, renamed: bool }
 ```
 
 ---
@@ -684,6 +950,15 @@ echo json_encode($jsConfig);
 | `downloadAll()` | Downloads all uploaded files as a ZIP archive |
 | `downloadSelected()` | Downloads selected files |
 | `deleteSelected()` | Deletes selected files |
+
+### Notification Methods
+
+| Method | Description |
+|--------|-------------|
+| `showError(message)` | Shows an error alert notification |
+| `showSuccess(message)` | Shows a success alert notification |
+| `showWarning(message)` | Shows a warning alert notification |
+| `showInfo(message)` | Shows an info alert notification |
 
 ### Usage
 
@@ -703,7 +978,55 @@ uploader.clearAll();
 
 // Download all as ZIP
 uploader.downloadAll();
+
+// Show notifications
+uploader.showSuccess('Files uploaded successfully!');
+uploader.showWarning('Large file detected');
+uploader.showInfo('Tip: You can drag files between uploaders');
 ```
+
+---
+
+## Alert Notification System
+
+The FileUploader includes a standalone Alert notification system that can also be used independently.
+
+### Alert Types
+
+- **Error** - Red theme, for errors and failures
+- **Success** - Green theme, for successful operations
+- **Warning** - Amber/Yellow theme, for warnings
+- **Info** - Blue theme, for informational messages
+
+### Alert Animations
+
+| Animation | Description |
+|-----------|-------------|
+| `fade` | Simple fade in/out |
+| `shake` | Slides in then shakes horizontally |
+| `bounce` | Bouncy entrance with overshoot |
+| `slideDown` | Slides down from top |
+| `pop` | Pops in with scale effect |
+| `flip` | 3D flip animation |
+
+### Standalone Usage
+
+```javascript
+import Alert from './src/library/js/components/Alert.js';
+
+// Show alerts programmatically
+Alert.error('Something went wrong!', { animation: 'shake' });
+Alert.success('File uploaded successfully!', { animation: 'bounce' });
+Alert.warning('File is very large', { animation: 'slideDown' });
+Alert.info('Drag files to upload', { animation: 'fade', duration: 3000 });
+
+// Dismiss all alerts
+Alert.dismissAll();
+```
+
+### Styling
+
+Alerts use solid backgrounds that work on any page background (light or dark). They automatically adapt when `data-theme="dark"` is set on the HTML or body element.
 
 ---
 
@@ -748,7 +1071,15 @@ The FileUploader uses CSS custom properties for easy theming:
 
 ### Dark Mode
 
-The component supports automatic dark mode via `prefers-color-scheme`:
+The component supports dark mode via `data-theme="dark"` attribute:
+
+```html
+<html data-theme="dark">
+  <!-- Your content -->
+</html>
+```
+
+Or via CSS media query:
 
 ```css
 @media (prefers-color-scheme: dark) {

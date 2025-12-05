@@ -996,7 +996,20 @@ export default class FileUploader {
       this.options.maxFiles > 0 ? (fileCount / this.options.maxFiles) * 100 : 0;
 
     // Check if there are any type-level limits to display
-    const hasTypeLimits = typeLimits && Object.keys(typeLimits).length > 0;
+    // This includes: per-file size per type, total size per type, and file count per type
+    const hasTypeLimits =
+      (typeLimits && Object.keys(typeLimits).length > 0) ||
+      (this.options.perFileMaxSizePerType && Object.keys(this.options.perFileMaxSizePerType).length > 0) ||
+      (this.options.perTypeMaxFileCount && Object.keys(this.options.perTypeMaxFileCount).length > 0);
+
+    // Get all unique types that have any kind of limit
+    const allTypesWithLimits = [
+      ...new Set([
+        ...Object.keys(this.options.perTypeMaxTotalSizeDisplay || {}),
+        ...Object.keys(this.options.perFileMaxSizePerType || {}),
+        ...Object.keys(this.options.perTypeMaxFileCount || {})
+      ])
+    ];
 
     // View mode toggle button (concise/detailed) - uses grid_view and list_view icons
     const viewModeToggleButton =
@@ -1029,10 +1042,11 @@ export default class FileUploader {
       // ===== DETAILED VIEW =====
 
       // File type specific limits - Top Section (Card Grid)
-      if (typeLimits && Object.keys(typeLimits).length > 0) {
+      if (allTypesWithLimits.length > 0) {
         limitsHTML += '<div class="file-uploader-limits-types">';
 
-        for (const [type, limit] of Object.entries(typeLimits)) {
+        for (const type of allTypesWithLimits) {
+          const limit = typeLimits ? typeLimits[type] : null; // Total size limit display string
           const allowedExtensions = this.getAllowedExtensionsForType(type);
           const tooltipText =
             allowedExtensions.length > 0
@@ -1051,6 +1065,10 @@ export default class FileUploader {
             typeLimitBytes > 0 ? (typeSize / typeLimitBytes) * 100 : 0;
           const typeIcon = getIcon(type, { class: "file-uploader-type-icon" });
 
+          // Get per-file limit for this type (if exists)
+          const perFileLimitDisplay = this.options.perFileMaxSizePerTypeDisplay[type] ||
+            this.options.perFileMaxSizeDisplay || '';
+
           limitsHTML += `
             <div class="file-uploader-type-card" ${
               tooltipText
@@ -1067,20 +1085,17 @@ export default class FileUploader {
               </div>
               <div class="file-uploader-type-card-body">
                 ${
-                  this.options.showPerFileLimit
+                  this.options.showPerFileLimit && perFileLimitDisplay
                     ? `
                   <div class="file-uploader-type-stat">
                     <span class="file-uploader-type-stat-label">Per file</span>
-                    <span class="file-uploader-type-stat-value">${
-                      this.options.perFileMaxSizePerTypeDisplay[type] ||
-                      this.options.maxFileSizeDisplay
-                    }</span>
+                    <span class="file-uploader-type-stat-value">${perFileLimitDisplay}</span>
                   </div>
                 `
                     : ""
                 }
                 ${
-                  this.options.showTypeGroupSize && typeLimitBytes > 0
+                  this.options.showTypeGroupSize && typeLimitBytes > 0 && limit
                     ? `
                   <div class="file-uploader-type-stat">
                     <span class="file-uploader-type-stat-label">Used</span>
@@ -1271,9 +1286,10 @@ export default class FileUploader {
         '<div class="file-uploader-limits-grid file-uploader-limits-concise">';
 
       // File type chips with expanded info (equal width)
-      if (typeLimits && Object.keys(typeLimits).length > 0) {
+      if (allTypesWithLimits.length > 0) {
         limitsHTML += '<div class="file-uploader-type-chips">';
-        for (const [type, limit] of Object.entries(typeLimits)) {
+        for (const type of allTypesWithLimits) {
+          const limit = typeLimits ? typeLimits[type] : null; // Total size limit display string
           const allowedExtensions = this.getAllowedExtensionsForType(type);
           const typeCount = this.getFileTypeCount(type);
           const typeCountLimit =
@@ -1285,6 +1301,20 @@ export default class FileUploader {
                   .map((ext) => `.${ext}`)
                   .join(", ")}`
               : "";
+
+          // Get per-file limit for this type (if exists)
+          const perFileLimitDisplay = this.options.perFileMaxSizePerTypeDisplay[type] ||
+            this.options.perFileMaxSizeDisplay || '';
+
+          // Build info items array for dynamic rendering
+          const infoItems = [];
+          if (perFileLimitDisplay) {
+            infoItems.push(`<span class="file-uploader-chip-limit">${perFileLimitDisplay} / file</span>`);
+          }
+          infoItems.push(`<span class="file-uploader-chip-max">${typeCountLimit} files</span>`);
+          if (limit) {
+            infoItems.push(`<span class="file-uploader-chip-max">Total ${limit}</span>`);
+          }
 
           limitsHTML += `
             <div class="file-uploader-type-chip-expanded" ${
@@ -1304,33 +1334,23 @@ export default class FileUploader {
                 }
               </div>
               <div class="file-uploader-chip-info">
-                <span class="file-uploader-chip-limit">${
-                  this.options.perFileMaxSizePerTypeDisplay[type] ||
-                  this.options.maxFileSizeDisplay
-                } / file</span>
-                <span class="file-uploader-chip-separator">•</span>
-                <span class="file-uploader-chip-max">${typeCountLimit} files</span>
-                <span class="file-uploader-chip-separator">•</span>
-                <span class="file-uploader-chip-max">Total ${limit}</span>
+                ${infoItems.join('<span class="file-uploader-chip-separator">•</span>')}
               </div>
             </div>
           `;
         }
 
         // Add "Other" chip for file types without specific limits
-        const typesWithLimits2 = Object.keys(
-          this.options.perFileMaxSizePerType || {}
-        );
         const allTypesCovered2 = this.options.allowedExtensions.every((ext) => {
           const fileType = this.getFileType(ext);
-          return typesWithLimits2.includes(fileType);
+          return allTypesWithLimits.includes(fileType);
         });
 
         if (!allTypesCovered2) {
           const otherExtensions = this.options.allowedExtensions.filter(
             (ext) => {
               const fileType = this.getFileType(ext);
-              return !typesWithLimits2.includes(fileType);
+              return !allTypesWithLimits.includes(fileType);
             }
           );
 
@@ -1338,6 +1358,8 @@ export default class FileUploader {
             otherExtensions.length > 0
               ? `Allowed: ${otherExtensions.map((ext) => `.${ext}`).join(", ")}`
               : "";
+
+          const otherPerFileLimit = this.options.perFileMaxSizeDisplay || '';
 
           limitsHTML += `
             <div class="file-uploader-type-chip-expanded" ${
@@ -1349,11 +1371,11 @@ export default class FileUploader {
                 ${getIcon("other", { class: "file-uploader-chip-icon" })}
                 <span class="file-uploader-chip-name">Other</span>
               </div>
+              ${otherPerFileLimit ? `
               <div class="file-uploader-chip-info">
-                <span class="file-uploader-chip-limit">${
-                  this.options.perFileMaxSizeDisplay
-                } / file</span>
+                <span class="file-uploader-chip-limit">${otherPerFileLimit} / file</span>
               </div>
+              ` : ''}
             </div>
           `;
         }

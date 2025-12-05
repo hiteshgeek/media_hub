@@ -1,0 +1,1148 @@
+// ============================================================================
+// FileUploader Config Builder Styles
+// Visual configuration interface for the FileUploader component
+// ============================================================================
+
+@use "../variables" as *;
+
+$builder-prefix: "fu-config-builder";
+
+// Main Container
+.#{$builder-prefix} {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2937;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Header
+.#{$builder-prefix}-header {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin-bottom: 16px;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+// Panels
+.#{$builder-prefix}-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.#{$builder-prefix}-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+  }
+}
+
+.#{$builder-prefix}-panel-content {
+  padding: 20px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+// Options Panel (Left side)
+.#{$builder-prefix}-options {
+  @media (max-width: 1200px) {
+    order: 2;
+  }
+}
+
+// Preview Panel (Right side)
+.#{$builder-prefix}-preview {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+
+  @media (max-width: 1200px) {
+    position: static;
+    order: 1;
+  }
+}
+
+// Category Sections
+.#{$builder-prefix}-category {
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.#{$builder-prefix}-category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  }
+
+  &.collapsed .#{$builder-prefix}-category-arrow {
+    transform: rotate(-90deg);
+  }
+}
+
+.#{$builder-prefix}-category-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+.#{$builder-prefix}-category-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.#{$builder-prefix}-category-arrow {
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.#{$builder-prefix}-category-content {
+  padding: 16px 0 0 0;
+  display: grid;
+  gap: 16px;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+// Form Groups
+.#{$builder-prefix}-group {
+  display: grid;
+  gap: 6px;
+}
+
+.#{$builder-prefix}-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+
+  code {
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    color: #6366f1;
+  }
+}
+
+.#{$builder-prefix}-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+// Input Styles
+.#{$builder-prefix}-input,
+.#{$builder-prefix}-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  &:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+.#{$builder-prefix}-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+// Checkbox/Toggle Styles
+.#{$builder-prefix}-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+
+  &.active {
+    background: #eef2ff;
+    border-color: #6366f1;
+  }
+}
+
+.#{$builder-prefix}-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+  }
+
+  .#{$builder-prefix}-toggle.active & {
+    background: #6366f1;
+
+    &::after {
+      transform: translateX(20px);
+    }
+  }
+}
+
+.#{$builder-prefix}-toggle-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.#{$builder-prefix}-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  code {
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    color: #6366f1;
+  }
+}
+
+.#{$builder-prefix}-toggle-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+// Number Input with Unit
+.#{$builder-prefix}-number-group {
+  display: flex;
+  gap: 8px;
+}
+
+.#{$builder-prefix}-number-input {
+  flex: 1;
+}
+
+.#{$builder-prefix}-unit-select {
+  width: 80px;
+  flex-shrink: 0;
+}
+
+// Multi-select Tags
+.#{$builder-prefix}-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-height: 48px;
+}
+
+.#{$builder-prefix}-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #6366f1;
+  }
+
+  &.selected {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+  }
+}
+
+.#{$builder-prefix}-tag-remove {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Extensions Grid
+.#{$builder-prefix}-extensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.#{$builder-prefix}-ext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  &.selected {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+  }
+}
+
+// Type group extensions
+.#{$builder-prefix}-ext-group {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.#{$builder-prefix}-ext-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.#{$builder-prefix}-ext-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.#{$builder-prefix}-ext-group-toggle {
+  font-size: 11px;
+  color: #6366f1;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// MIME Types Grid (PHP validation)
+.#{$builder-prefix}-mimes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.#{$builder-prefix}-mime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  min-width: 120px;
+
+  &:hover {
+    border-color: #10b981;
+
+    .#{$builder-prefix}-mime-label {
+      color: #10b981;
+    }
+  }
+
+  &.selected {
+    background: #10b981;
+    border-color: #10b981;
+
+    .#{$builder-prefix}-mime-label,
+    .#{$builder-prefix}-mime-value {
+      color: #ffffff;
+    }
+
+    .#{$builder-prefix}-mime-value {
+      opacity: 0.8;
+    }
+  }
+}
+
+.#{$builder-prefix}-mime-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  line-height: 1.2;
+}
+
+.#{$builder-prefix}-mime-value {
+  font-size: 9px;
+  font-weight: 400;
+  color: #9ca3af;
+  line-height: 1.2;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+// MIME type group
+.#{$builder-prefix}-mime-group {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+.#{$builder-prefix}-mime-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.#{$builder-prefix}-mime-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.#{$builder-prefix}-mime-group-toggle {
+  font-size: 11px;
+  color: #10b981;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Code Output
+.#{$builder-prefix}-code-container {
+  position: relative;
+}
+
+.#{$builder-prefix}-code {
+  background: #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.#{$builder-prefix}-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #111827;
+  border-bottom: 1px solid #374151;
+}
+
+.#{$builder-prefix}-code-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.#{$builder-prefix}-code-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.#{$builder-prefix}-code-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #374151;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #4b5563;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.#{$builder-prefix}-code-content {
+  padding: 16px;
+  max-height: 300px;
+  overflow: auto;
+
+  pre {
+    margin: 0;
+    font-family: "SF Mono", Monaco, "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e5e7eb;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  // Syntax highlighting
+  .code-keyword {
+    color: #c084fc;
+  }
+  .code-string {
+    color: #86efac;
+  }
+  .code-number {
+    color: #fcd34d;
+  }
+  .code-boolean {
+    color: #f472b6;
+  }
+  .code-property {
+    color: #60a5fa;
+  }
+  .code-comment {
+    color: #6b7280;
+    font-style: italic;
+  }
+}
+
+// Preview Area
+.#{$builder-prefix}-preview-area {
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+// Tabs for Preview
+.#{$builder-prefix}-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.#{$builder-prefix}-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #374151;
+  }
+
+  &.active {
+    background: #ffffff;
+    color: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.#{$builder-prefix}-tab-content {
+  display: none;
+
+  &.active {
+    display: block;
+  }
+}
+
+// Limit Config Grid
+.#{$builder-prefix}-limits-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.#{$builder-prefix}-limit-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 100px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.#{$builder-prefix}-limit-type {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+// Presets
+.#{$builder-prefix}-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.#{$builder-prefix}-preset {
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  &.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .#{$builder-prefix} {
+    padding: 16px;
+  }
+
+  .#{$builder-prefix}-limit-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .#{$builder-prefix}-number-group {
+    flex-direction: column;
+  }
+
+  .#{$builder-prefix}-unit-select {
+    width: 100%;
+  }
+}
+
+// Copy success animation
+.#{$builder-prefix}-copy-success {
+  animation: copySuccess 0.3s ease;
+}
+
+@keyframes copySuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    background: #10b981;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Tooltip for options
+.#{$builder-prefix}-info {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: help;
+
+  &:hover {
+    color: #6366f1;
+  }
+}
+
+// ============================================================================
+// Dependency & Disabled States
+// ============================================================================
+
+// Dependency indicator icon
+.#{$builder-prefix}-depends-on {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  margin-left: 4px;
+  cursor: help;
+  vertical-align: middle;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// Option wrapper for dependencies
+.#{$builder-prefix}-option-wrapper {
+  transition: opacity 0.2s ease;
+
+  &.fu-config-builder-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// Disabled states for various elements
+.#{$builder-prefix}-group.disabled,
+.#{$builder-prefix}-toggle.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.#{$builder-prefix}-toggle.disabled {
+  cursor: not-allowed;
+
+  .#{$builder-prefix}-toggle-switch {
+    background: #e5e7eb;
+  }
+}
+
+.#{$builder-prefix}-tag.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.#{$builder-prefix}-tags.disabled {
+  background: #f3f4f6;
+  pointer-events: none;
+}
+
+// Affects indicator (shows which options this controls)
+.#{$builder-prefix}-affects-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  margin-left: 8px;
+
+  svg {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+// ============================================================================
+// Uploader Selector (Multiple Uploaders)
+// ============================================================================
+
+.#{$builder-prefix}-uploader-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.#{$builder-prefix}-uploader-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.#{$builder-prefix}-uploader-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  &.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+
+    .#{$builder-prefix}-uploader-tab-close,
+    .#{$builder-prefix}-uploader-tab-duplicate {
+      color: rgba(255, 255, 255, 0.7);
+
+      &:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+}
+
+.#{$builder-prefix}-uploader-tab-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.#{$builder-prefix}-uploader-tab-input {
+  width: 120px;
+  padding: 2px 6px;
+  border: 1px solid #6366f1;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+}
+
+.#{$builder-prefix}-uploader-tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.#{$builder-prefix}-uploader-tab-close,
+.#{$builder-prefix}-uploader-tab-duplicate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.#{$builder-prefix}-uploader-tab-close {
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.#{$builder-prefix}-uploader-tab-duplicate {
+  &:hover {
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.#{$builder-prefix}-add-uploader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px dashed #d1d5db;
+  background: transparent;
+  border-radius: 6px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// ============================================================================
+// Uploader Preview Wrappers (Vertical Stack)
+// ============================================================================
+
+.#{$builder-prefix}-uploader-wrapper {
+  margin-bottom: 24px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.active {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  &:not(.active):hover {
+    border-color: #d1d5db;
+  }
+}
+
+.#{$builder-prefix}-uploader-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+
+  .active & {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border-bottom-color: transparent;
+  }
+}
+
+.#{$builder-prefix}-uploader-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+
+  .active & {
+    color: #ffffff;
+  }
+}
+
+.#{$builder-prefix}-uploader-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.#{$builder-prefix}-uploader-edit-btn {
+  padding: 6px 14px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+  }
+}
+
+.#{$builder-prefix}-uploader-container {
+  padding: 16px;
+  background: #ffffff;
+}
+
+// ============================================================================
+// Code Cards (Multiple Uploaders)
+// ============================================================================
+
+.#{$builder-prefix}-code-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.#{$builder-prefix}-code-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &.active {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  .#{$builder-prefix}-code {
+    border: none;
+    border-radius: 0;
+  }
+
+  .#{$builder-prefix}-code-header {
+    border-radius: 0;
+  }
+
+  &.active .#{$builder-prefix}-code-header {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+
+    .#{$builder-prefix}-code-title {
+      color: #ffffff;
+    }
+  }
+}
+
+.#{$builder-prefix}-code-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-left: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// ============================================================================
+// Code Syntax Highlighting - Comments
+// ============================================================================
+
+.code-comment {
+  color: #6b7280;
+  font-style: italic;
+}

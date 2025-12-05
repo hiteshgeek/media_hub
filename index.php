@@ -54,6 +54,10 @@ include_once __DIR__ . '/includes/functions.php';
             <a href="usage/demo-bootstrap5.php">Bootstrap 5 Demo</a>
             <a href="modal_file_uploader.php">Modal Demo</a>
         </div>
+
+        <div class="demo-links">
+            <a href="config-builder.php">Config Builder</a>
+        </div>
     </div>
 
     <script type="module" src="<?= asset('file-uploader.js') ?>"></script>
