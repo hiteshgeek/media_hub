@@ -11,6 +11,7 @@ import AudioWorkletRecorder from "../utils/AudioWorkletRecorder.js";
 import RecordingUI from "../utils/RecordingUI.js";
 import Tooltip from "./tooltip/index.js";
 import { FileCarousel } from "./carousel/index.js";
+import Alert from "./Alert.js";
 
 // Static registry for all FileUploader instances (for cross-uploader drag-drop)
 const uploaderRegistry = new Map();
@@ -37,6 +38,7 @@ export default class FileUploader {
       deleteUrl: "./delete.php",
       downloadAllUrl: "./download-all.php",
       cleanupZipUrl: "./cleanup-zip.php",
+      copyFileUrl: "./copy-file.php", // URL for copying files between directories (cross-uploader)
       configUrl: "./get-config.php",
       uploadDir: "", // Target folder for uploads (relative to server's base upload directory, e.g., "profile_pictures" or "documents/2024")
       allowedExtensions: [],
@@ -80,6 +82,9 @@ export default class FileUploader {
       confirmBeforeDelete: false, // Show confirmation dialog before deleting files
       preventDuplicates: false, // Prevent uploading the same file again
       duplicateCheckBy: "name-size", // How to check duplicates: 'name', 'size', 'name-size', 'hash'
+      // Alert notification options
+      alertAnimation: "shake", // Animation for error alerts: 'fade', 'shake', 'bounce', 'slideDown', 'pop', 'flip'
+      alertDuration: 5000, // Auto-dismiss duration in ms (0 = no auto-dismiss)
       showDownloadAllButton: true, // Show internal download-all button
       downloadAllButtonText: "Download All", // Text for download-all button
       downloadAllButtonClasses: [], // Custom classes for download-all button (Bootstrap, etc.)
@@ -1615,6 +1620,13 @@ export default class FileUploader {
       return;
     }
 
+    // Validate the file against this uploader's constraints
+    const validation = this.validateCrossUploaderFile(sourceFileObj);
+    if (!validation.valid) {
+      this.showError(validation.error);
+      return;
+    }
+
     // Check for duplicates if enabled
     if (this.options.preventDuplicates) {
       const duplicate = this.checkDuplicateByNameSize(
@@ -1640,12 +1652,33 @@ export default class FileUploader {
       return;
     }
 
-    // Copy the file to this uploader
-    await this.copyFileFromUploader(sourceFileObj, sourceUploader);
+    // Determine if we need server-side copy (different uploadDir)
+    const sourceUploadDir = sourceUploader.options.uploadDir || "";
+    const targetUploadDir = this.options.uploadDir || "";
+    const needsServerCopy = sourceUploadDir !== targetUploadDir;
 
-    // If move was selected, remove from source (without deleting from server)
+    // Copy/move the file to this uploader
+    const result = await this.copyFileFromUploader(
+      sourceFileObj,
+      sourceUploader
+    );
+
+    if (!result.success) {
+      this.showError(result.error || "Failed to copy/move file");
+      return;
+    }
+
+    // If move was selected and copy succeeded, handle source cleanup
     if (action === "move") {
-      sourceUploader.removeFileFromUI(sourceFileObj.id);
+      if (needsServerCopy) {
+        // Different directories: delete file from source server location
+        await sourceUploader.deleteFile(sourceFileObj.id, {
+          skipConfirmation: true,
+        });
+      } else {
+        // Same directory: just remove from UI (file is shared)
+        sourceUploader.removeFileFromUI(sourceFileObj.id);
+      }
     }
   }
 
@@ -1865,6 +1898,53 @@ export default class FileUploader {
    * Copy a file from another uploader to this one
    */
   async copyFileFromUploader(sourceFileObj, sourceUploader) {
+    const sourceUploadDir = sourceUploader.options.uploadDir || "";
+    const targetUploadDir = this.options.uploadDir || "";
+    const needsServerCopy = sourceUploadDir !== targetUploadDir;
+
+    let serverFilename = sourceFileObj.serverFilename;
+    let serverData = { ...sourceFileObj.serverData };
+
+    // If different directories, call server to copy the file
+    if (needsServerCopy) {
+      try {
+        const response = await fetch(this.options.copyFileUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sourceFilename: sourceFileObj.serverFilename,
+            sourceUploadDir: sourceUploadDir,
+            targetUploadDir: targetUploadDir,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          return {
+            success: false,
+            error: result.error || "Failed to copy file on server",
+          };
+        }
+
+        // Update with new server data
+        serverFilename = result.file.filename;
+        serverData = result.file;
+
+        // If file was renamed due to conflict, notify
+        if (result.renamed) {
+          console.log(
+            `File renamed from "${sourceFileObj.serverFilename}" to "${serverFilename}" to avoid conflict`
+          );
+        }
+      } catch (error) {
+        console.error("Error copying file to server:", error);
+        return { success: false, error: "Network error while copying file" };
+      }
+    }
+
     // Create a new file object with the same data
     const newFileObj = {
       id: Date.now() + Math.random().toString(36).substr(2, 9),
@@ -1875,8 +1955,8 @@ export default class FileUploader {
       extension: sourceFileObj.extension,
       uploaded: true,
       uploading: false,
-      serverFilename: sourceFileObj.serverFilename,
-      serverData: { ...sourceFileObj.serverData },
+      serverFilename: serverFilename,
+      serverData: serverData,
       captureType: sourceFileObj.captureType,
     };
 
@@ -1899,6 +1979,8 @@ export default class FileUploader {
 
     // Update carousel
     this.updateCarousel();
+
+    return { success: true, fileObj: newFileObj };
   }
 
   handleFiles(fileList) {
@@ -2027,6 +2109,103 @@ export default class FileUploader {
       return {
         valid: false,
         error: `Adding "${file.name}" would exceed the total size limit of ${
+          this.options.totalMaxSizeDisplay
+        }. Available: ${this.formatFileSize(remaining)}.`,
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Validate a file from cross-uploader drag-drop operation
+   * Checks all constraints (extension, size limits, file count, etc.)
+   * @param {Object} fileObj - The source file object from another uploader
+   * @returns {Object} - { valid: boolean, error?: string }
+   */
+  validateCrossUploaderFile(fileObj) {
+    // Check max files limit
+    const totalFileCount = this.files.length;
+    if (totalFileCount >= this.options.maxFiles) {
+      return {
+        valid: false,
+        error: `Maximum number of files (${this.options.maxFiles}) reached. Please delete some files before adding more.`,
+      };
+    }
+
+    // Check file extension
+    const extension = fileObj.extension || this.getFileExtension(fileObj.name);
+    if (
+      this.options.allowedExtensions.length > 0 &&
+      !this.options.allowedExtensions.includes(extension)
+    ) {
+      const allowedList = this.options.allowedExtensions
+        .slice(0, 5)
+        .map((ext) => `.${ext}`)
+        .join(", ");
+      const moreText =
+        this.options.allowedExtensions.length > 5
+          ? ` and ${this.options.allowedExtensions.length - 5} more`
+          : "";
+      return {
+        valid: false,
+        error: `"${fileObj.name}" file type (.${extension}) is not allowed in this uploader. Allowed types: ${allowedList}${moreText}.`,
+      };
+    }
+
+    // Check per-file size limit
+    const fileType = this.getFileType(extension);
+    const perFileLimit =
+      this.options.perFileMaxSizePerType[fileType] ||
+      this.options.perFileMaxSize;
+    const perFileLimitDisplay =
+      this.options.perFileMaxSizePerTypeDisplay[fileType] ||
+      this.options.perFileMaxSizeDisplay;
+
+    if (fileObj.size > perFileLimit) {
+      return {
+        valid: false,
+        error: `"${fileObj.name}" exceeds the maximum ${fileType} file size of ${perFileLimitDisplay}.`,
+      };
+    }
+
+    // Check per-file-type TOTAL size limit
+    const typeLimit = this.options.perTypeMaxTotalSize[fileType];
+    if (typeLimit) {
+      const currentTypeSize = this.getFileTypeSize(fileType);
+      if (currentTypeSize + fileObj.size > typeLimit) {
+        const limitDisplay = this.options.perTypeMaxTotalSizeDisplay[fileType];
+        const remaining = typeLimit - currentTypeSize;
+        return {
+          valid: false,
+          error: `Adding "${
+            fileObj.name
+          }" would exceed the total ${fileType} size limit of ${limitDisplay}. Available: ${this.formatFileSize(
+            remaining
+          )}.`,
+        };
+      }
+    }
+
+    // Check per-file-type file COUNT limit
+    const typeCountLimit = this.options.perTypeMaxFileCount[fileType];
+    if (typeCountLimit) {
+      const currentTypeCount = this.getFileTypeCount(fileType);
+      if (currentTypeCount >= typeCountLimit) {
+        return {
+          valid: false,
+          error: `Maximum number of ${fileType} files (${typeCountLimit}) reached. Please delete some ${fileType} files before adding more.`,
+        };
+      }
+    }
+
+    // Check total size limit
+    const currentTotalSize = this.getTotalSize();
+    if (currentTotalSize + fileObj.size > this.options.totalMaxSize) {
+      const remaining = this.options.totalMaxSize - currentTotalSize;
+      return {
+        valid: false,
+        error: `Adding "${fileObj.name}" would exceed the total size limit of ${
           this.options.totalMaxSizeDisplay
         }. Available: ${this.formatFileSize(remaining)}.`,
       };
@@ -2778,26 +2957,44 @@ export default class FileUploader {
   showError(message) {
     console.error("FileUploader:", message);
 
-    // Create error message with icon
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "file-uploader-error";
-    errorDiv.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="file-uploader-error-icon">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>${message}</span>
-        `;
+    // Use the Alert notification system
+    Alert.error(message, {
+      animation: this.options.alertAnimation,
+      duration: this.options.alertDuration,
+    });
+  }
 
-    // Insert error message before the dropzone (since preview is now inside dropzone)
-    this.wrapper.insertBefore(errorDiv, this.dropZone);
+  /**
+   * Show a success notification
+   * @param {string} message - Success message to display
+   */
+  showSuccess(message) {
+    Alert.success(message, {
+      animation: this.options.alertAnimation,
+      duration: this.options.alertDuration,
+    });
+  }
 
-    // Auto-remove after 6 seconds
-    setTimeout(() => {
-      errorDiv.style.opacity = "0";
-      setTimeout(() => errorDiv.remove(), 300);
-    }, 6000);
+  /**
+   * Show a warning notification
+   * @param {string} message - Warning message to display
+   */
+  showWarning(message) {
+    Alert.warning(message, {
+      animation: this.options.alertAnimation,
+      duration: this.options.alertDuration,
+    });
+  }
+
+  /**
+   * Show an info notification
+   * @param {string} message - Info message to display
+   */
+  showInfo(message) {
+    Alert.info(message, {
+      animation: this.options.alertAnimation,
+      duration: this.options.alertDuration,
+    });
   }
 
   getFiles() {
@@ -2984,10 +3181,16 @@ export default class FileUploader {
           filename: f.serverFilename,
         }));
 
+        // Build request payload with uploadDir if specified
+        const payload = { files: fileData };
+        if (this.options.uploadDir) {
+          payload.uploadDir = this.options.uploadDir;
+        }
+
         // Use sendBeacon for reliable cleanup even when page is unloading
         // This is a fire-and-forget request that will complete even if page closes
         if (navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify({ files: fileData })], {
+          const blob = new Blob([JSON.stringify(payload)], {
             type: "application/json",
           });
           navigator.sendBeacon(this.options.deleteUrl, blob);

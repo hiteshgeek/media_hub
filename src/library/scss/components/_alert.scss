@@ -1,0 +1,417 @@
+// ============================================================================
+// Alert Notification System
+// Toast-like notifications with animation support
+// Works on any background (light or dark)
+// ============================================================================
+
+@use "../variables" as *;
+@use "../mixins" as *;
+
+$component-prefix: $file-uploader-prefix !default;
+
+// Alert Container - Fixed at top center
+.#{$component-prefix}-alert-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 90vw;
+  width: 500px;
+}
+
+// Base Alert Styles - Solid background that works on any page background
+.#{$component-prefix}-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  pointer-events: auto;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(-20px);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+// Alert Icon
+.#{$component-prefix}-alert-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Alert Content
+.#{$component-prefix}-alert-content {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.#{$component-prefix}-alert-message {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+// Close Button
+.#{$component-prefix}-alert-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px -4px 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ============================================================================
+// Alert Types - Solid backgrounds for universal compatibility
+// ============================================================================
+
+// Error Alert - Red theme
+.#{$component-prefix}-alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+
+  .#{$component-prefix}-alert-icon {
+    color: #dc2626;
+  }
+
+  .#{$component-prefix}-alert-message {
+    color: #991b1b;
+  }
+
+  .#{$component-prefix}-alert-close {
+    color: #991b1b;
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.1);
+    }
+  }
+}
+
+// Success Alert - Green theme
+.#{$component-prefix}-alert-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+
+  .#{$component-prefix}-alert-icon {
+    color: #16a34a;
+  }
+
+  .#{$component-prefix}-alert-message {
+    color: #166534;
+  }
+
+  .#{$component-prefix}-alert-close {
+    color: #166534;
+
+    &:hover {
+      background: rgba(22, 163, 74, 0.1);
+    }
+  }
+}
+
+// Warning Alert - Yellow/Amber theme
+.#{$component-prefix}-alert-warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+
+  .#{$component-prefix}-alert-icon {
+    color: #d97706;
+  }
+
+  .#{$component-prefix}-alert-message {
+    color: #92400e;
+  }
+
+  .#{$component-prefix}-alert-close {
+    color: #92400e;
+
+    &:hover {
+      background: rgba(217, 119, 6, 0.1);
+    }
+  }
+}
+
+// Info Alert - Blue theme
+.#{$component-prefix}-alert-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+
+  .#{$component-prefix}-alert-icon {
+    color: #2563eb;
+  }
+
+  .#{$component-prefix}-alert-message {
+    color: #1e40af;
+  }
+
+  .#{$component-prefix}-alert-close {
+    color: #1e40af;
+
+    &:hover {
+      background: rgba(37, 99, 235, 0.1);
+    }
+  }
+}
+
+// ============================================================================
+// Dark Mode Variants (when data-theme="dark" is set on html/body)
+// These use darker solid backgrounds
+// ============================================================================
+
+@if $file-uploader-enable-dark-mode {
+  [data-theme="dark"] {
+    .#{$component-prefix}-alert-error {
+      background: #450a0a;
+      border-color: #7f1d1d;
+
+      .#{$component-prefix}-alert-icon {
+        color: #f87171;
+      }
+
+      .#{$component-prefix}-alert-message {
+        color: #fecaca;
+      }
+
+      .#{$component-prefix}-alert-close {
+        color: #fecaca;
+
+        &:hover {
+          background: rgba(248, 113, 113, 0.15);
+        }
+      }
+    }
+
+    .#{$component-prefix}-alert-success {
+      background: #052e16;
+      border-color: #166534;
+
+      .#{$component-prefix}-alert-icon {
+        color: #4ade80;
+      }
+
+      .#{$component-prefix}-alert-message {
+        color: #bbf7d0;
+      }
+
+      .#{$component-prefix}-alert-close {
+        color: #bbf7d0;
+
+        &:hover {
+          background: rgba(74, 222, 128, 0.15);
+        }
+      }
+    }
+
+    .#{$component-prefix}-alert-warning {
+      background: #451a03;
+      border-color: #92400e;
+
+      .#{$component-prefix}-alert-icon {
+        color: #fbbf24;
+      }
+
+      .#{$component-prefix}-alert-message {
+        color: #fde68a;
+      }
+
+      .#{$component-prefix}-alert-close {
+        color: #fde68a;
+
+        &:hover {
+          background: rgba(251, 191, 36, 0.15);
+        }
+      }
+    }
+
+    .#{$component-prefix}-alert-info {
+      background: #1e3a5f;
+      border-color: #1e40af;
+
+      .#{$component-prefix}-alert-icon {
+        color: #60a5fa;
+      }
+
+      .#{$component-prefix}-alert-message {
+        color: #bfdbfe;
+      }
+
+      .#{$component-prefix}-alert-close {
+        color: #bfdbfe;
+
+        &:hover {
+          background: rgba(96, 165, 250, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Animations
+// ============================================================================
+
+// Show state (base)
+.#{$component-prefix}-alert-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+// Hide state
+.#{$component-prefix}-alert-hide {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+// Fade Animation
+.#{$component-prefix}-alert-fade {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+// SlideDown Animation
+.#{$component-prefix}-alert-slideDown {
+  animation: alertSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes alertSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Bounce Animation
+.#{$component-prefix}-alert-bounce {
+  animation: alertBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes alertBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(10px) scale(1.02);
+  }
+  70% {
+    transform: translateY(-5px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Shake Animation (appears then shakes)
+.#{$component-prefix}-alert-shake {
+  animation: alertShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+@keyframes alertShake {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-8px);
+  }
+  40%, 60% {
+    transform: translateX(8px);
+  }
+  80% {
+    transform: translateX(-4px);
+  }
+  90% {
+    transform: translateX(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Pop Animation
+.#{$component-prefix}-alert-pop {
+  animation: alertPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes alertPop {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.5);
+  }
+  70% {
+    transform: translateY(0) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Flip Animation
+.#{$component-prefix}-alert-flip {
+  animation: alertFlip 0.5s ease forwards;
+  transform-style: preserve-3d;
+}
+
+@keyframes alertFlip {
+  0% {
+    opacity: 0;
+    transform: perspective(400px) rotateX(-90deg) translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(400px) rotateX(0) translateY(0);
+  }
+}

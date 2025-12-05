@@ -7,5 +7,6 @@
 @use "components/recording";
 @use "components/tooltip"; // Old info icon tooltip
 @use "components/tooltip/tooltip" as modern-tooltip; // Modern tooltip system
+@use "components/alert"; // Alert notification system
 @use "components/file-uploader";
 @use "components/carousel/carousel"; // Carousel preview modal
