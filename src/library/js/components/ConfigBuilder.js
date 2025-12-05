@@ -2605,6 +2605,19 @@ export default class ConfigBuilder {
   }
 
   /**
+   * Check if an uploader name is already in use
+   */
+  isNameDuplicate(name, excludeUploaderId = null) {
+    const normalizedName = name.trim().toLowerCase();
+    for (const [id, data] of Object.entries(this.uploaderInstances)) {
+      if (id !== excludeUploaderId && data.name.trim().toLowerCase() === normalizedName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Edit uploader name
    */
   editUploaderName(uploaderId) {
@@ -2617,28 +2630,84 @@ export default class ConfigBuilder {
     input.value = currentName;
     input.className = "fu-config-builder-uploader-tab-input";
 
-    const finishEdit = () => {
-      const newName = input.value.trim() || currentName;
-      this.uploaderInstances[uploaderId].name = newName;
-      nameEl.textContent = newName;
-      nameEl.style.display = "";
-      input.remove();
+    // Error message element
+    const errorEl = document.createElement("span");
+    errorEl.className = "fu-config-builder-name-error";
+    errorEl.style.display = "none";
+    errorEl.textContent = "Name already exists";
+
+    const validateName = () => {
+      const newName = input.value.trim();
+      if (newName && this.isNameDuplicate(newName, uploaderId)) {
+        input.classList.add("error");
+        errorEl.style.display = "";
+        return false;
+      } else {
+        input.classList.remove("error");
+        errorEl.style.display = "none";
+        return true;
+      }
     };
 
-    input.addEventListener("blur", finishEdit);
+    const finishEdit = (save = true) => {
+      if (save) {
+        const newName = input.value.trim();
+        if (!newName) {
+          // Empty name - keep current
+          this.uploaderInstances[uploaderId].name = currentName;
+          nameEl.textContent = currentName;
+        } else if (this.isNameDuplicate(newName, uploaderId)) {
+          // Duplicate name - show error and don't close
+          input.classList.add("error");
+          errorEl.style.display = "";
+          input.focus();
+          return;
+        } else {
+          // Valid name
+          this.uploaderInstances[uploaderId].name = newName;
+          nameEl.textContent = newName;
+          // Update preview header
+          this.updatePreviewHeader(uploaderId, newName);
+          // Update code output
+          this.updateCodeOutput();
+        }
+      }
+      nameEl.style.display = "";
+      input.remove();
+      errorEl.remove();
+    };
+
+    input.addEventListener("input", validateName);
+    input.addEventListener("blur", () => finishEdit(true));
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        finishEdit();
+        e.preventDefault();
+        if (validateName()) {
+          finishEdit(true);
+        }
       } else if (e.key === "Escape") {
-        nameEl.style.display = "";
-        input.remove();
+        finishEdit(false);
       }
     });
 
     nameEl.style.display = "none";
     nameEl.parentNode.insertBefore(input, nameEl);
+    nameEl.parentNode.insertBefore(errorEl, input.nextSibling);
     input.focus();
     input.select();
+  }
+
+  /**
+   * Update preview header with new name
+   */
+  updatePreviewHeader(uploaderId, newName) {
+    const wrapper = this.element.querySelector(`[data-uploader-wrapper="${uploaderId}"]`);
+    if (wrapper) {
+      const label = wrapper.querySelector(".fu-config-builder-uploader-label");
+      if (label) {
+        label.textContent = newName;
+      }
+    }
   }
 
   /**

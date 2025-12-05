@@ -930,6 +930,26 @@ $builder-prefix: "fu-config-builder";
   font-size: 13px;
   font-weight: 500;
   outline: none;
+
+  &.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+}
+
+.#{$builder-prefix}-name-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
 }
 
 .#{$builder-prefix}-uploader-tab-actions {
