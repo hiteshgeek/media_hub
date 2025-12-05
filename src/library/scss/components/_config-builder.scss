@@ -31,6 +31,16 @@ $builder-prefix: "fu-config-builder";
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0; // Don't shrink header
+  position: relative; // For absolute positioning of header-left
+}
+
+// Header Left Section (home link + theme switcher)
+.#{$builder-prefix}-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: absolute;
+  left: 24px;
 }
 
 .#{$builder-prefix}-home-link {
@@ -55,6 +65,48 @@ $builder-prefix: "fu-config-builder";
   &:hover {
     background: #6366f1;
     color: #ffffff;
+  }
+}
+
+// Theme Switcher
+.#{$builder-prefix}-theme-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+
+.#{$builder-prefix}-theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #374151;
+  }
+
+  &.active {
+    background: #ffffff;
+    color: #6366f1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -113,6 +165,64 @@ $builder-prefix: "fu-config-builder";
     font-weight: 600;
     color: #111827;
     margin: 0;
+  }
+}
+
+// Main Tabs (Config / Styles)
+.#{$builder-prefix}-main-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+
+.#{$builder-prefix}-main-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #374151;
+  }
+
+  &.active {
+    background: #ffffff;
+    color: #6366f1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+    svg {
+      stroke: #6366f1;
+    }
+  }
+}
+
+// Main Tab Content
+.#{$builder-prefix}-main-tab-content {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  &.active {
+    display: flex;
   }
 }
 
@@ -349,12 +459,17 @@ $builder-prefix: "fu-config-builder";
 }
 
 .#{$builder-prefix}-category-icon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6b7280;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .#{$builder-prefix}-category-title {
@@ -438,9 +553,10 @@ $builder-prefix: "fu-config-builder";
   code {
     font-family: "SF Mono", Monaco, monospace;
     font-size: 10px;
-    padding: 2px 5px;
-    background: #f3f4f6;
-    border-radius: 3px;
+    padding: 3px 6px;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    border-radius: 4px;
     color: #6366f1;
   }
 }
@@ -1273,7 +1389,7 @@ $builder-prefix: "fu-config-builder";
   background: #f3f4f6;
   border-radius: 6px;
   margin-bottom: 12px;
-  width: 300px;
+  width: 500px;
 }
 
 .#{$builder-prefix}-tab {
@@ -1754,6 +1870,193 @@ $builder-prefix: "fu-config-builder";
 }
 
 // ============================================================================
+// CSS Variables Panel (in Uploader Wrapper)
+// ============================================================================
+
+.#{$builder-prefix}-css-vars-toggle {
+  padding: 0 14px 14px;
+  background: #ffffff;
+}
+
+.#{$builder-prefix}-css-vars-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    flex-shrink: 0;
+  }
+
+  svg.chevron {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #374151;
+  }
+
+  &.active {
+    background: #eef2ff;
+    border-color: #6366f1;
+    color: #6366f1;
+
+    svg.chevron {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.#{$builder-prefix}-css-vars-panel {
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  padding: 14px;
+}
+
+.#{$builder-prefix}-css-vars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.#{$builder-prefix}-css-vars-empty {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 16px;
+  font-style: italic;
+}
+
+.#{$builder-prefix}-css-vars-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.#{$builder-prefix}-css-vars-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.#{$builder-prefix}-css-vars-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  border-radius: 50%;
+
+  &.light {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  &.dark {
+    background: #312e81;
+    color: #c7d2fe;
+  }
+}
+
+.#{$builder-prefix}-css-vars-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.#{$builder-prefix}-css-var-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+
+    .#{$builder-prefix}-css-var-label {
+      color: #6366f1;
+    }
+  }
+
+  &.modified {
+    border-color: #818cf8;
+    background: #f5f3ff;
+
+    .#{$builder-prefix}-css-var-label {
+      color: #6366f1;
+    }
+  }
+}
+
+.#{$builder-prefix}-css-var-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.#{$builder-prefix}-css-var-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.#{$builder-prefix}-css-var-value {
+  font-family: "SF Mono", Monaco, monospace;
+  font-size: 10px;
+  padding: 2px 5px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  color: #6b7280;
+}
+
+// Highlight animation for style variable when navigated to
+.#{$builder-prefix}-style-var-highlight {
+  animation: style-var-highlight 2s ease;
+}
+
+@keyframes style-var-highlight {
+  0%, 100% {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+  }
+  25%, 75% {
+    background: #eef2ff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+}
+
+// ============================================================================
 // Code Cards (Multiple Uploaders)
 // ============================================================================
 
@@ -1814,3 +2117,1108 @@ $builder-prefix: "fu-config-builder";
   color: #6b7280;
   font-style: italic;
 }
+
+// ============================================================================
+// Style Editor Components
+// ============================================================================
+
+// Style Tabs - extends vertical tabs to full height with reset at bottom
+.#{$builder-prefix}-style-tabs {
+  align-self: stretch !important;
+  display: flex;
+  flex-direction: column;
+}
+
+// Mode-specific vertical tabs (light/dark mode indicators)
+.#{$builder-prefix}-vertical-tab.mode-light {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: #fbbf24;
+    border-radius: 50%;
+    border: 1px solid #f59e0b;
+  }
+}
+
+.#{$builder-prefix}-vertical-tab.mode-dark {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: #6366f1;
+    border-radius: 50%;
+    border: 1px solid #4f46e5;
+  }
+}
+
+// Mode badge for style section headers
+.#{$builder-prefix}-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+  }
+
+  &.mode-light {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
+  }
+
+  &.mode-dark {
+    background: linear-gradient(135deg, #312e81 0%, #4338ca 100%);
+    color: #c7d2fe;
+    border: 1px solid #6366f1;
+  }
+}
+
+// Spacer to push reset button to bottom
+.#{$builder-prefix}-vertical-tabs-spacer {
+  flex: 1;
+  min-height: 16px;
+}
+
+// Reset button in vertical tabs (at bottom)
+.#{$builder-prefix}-reset-styles-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 4px;
+  margin: 8px 4px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #dc2626;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+  }
+
+  span {
+    font-size: 7px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  &:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+  }
+}
+
+// Custom indicator dot on Styles tab
+.#{$builder-prefix}-custom-indicator {
+  display: none;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  margin-left: 4px;
+  animation: pulse-indicator 2s infinite;
+
+  &.visible {
+    display: inline-block;
+  }
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+// Styles tab with custom styles
+.#{$builder-prefix}-main-tab.has-custom {
+  position: relative;
+}
+
+// Style Toolbar (contains highlight toggle)
+.#{$builder-prefix}-style-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+// Highlight Toggle Switch
+.#{$builder-prefix}-highlight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    display: none;
+  }
+}
+
+.#{$builder-prefix}-highlight-toggle-slider {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #d1d5db;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.#{$builder-prefix}-highlight-toggle input:checked + .#{$builder-prefix}-highlight-toggle-slider {
+  background: #6366f1;
+
+  &::after {
+    transform: translateX(16px);
+  }
+}
+
+.#{$builder-prefix}-highlight-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+  }
+}
+
+.#{$builder-prefix}-highlight-toggle input:checked ~ .#{$builder-prefix}-highlight-toggle-label {
+  color: #6366f1;
+}
+
+// Style Variables Container
+.#{$builder-prefix}-style-variables {
+  display: grid;
+  gap: 12px;
+}
+
+// Individual Style Variable Row
+.#{$builder-prefix}-style-var {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.#{$builder-prefix}-style-var-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.#{$builder-prefix}-style-var-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.#{$builder-prefix}-style-var-name {
+  font-family: "SF Mono", Monaco, monospace;
+  font-size: 10px;
+  padding: 3px 6px;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 4px;
+  color: #6366f1;
+}
+
+.#{$builder-prefix}-style-var-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Color Picker Input
+.#{$builder-prefix}-color-picker {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #ffffff;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
+
+  &::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
+}
+
+// Color Text Input
+.#{$builder-prefix}-color-text {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+}
+
+// Size Input
+.#{$builder-prefix}-size-input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+}
+
+// Text Input (for shadows, transitions, etc.)
+.#{$builder-prefix}-text-input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+}
+
+// Number Input
+.#{$builder-prefix}-number-input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2937;
+
+  &:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+
+  // Hide spinners
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+// ============================================================================
+// Highlight Glow Effect for Preview Elements
+// ============================================================================
+
+.fu-highlight-glow {
+  position: relative;
+  animation: highlight-pulse 1s ease-in-out infinite;
+  outline: 2px solid #6366f1 !important;
+  outline-offset: 2px;
+  z-index: 10;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: rgba(99, 102, 241, 0.15);
+    pointer-events: none;
+    animation: highlight-glow 1s ease-in-out infinite;
+  }
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    outline-color: #6366f1;
+  }
+  50% {
+    outline-color: #818cf8;
+  }
+}
+
+@keyframes highlight-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02);
+  }
+}
+
+// ============================================================================
+// Dark Theme Styles
+// ============================================================================
+
+.#{$builder-prefix}.theme-dark {
+  background: #1a202c;
+  color: #e2e8f0;
+
+  // Header
+  .#{$builder-prefix}-header {
+    background: #2d3748;
+    border-bottom-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-header-text {
+    h1 {
+      color: #f7fafc;
+    }
+    p {
+      color: #a0aec0;
+    }
+  }
+
+  .#{$builder-prefix}-home-link {
+    background: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      background: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  .#{$builder-prefix}-theme-switcher {
+    background: #4a5568;
+  }
+
+  .#{$builder-prefix}-theme-btn {
+    color: #a0aec0;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.2);
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #2d3748;
+      color: #6366f1;
+    }
+  }
+
+  // Panels
+  .#{$builder-prefix}-panel {
+    background: #2d3748;
+  }
+
+  .#{$builder-prefix}-panel-header {
+    background: #1a202c;
+    border-bottom-color: #4a5568;
+
+    h2 {
+      color: #f7fafc;
+    }
+  }
+
+  .#{$builder-prefix}-options {
+    border-right-color: #4a5568;
+  }
+
+  // Main Tabs
+  .#{$builder-prefix}-main-tabs {
+    background: #4a5568;
+  }
+
+  .#{$builder-prefix}-main-tab {
+    color: #a0aec0;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.2);
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #2d3748;
+      color: #6366f1;
+    }
+  }
+
+  // Vertical Tabs
+  .#{$builder-prefix}-vertical-tabs {
+    background: #1a202c;
+    border-right-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-vertical-tab {
+    color: #718096;
+
+    &:hover {
+      background: #2d3748;
+      color: #a0aec0;
+    }
+
+    &.active {
+      background: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  // Category Panels
+  .#{$builder-prefix}-category-panel-header {
+    border-bottom-color: #4a5568;
+
+    h3 {
+      color: #f7fafc;
+    }
+
+    p {
+      color: #a0aec0;
+    }
+  }
+
+  // Presets
+  .#{$builder-prefix}-presets {
+    border-bottom-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-preset {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+    }
+
+    &.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  // Form Elements
+  .#{$builder-prefix}-label {
+    color: #e2e8f0;
+
+    code {
+      background: #374151;
+      border-color: #4a5568;
+      color: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-hint {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-input,
+  .#{$builder-prefix}-select {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    &:disabled {
+      background: #2d3748;
+      color: #718096;
+    }
+  }
+
+  // Toggle Styles
+  .#{$builder-prefix}-toggle {
+    background: #1a202c;
+    border-color: #4a5568;
+
+    &:hover {
+      background: #2d3748;
+      border-color: #4a5568;
+    }
+
+    &.active {
+      background: #312e81;
+      border-color: #6366f1;
+    }
+  }
+
+  .#{$builder-prefix}-toggle-label {
+    color: #e2e8f0;
+
+    code {
+      background: #4a5568;
+      color: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-toggle-hint {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-toggle-switch {
+    background: #4a5568;
+  }
+
+  // Size Slider
+  .#{$builder-prefix}-size-slider,
+  .#{$builder-prefix}-count-slider,
+  .#{$builder-prefix}-type-slider-block {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-slider-btn {
+    background: #2d3748;
+    border-color: #4a5568;
+
+    svg {
+      fill: #a0aec0;
+    }
+
+    &:hover {
+      border-color: #6366f1;
+      background: #312e81;
+
+      svg {
+        fill: #818cf8;
+      }
+    }
+  }
+
+  .#{$builder-prefix}-slider-input {
+    background: #4a5568;
+
+    &::-webkit-slider-runnable-track {
+      background: #4a5568;
+    }
+
+    &::-moz-range-track {
+      background: #4a5568;
+    }
+  }
+
+  .#{$builder-prefix}-slider-value-input {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:focus {
+      border-color: #6366f1;
+    }
+  }
+
+  .#{$builder-prefix}-slider-label,
+  .#{$builder-prefix}-slider-value-label {
+    color: #718096;
+  }
+
+  .#{$builder-prefix}-unit-dropdown {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:focus {
+      border-color: #6366f1;
+    }
+  }
+
+  .#{$builder-prefix}-type-slider-title {
+    color: #e2e8f0;
+  }
+
+  // Extensions & Tags
+  .#{$builder-prefix}-tags {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-tag {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      border-color: #6366f1;
+    }
+
+    &.selected {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  .#{$builder-prefix}-ext {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+    }
+
+    &.selected {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  .#{$builder-prefix}-ext-group-title,
+  .#{$builder-prefix}-mime-group-title {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-ext-group-toggle,
+  .#{$builder-prefix}-mime-group-toggle {
+    color: #818cf8;
+  }
+
+  // MIME Types
+  .#{$builder-prefix}-mime {
+    background: #1a202c;
+    border-color: #4a5568;
+
+    &:hover {
+      border-color: #6366f1;
+    }
+
+    &.selected {
+      background: #6366f1;
+      border-color: #6366f1;
+    }
+  }
+
+  .#{$builder-prefix}-mime-label {
+    color: #e2e8f0;
+  }
+
+  .#{$builder-prefix}-mime-value {
+    color: #718096;
+  }
+
+  .#{$builder-prefix}-mime-group {
+    border-bottom-color: #2d3748;
+  }
+
+  // Resizer
+  .#{$builder-prefix}-resizer {
+    background: #4a5568;
+
+    &::before {
+      color: #718096;
+    }
+  }
+
+  // Preview Tabs
+  .#{$builder-prefix}-tabs {
+    background: #1a202c;
+  }
+
+  .#{$builder-prefix}-tab {
+    color: #a0aec0;
+
+    &:hover {
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #2d3748;
+      color: #f7fafc;
+    }
+  }
+
+  // Preview Area
+  .#{$builder-prefix}-preview-area {
+    background: #1a202c;
+  }
+
+  // Uploader Wrappers
+  .#{$builder-prefix}-uploader-wrapper {
+    border-color: #4a5568;
+
+    &.active {
+      border-color: #6366f1;
+    }
+
+    &:not(.active):hover {
+      border-color: #718096;
+    }
+  }
+
+  .#{$builder-prefix}-uploader-header {
+    background: #1a202c;
+    border-bottom-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-uploader-label {
+    color: #e2e8f0;
+  }
+
+  .#{$builder-prefix}-uploader-container {
+    background: #2d3748;
+  }
+
+  .#{$builder-prefix}-uploader-edit-btn {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  // CSS Variables Panel
+  .#{$builder-prefix}-css-vars-toggle {
+    background: #2d3748;
+  }
+
+  .#{$builder-prefix}-css-vars-btn {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #312e81;
+      border-color: #6366f1;
+      color: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-css-vars-panel {
+    background: #1a202c;
+    border-top-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-css-vars-empty {
+    color: #6b7280;
+  }
+
+  .#{$builder-prefix}-css-vars-group-title {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-css-vars-mode {
+    &.light {
+      background: #78350f;
+      color: #fde68a;
+    }
+
+    &.dark {
+      background: #1e1b4b;
+      color: #a5b4fc;
+    }
+  }
+
+  .#{$builder-prefix}-css-var-item {
+    background: #2d3748;
+    border-color: #4a5568;
+
+    &:hover {
+      border-color: #718096;
+      background: #374151;
+    }
+
+    &.modified {
+      border-color: #6366f1;
+      background: #312e81;
+
+      .#{$builder-prefix}-css-var-label {
+        color: #a5b4fc;
+      }
+    }
+  }
+
+  .#{$builder-prefix}-css-var-label {
+    color: #e2e8f0;
+  }
+
+  .#{$builder-prefix}-css-var-color {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  // Style variable highlight in dark mode
+  @keyframes style-var-highlight-dark {
+    0%, 100% {
+      background: #1a202c;
+      border-color: #4a5568;
+    }
+    25%, 75% {
+      background: #312e81;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    }
+  }
+
+  .#{$builder-prefix}-style-var-highlight {
+    animation: style-var-highlight-dark 2s ease;
+  }
+
+  // Code Cards
+  .#{$builder-prefix}-code-card {
+    border-color: #4a5568;
+
+    &.active {
+      border-color: #6366f1;
+    }
+  }
+
+  // Uploader Selector
+  .#{$builder-prefix}-uploader-selector {
+    border-bottom-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-uploader-tab {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #a0aec0;
+
+    &:hover {
+      background: #2d3748;
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+  }
+
+  .#{$builder-prefix}-add-uploader {
+    border-color: #4a5568;
+    color: #718096;
+
+    &:hover {
+      border-color: #6366f1;
+      color: #6366f1;
+    }
+  }
+
+  // Style Editor
+  .#{$builder-prefix}-style-toolbar {
+    border-bottom-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-highlight-toggle-label {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-highlight-toggle input:checked ~ .#{$builder-prefix}-highlight-toggle-label {
+    color: #818cf8;
+  }
+
+  .#{$builder-prefix}-highlight-toggle-slider {
+    background: #4a5568;
+  }
+
+  .#{$builder-prefix}-style-var {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-style-var-label {
+    color: #e2e8f0;
+  }
+
+  .#{$builder-prefix}-style-var-name {
+    background: #374151;
+    border-color: #4a5568;
+    color: #818cf8;
+  }
+
+  // Mode badge in dark mode
+  .#{$builder-prefix}-mode-badge {
+    &.mode-light {
+      background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+      color: #fde68a;
+      border-color: #b45309;
+    }
+
+    &.mode-dark {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      color: #a5b4fc;
+      border-color: #4f46e5;
+    }
+  }
+
+  // Mode indicators on vertical tabs in dark mode
+  .#{$builder-prefix}-vertical-tab.mode-light::after {
+    background: #fbbf24;
+    border-color: #d97706;
+  }
+
+  .#{$builder-prefix}-vertical-tab.mode-dark::after {
+    background: #818cf8;
+    border-color: #6366f1;
+  }
+
+  .#{$builder-prefix}-color-picker {
+    border-color: #4a5568;
+    background: #2d3748;
+  }
+
+  .#{$builder-prefix}-color-text,
+  .#{$builder-prefix}-size-input,
+  .#{$builder-prefix}-text-input {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &:focus {
+      border-color: #6366f1;
+    }
+  }
+
+  // Slider Config
+  .#{$builder-prefix}-slider-config {
+    background: #1a202c;
+    border-color: #4a5568;
+
+    label {
+      color: #a0aec0;
+    }
+
+    input {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #e2e8f0;
+
+      &:focus {
+        border-color: #6366f1;
+      }
+    }
+  }
+
+  // Limit Row
+  .#{$builder-prefix}-limit-row {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-limit-type {
+    color: #e2e8f0;
+  }
+
+  // Reset Styles Button (in dark mode)
+  .#{$builder-prefix}-reset-styles-btn {
+    background: #4a2c2c;
+    border-color: #7f1d1d;
+    color: #f87171;
+
+    &:hover {
+      background: #5c3030;
+      border-color: #dc2626;
+    }
+  }
+
+  // Scrollbar styling for dark mode
+  .#{$builder-prefix}-options-content,
+  .#{$builder-prefix}-panel-content {
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #2d3748;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #4a5568;
+      border-radius: 3px;
+
+      &:hover {
+        background: #718096;
+      }
+    }
+  }
+}
+
