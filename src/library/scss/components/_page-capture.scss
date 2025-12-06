@@ -46,7 +46,8 @@ $component-prefix: $file-uploader-prefix !default;
   bottom: 0;
   z-index: 999998;
   background-color: var(--#{$component-prefix}-page-capture-overlay-bg);
-  cursor: crosshair;
+  // Use a custom white crosshair cursor for better visibility on dark overlay
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cline x1='16' y1='0' x2='16' y2='32' stroke='white' stroke-width='2'/%3E%3Cline x1='0' y1='16' x2='32' y2='16' stroke='white' stroke-width='2'/%3E%3Cline x1='16' y1='0' x2='16' y2='32' stroke='%236366f1' stroke-width='1'/%3E%3Cline x1='0' y1='16' x2='32' y2='16' stroke='%236366f1' stroke-width='1'/%3E%3C/svg%3E") 16 16, crosshair;
   user-select: none;
 
   @if $file-uploader-enable-animations {
@@ -105,23 +106,51 @@ $component-prefix: $file-uploader-prefix !default;
   font-size: var(--fu-font-size-base);
   font-weight: var(--fu-font-weight-medium);
   font-family: var(--fu-font-family-base);
+  margin-bottom: var(--fu-spacing-xs);
 }
 
-.#{$component-prefix}-page-capture-instructions-hint {
+.#{$component-prefix}-page-capture-instructions-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--fu-spacing-sm);
+}
+
+.#{$component-prefix}-page-capture-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--#{$component-prefix}-page-capture-instructions-hint);
   font-size: var(--fu-font-size-sm);
   font-family: var(--fu-font-family-base);
+  padding: 4px 10px;
+  border-radius: var(--fu-radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
 
   kbd {
     display: inline-block;
     padding: 2px 6px;
-    margin: 0 2px;
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--fu-radius-sm);
     font-family: var(--fu-font-family-mono, 'Courier New', monospace);
     font-size: 11px;
     font-weight: var(--fu-font-weight-semibold);
+  }
+
+  // Active/selected state for shape shortcuts
+  &.active {
+    color: var(--#{$component-prefix}-page-capture-instructions-text);
+    background: rgba(99, 102, 241, 0.3);
+    border-color: var(--fu-color-primary, #6366f1);
+
+    kbd {
+      background: var(--fu-color-primary, #6366f1);
+      border-color: var(--fu-color-primary, #6366f1);
+      color: #ffffff;
+    }
   }
 }
 
@@ -132,7 +161,7 @@ $component-prefix: $file-uploader-prefix !default;
 .#{$component-prefix}-page-capture-selection-box {
   position: fixed;
   display: none;
-  border: 4px dotted var(--fu-color-primary, #6366f1) !important;
+  border: 2px dashed var(--fu-color-primary, #6366f1) !important;
   background-color: transparent; // Clear/transparent to show content beneath
   pointer-events: none;
   z-index: 999999;
@@ -160,6 +189,14 @@ $component-prefix: $file-uploader-prefix !default;
   &::after {
     bottom: -6px;
     right: -6px;
+  }
+
+  // Oval/circle mode - hide corner handles
+  &.oval-mode {
+    &::before,
+    &::after {
+      display: none;
+    }
   }
 }
 
@@ -197,23 +234,58 @@ $component-prefix: $file-uploader-prefix !default;
 }
 
 // ============================================================================
+// Shape Change Feedback
+// ============================================================================
+
+.#{$component-prefix}-page-capture-shape-feedback {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 1000001;
+  padding: var(--fu-spacing-md) var(--fu-spacing-xl);
+  background: var(--fu-color-primary, #6366f1);
+  color: #ffffff;
+  border-radius: var(--fu-radius-lg);
+  font-size: var(--fu-font-size-xl, 1.25rem);
+  font-weight: var(--fu-font-weight-bold);
+  font-family: var(--fu-font-family-base);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(10px);
+  }
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+// ============================================================================
 // Selection Dimensions Display
 // ============================================================================
 
 .#{$component-prefix}-page-capture-dimensions {
-  position: absolute;
-  bottom: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 8px;
-  background: var(--#{$component-prefix}-page-capture-instructions-bg);
-  color: var(--#{$component-prefix}-page-capture-instructions-text);
+  position: fixed;
+  z-index: 1000000;
+  padding: 4px 10px;
+  background: var(--fu-color-primary, #6366f1);
+  color: #ffffff;
   border-radius: var(--fu-radius-sm);
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--fu-font-family-mono, 'Courier New', monospace);
-  font-weight: var(--fu-font-weight-medium);
+  font-weight: var(--fu-font-weight-semibold);
   white-space: nowrap;
   pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
 
   @if $file-uploader-enable-animations {
     @include backdrop-blur(5px);
@@ -289,7 +361,13 @@ $component-prefix: $file-uploader-prefix !default;
     font-size: var(--fu-font-size-sm);
   }
 
-  .#{$component-prefix}-page-capture-instructions-hint {
+  .#{$component-prefix}-page-capture-shortcut {
     font-size: var(--fu-font-size-xs);
+    padding: 3px 8px;
+
+    kbd {
+      font-size: 10px;
+      padding: 1px 4px;
+    }
   }
 }

@@ -67,7 +67,17 @@ const DEFAULT_OPTIONS = {
     imageExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
     videoExtensions: ["mp4", "mpeg", "mov", "avi", "webm"],
     audioExtensions: ["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"],
-    documentExtensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"],
+    documentExtensions: [
+      "pdf",
+      "doc",
+      "docx",
+      "xls",
+      "xlsx",
+      "ppt",
+      "pptx",
+      "txt",
+      "csv",
+    ],
     archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
   },
 
@@ -143,6 +153,8 @@ const DEFAULT_OPTIONS = {
     maxVideoRecordingFileSize: null,
     maxAudioRecordingFileSize: null,
     externalRecordingToolbarContainer: null,
+    regionCaptureShowDimensions: true,
+    regionCaptureDimensionsPosition: "center",
   },
 
   // ============================================================================
@@ -152,8 +164,24 @@ const DEFAULT_OPTIONS = {
     enableCarouselPreview: true,
     carouselAutoPreload: true,
     carouselEnableManualLoading: true,
-    carouselVisibleTypes: ["image", "video", "audio", "pdf", "excel", "csv", "text"],
-    carouselPreviewableTypes: ["image", "video", "audio", "pdf", "csv", "excel", "text"],
+    carouselVisibleTypes: [
+      "image",
+      "video",
+      "audio",
+      "pdf",
+      "excel",
+      "csv",
+      "text",
+    ],
+    carouselPreviewableTypes: [
+      "image",
+      "video",
+      "audio",
+      "pdf",
+      "csv",
+      "excel",
+      "text",
+    ],
     carouselMaxPreviewRows: 100,
     carouselMaxTextPreviewChars: 50000,
     carouselShowDownloadButton: true,
@@ -189,7 +217,11 @@ const DEFAULT_OPTIONS = {
 function flattenOptions(groupedOptions) {
   const flat = {};
   for (const category of Object.values(groupedOptions)) {
-    if (typeof category === "object" && category !== null && !Array.isArray(category)) {
+    if (
+      typeof category === "object" &&
+      category !== null &&
+      !Array.isArray(category)
+    ) {
       Object.assign(flat, category);
     }
   }
@@ -211,7 +243,12 @@ function mergeGroupedOptions(userOptions, defaults) {
   const groupKeys = Object.keys(defaults);
 
   for (const [key, value] of Object.entries(userOptions)) {
-    if (groupKeys.includes(key) && typeof value === "object" && !Array.isArray(value) && value !== null) {
+    if (
+      groupKeys.includes(key) &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      value !== null
+    ) {
       // This is a category object - flatten it
       Object.assign(flatUserOptions, value);
     }
@@ -578,7 +615,8 @@ export default class FileUploader {
     if (this.options.enableFullPageCapture && PageCapture.isSupported()) {
       this.fullPageCaptureBtn = document.createElement("button");
       this.fullPageCaptureBtn.type = "button";
-      this.fullPageCaptureBtn.className = "file-uploader-capture-btn has-tooltip";
+      this.fullPageCaptureBtn.className =
+        "file-uploader-capture-btn has-tooltip";
       this.fullPageCaptureBtn.setAttribute("data-tooltip", "Capture Full Page");
       this.fullPageCaptureBtn.setAttribute("data-tooltip-position", "top");
       this.fullPageCaptureBtn.innerHTML = getIcon("fullpage_capture");
@@ -641,7 +679,11 @@ export default class FileUploader {
       this.recordingIndicator.innerHTML = `
         <span class="file-uploader-recording-dot"></span>
         <span class="file-uploader-recording-time">00:00 / 05:00</span>
-        ${showSize ? '<span class="file-uploader-recording-size">~0 B</span>' : ''}
+        ${
+          showSize
+            ? '<span class="file-uploader-recording-size">~0 B</span>'
+            : ""
+        }
       `;
       // Prevent recording indicator from triggering file upload
       this.recordingIndicator.addEventListener("click", (e) => {
@@ -655,7 +697,10 @@ export default class FileUploader {
       if (timeElement) {
         timeElement.style.cursor = "pointer";
         timeElement.classList.add("has-tooltip");
-        timeElement.setAttribute("data-tooltip", "Click to toggle time display");
+        timeElement.setAttribute(
+          "data-tooltip",
+          "Click to toggle time display"
+        );
         timeElement.setAttribute("data-tooltip-position", "top");
         timeElement.dataset.showRemaining = "false";
         timeElement.addEventListener("click", (e) => {
@@ -695,7 +740,11 @@ export default class FileUploader {
         this.recordingIndicator.innerHTML = `
           <span class="file-uploader-recording-dot"></span>
           <span class="file-uploader-recording-time">00:00 / 05:00</span>
-          ${showSizeAudio ? '<span class="file-uploader-recording-size">~0 B</span>' : ''}
+          ${
+            showSizeAudio
+              ? '<span class="file-uploader-recording-size">~0 B</span>'
+              : ""
+          }
         `;
         this.recordingIndicator.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -707,7 +756,10 @@ export default class FileUploader {
         if (timeElement) {
           timeElement.style.cursor = "pointer";
           timeElement.classList.add("has-tooltip");
-          timeElement.setAttribute("data-tooltip", "Click to toggle time display");
+          timeElement.setAttribute(
+            "data-tooltip",
+            "Click to toggle time display"
+          );
           timeElement.setAttribute("data-tooltip-position", "top");
           timeElement.dataset.showRemaining = "false";
           timeElement.addEventListener("click", (e) => {
@@ -732,10 +784,13 @@ export default class FileUploader {
         // Create toggle button
         this.captureToggleBtn = document.createElement("button");
         this.captureToggleBtn.type = "button";
-        this.captureToggleBtn.className = "file-uploader-capture-toggle has-tooltip";
+        this.captureToggleBtn.className =
+          "file-uploader-capture-toggle has-tooltip";
         this.captureToggleBtn.setAttribute("data-tooltip", "Media Capture");
         this.captureToggleBtn.setAttribute("data-tooltip-position", "top");
-        this.captureToggleBtn.innerHTML = `<span class="toggle-chevron">${getIcon("chevron_right")}</span>`;
+        this.captureToggleBtn.innerHTML = `<span class="toggle-chevron">${getIcon(
+          "chevron_right"
+        )}</span>`;
         this.captureToggleBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           this.toggleCaptureButtons();
@@ -880,13 +935,13 @@ export default class FileUploader {
           },
           onCaptureError: (error) => {
             this.showError(error.message);
-          }
+          },
         });
       }
 
       // Capture full page screenshot
       const blob = await this.pageCapture.captureFullPage();
-      const file = this.pageCapture.blobToFile(blob, 'fullpage');
+      const file = this.pageCapture.blobToFile(blob, "fullpage");
 
       // Add captured file
       this.handleCapturedFile(file, "fullpage-screenshot");
@@ -910,6 +965,8 @@ export default class FileUploader {
       // Initialize page capture if not already done
       if (!this.pageCapture) {
         this.pageCapture = new PageCapture({
+          showDimensions: this.options.regionCaptureShowDimensions,
+          dimensionsPosition: this.options.regionCaptureDimensionsPosition,
           onSelectionStart: () => {
             // Region selection started
           },
@@ -921,19 +978,19 @@ export default class FileUploader {
           },
           onCaptureError: (error) => {
             this.showError(error.message);
-          }
+          },
         });
       }
 
       // Start region selection and capture
       const blob = await this.pageCapture.captureRegion();
-      const file = this.pageCapture.blobToFile(blob, 'region');
+      const file = this.pageCapture.blobToFile(blob, "region");
 
       // Add captured file
       this.handleCapturedFile(file, "region-screenshot");
     } catch (error) {
       // Don't show error for user cancellation
-      if (error.message !== 'Selection cancelled') {
+      if (error.message !== "Selection cancelled") {
         this.showError(error.message);
       }
     } finally {
@@ -967,7 +1024,7 @@ export default class FileUploader {
       // Initialize video recorder with options
       // Always create a new recorder to ensure options are fresh
       // Calculate effective max size considering all limits
-      const maxRecordingSize = this.calculateEffectiveMaxRecordingSize('video');
+      const maxRecordingSize = this.calculateEffectiveMaxRecordingSize("video");
       this.videoRecorder = new VideoRecorder({
         maxDuration: this.options.maxVideoRecordingDuration * 1000, // Convert to ms
         systemAudioConstraints: this.options.enableSystemAudio,
@@ -976,7 +1033,8 @@ export default class FileUploader {
         audioBitsPerSecond: this.options.audioBitsPerSecond,
         maxFileSize: maxRecordingSize,
         onAutoStop: (file) => this.handleVideoAutoStop(file),
-        onSizeLimitReached: (status) => this.handleRecordingSizeLimitReached(status, 'video'),
+        onSizeLimitReached: (status) =>
+          this.handleRecordingSizeLimitReached(status, "video"),
       });
 
       // Set recording type BEFORE starting recording
@@ -1140,7 +1198,9 @@ export default class FileUploader {
    * @param {string} type - 'video' or 'audio'
    */
   handleRecordingSizeLimitReached(status, type) {
-    console.log(`Recording stopped: file size limit reached (${status.formattedSize})`);
+    console.log(
+      `Recording stopped: file size limit reached (${status.formattedSize})`
+    );
     // The recorder will auto-stop, the file will be handled by onAutoStop callback
   }
 
@@ -1158,9 +1218,12 @@ export default class FileUploader {
     const limits = [];
 
     // 1. Explicit recording file size limit based on type
-    if (recordingType === 'video' && this.options.maxVideoRecordingFileSize) {
+    if (recordingType === "video" && this.options.maxVideoRecordingFileSize) {
       limits.push(this.options.maxVideoRecordingFileSize);
-    } else if (recordingType === 'audio' && this.options.maxAudioRecordingFileSize) {
+    } else if (
+      recordingType === "audio" &&
+      this.options.maxAudioRecordingFileSize
+    ) {
       limits.push(this.options.maxAudioRecordingFileSize);
     }
 
@@ -1218,7 +1281,7 @@ export default class FileUploader {
    */
   getCurrentTotalSize() {
     let totalSize = 0;
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       totalSize += file.size || 0;
     });
     return totalSize;
@@ -1231,7 +1294,7 @@ export default class FileUploader {
    */
   getCurrentTypeTotalSize(type) {
     let totalSize = 0;
-    this.files.forEach(file => {
+    this.files.forEach((file) => {
       const fileType = this.getFileType(file);
       if (fileType === type) {
         totalSize += file.size || 0;
@@ -1269,7 +1332,8 @@ export default class FileUploader {
 
       // Always create a new recorder to ensure options are fresh
       // Calculate effective max size considering all limits
-      const maxAudioRecordingSize = this.calculateEffectiveMaxRecordingSize('audio');
+      const maxAudioRecordingSize =
+        this.calculateEffectiveMaxRecordingSize("audio");
       this.audioRecorder = new AudioWorkletRecorder({
         enableMicrophoneAudio: enableMic,
         enableSystemAudio: this.options.enableSystemAudio,
@@ -1279,7 +1343,8 @@ export default class FileUploader {
         numberOfChannels: 2, // Stereo
         maxFileSize: maxAudioRecordingSize,
         onAutoStop: (file) => this.handleAudioAutoStop(file),
-        onSizeLimitReached: (status) => this.handleRecordingSizeLimitReached(status, 'audio'),
+        onSizeLimitReached: (status) =>
+          this.handleRecordingSizeLimitReached(status, "audio"),
       });
 
       // Set recording type BEFORE starting recording
@@ -1490,16 +1555,18 @@ export default class FileUploader {
     // This includes: per-file size per type, total size per type, and file count per type
     const hasTypeLimits =
       (typeLimits && Object.keys(typeLimits).length > 0) ||
-      (this.options.perFileMaxSizePerType && Object.keys(this.options.perFileMaxSizePerType).length > 0) ||
-      (this.options.perTypeMaxFileCount && Object.keys(this.options.perTypeMaxFileCount).length > 0);
+      (this.options.perFileMaxSizePerType &&
+        Object.keys(this.options.perFileMaxSizePerType).length > 0) ||
+      (this.options.perTypeMaxFileCount &&
+        Object.keys(this.options.perTypeMaxFileCount).length > 0);
 
     // Get all unique types that have any kind of limit
     const allTypesWithLimits = [
       ...new Set([
         ...Object.keys(this.options.perTypeMaxTotalSizeDisplay || {}),
         ...Object.keys(this.options.perFileMaxSizePerType || {}),
-        ...Object.keys(this.options.perTypeMaxFileCount || {})
-      ])
+        ...Object.keys(this.options.perTypeMaxFileCount || {}),
+      ]),
     ];
 
     // View mode toggle button (concise/detailed) - uses grid_view and list_view icons
@@ -1562,8 +1629,10 @@ export default class FileUploader {
           const typeIcon = getIcon(type, { class: "file-uploader-type-icon" });
 
           // Get per-file limit for this type (if exists)
-          const perFileLimitDisplay = this.options.perFileMaxSizePerTypeDisplay[type] ||
-            this.options.perFileMaxSizeDisplay || '';
+          const perFileLimitDisplay =
+            this.options.perFileMaxSizePerTypeDisplay[type] ||
+            this.options.perFileMaxSizeDisplay ||
+            "";
 
           limitsHTML += `
             <div class="file-uploader-type-card" ${
@@ -1595,7 +1664,9 @@ export default class FileUploader {
                     ? `
                   <div class="file-uploader-type-stat">
                     <span class="file-uploader-type-stat-label">Used</span>
-                    <span class="file-uploader-type-stat-value">${typeSizeFormatted}${typeLimitBytes > 0 && limit ? ` / ${limit}` : ""}</span>
+                    <span class="file-uploader-type-stat-value">${typeSizeFormatted}${
+                        typeLimitBytes > 0 && limit ? ` / ${limit}` : ""
+                      }</span>
                   </div>
                   ${
                     this.options.showTypeProgressBar
@@ -1805,17 +1876,25 @@ export default class FileUploader {
               : "";
 
           // Get per-file limit for this type (if exists)
-          const perFileLimitDisplay = this.options.perFileMaxSizePerTypeDisplay[type] ||
-            this.options.perFileMaxSizeDisplay || '';
+          const perFileLimitDisplay =
+            this.options.perFileMaxSizePerTypeDisplay[type] ||
+            this.options.perFileMaxSizeDisplay ||
+            "";
 
           // Build info items array for dynamic rendering
           const infoItems = [];
           if (perFileLimitDisplay) {
-            infoItems.push(`<span class="file-uploader-chip-limit">${perFileLimitDisplay} / file</span>`);
+            infoItems.push(
+              `<span class="file-uploader-chip-limit">${perFileLimitDisplay} / file</span>`
+            );
           }
-          infoItems.push(`<span class="file-uploader-chip-max">${typeCountLimit} files</span>`);
+          infoItems.push(
+            `<span class="file-uploader-chip-max">${typeCountLimit} files</span>`
+          );
           if (limit) {
-            infoItems.push(`<span class="file-uploader-chip-max">Total ${limit}</span>`);
+            infoItems.push(
+              `<span class="file-uploader-chip-max">Total ${limit}</span>`
+            );
           }
 
           limitsHTML += `
@@ -1836,7 +1915,9 @@ export default class FileUploader {
                 }
               </div>
               <div class="file-uploader-chip-info">
-                ${infoItems.join('<span class="file-uploader-chip-separator">•</span>')}
+                ${infoItems.join(
+                  '<span class="file-uploader-chip-separator">•</span>'
+                )}
               </div>
             </div>
           `;
@@ -1861,7 +1942,7 @@ export default class FileUploader {
               ? `Allowed: ${otherExtensions.map((ext) => `.${ext}`).join(", ")}`
               : "";
 
-          const otherPerFileLimit = this.options.perFileMaxSizeDisplay || '';
+          const otherPerFileLimit = this.options.perFileMaxSizeDisplay || "";
 
           limitsHTML += `
             <div class="file-uploader-type-chip-expanded" ${
@@ -1873,11 +1954,15 @@ export default class FileUploader {
                 ${getIcon("other", { class: "file-uploader-chip-icon" })}
                 <span class="file-uploader-chip-name">Other</span>
               </div>
-              ${otherPerFileLimit ? `
+              ${
+                otherPerFileLimit
+                  ? `
               <div class="file-uploader-chip-info">
                 <span class="file-uploader-chip-limit">${otherPerFileLimit} / file</span>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
             </div>
           `;
         }
@@ -2107,7 +2192,7 @@ export default class FileUploader {
 
     // Get the element - support both selector string and element reference
     let dropZoneElement;
-    if (typeof externalDropZone === 'string') {
+    if (typeof externalDropZone === "string") {
       dropZoneElement = document.querySelector(externalDropZone);
     } else if (externalDropZone instanceof HTMLElement) {
       dropZoneElement = externalDropZone;
@@ -2120,11 +2205,11 @@ export default class FileUploader {
     const activeClass = this.options.externalDropZoneActiveClass;
 
     // Add tooltip to indicate drop is supported
-    dropZoneElement.setAttribute('data-tooltip-text', 'Drop files here');
-    dropZoneElement.setAttribute('data-tooltip-position', 'top');
+    dropZoneElement.setAttribute("data-tooltip-text", "Drop files here");
+    dropZoneElement.setAttribute("data-tooltip-position", "top");
 
     // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       dropZoneElement.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -2132,16 +2217,16 @@ export default class FileUploader {
     });
 
     // Add visual feedback on drag enter/over
-    dropZoneElement.addEventListener('dragenter', () => {
+    dropZoneElement.addEventListener("dragenter", () => {
       dropZoneElement.classList.add(activeClass);
     });
 
-    dropZoneElement.addEventListener('dragover', () => {
+    dropZoneElement.addEventListener("dragover", () => {
       dropZoneElement.classList.add(activeClass);
     });
 
     // Remove visual feedback on drag leave
-    dropZoneElement.addEventListener('dragleave', (e) => {
+    dropZoneElement.addEventListener("dragleave", (e) => {
       // Only remove class if we're actually leaving the element
       if (!dropZoneElement.contains(e.relatedTarget)) {
         dropZoneElement.classList.remove(activeClass);
@@ -2149,7 +2234,7 @@ export default class FileUploader {
     });
 
     // Handle file drop
-    dropZoneElement.addEventListener('drop', (e) => {
+    dropZoneElement.addEventListener("drop", (e) => {
       dropZoneElement.classList.remove(activeClass);
 
       const files = e.dataTransfer?.files;
@@ -2671,7 +2756,10 @@ export default class FileUploader {
         error: {
           filename: file.name,
           error: "Maximum file limit reached",
-          details: this.formatAlertDetails("Limit:", `${this.options.maxFiles} files`),
+          details: this.formatAlertDetails(
+            "Limit:",
+            `${this.options.maxFiles} files`
+          ),
         },
       };
     }
@@ -2739,7 +2827,10 @@ export default class FileUploader {
             details:
               this.formatAlertDetails("Limit:", limitDisplay) +
               " " +
-              this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+              this.formatAlertDetails(
+                "Available:",
+                this.formatFileSize(remaining)
+              ),
           },
         };
       }
@@ -2755,9 +2846,15 @@ export default class FileUploader {
           filename: file.name,
           error: "Exceeds total upload size limit",
           details:
-            this.formatAlertDetails("Limit:", this.options.totalMaxSizeDisplay) +
+            this.formatAlertDetails(
+              "Limit:",
+              this.options.totalMaxSizeDisplay
+            ) +
             " " +
-            this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+            this.formatAlertDetails(
+              "Available:",
+              this.formatFileSize(remaining)
+            ),
         },
       };
     }
@@ -2780,7 +2877,10 @@ export default class FileUploader {
         error: {
           filename: fileObj.name,
           error: "Maximum file limit reached",
-          details: this.formatAlertDetails("Limit:", `${this.options.maxFiles} files`),
+          details: this.formatAlertDetails(
+            "Limit:",
+            `${this.options.maxFiles} files`
+          ),
         },
       };
     }
@@ -2824,7 +2924,10 @@ export default class FileUploader {
           filename: fileObj.name,
           error: `Exceeds max ${fileType} file size`,
           details:
-            this.formatAlertDetails("Size:", this.formatFileSize(fileObj.size)) +
+            this.formatAlertDetails(
+              "Size:",
+              this.formatFileSize(fileObj.size)
+            ) +
             " " +
             this.formatAlertDetails("Limit:", perFileLimitDisplay),
         },
@@ -2846,7 +2949,10 @@ export default class FileUploader {
             details:
               this.formatAlertDetails("Limit:", limitDisplay) +
               " " +
-              this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+              this.formatAlertDetails(
+                "Available:",
+                this.formatFileSize(remaining)
+              ),
           },
         };
       }
@@ -2862,7 +2968,10 @@ export default class FileUploader {
           error: {
             filename: fileObj.name,
             error: `Maximum ${fileType} file count reached`,
-            details: this.formatAlertDetails("Limit:", `${typeCountLimit} ${fileType} files`),
+            details: this.formatAlertDetails(
+              "Limit:",
+              `${typeCountLimit} ${fileType} files`
+            ),
           },
         };
       }
@@ -2878,9 +2987,15 @@ export default class FileUploader {
           filename: fileObj.name,
           error: "Exceeds total upload size limit",
           details:
-            this.formatAlertDetails("Limit:", this.options.totalMaxSizeDisplay) +
+            this.formatAlertDetails(
+              "Limit:",
+              this.options.totalMaxSizeDisplay
+            ) +
             " " +
-            this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+            this.formatAlertDetails(
+              "Available:",
+              this.formatFileSize(remaining)
+            ),
         },
       };
     }
@@ -3440,7 +3555,9 @@ export default class FileUploader {
         }
       } else {
         // Create error with server error data attached
-        const error = new Error(typeof result.error === 'string' ? result.error : 'Upload failed');
+        const error = new Error(
+          typeof result.error === "string" ? result.error : "Upload failed"
+        );
         error.serverError = result.error;
         throw error;
       }
@@ -3460,7 +3577,7 @@ export default class FileUploader {
       let errorData = error.serverError || error.message;
 
       // Convert server error format to Alert format
-      if (typeof errorData === 'object' && errorData !== null) {
+      if (typeof errorData === "object" && errorData !== null) {
         errorData = this.formatServerError(errorData);
       }
 
@@ -3652,7 +3769,12 @@ export default class FileUploader {
   showError(message) {
     // Log error - handle both string and object messages
     if (typeof message === "object" && message !== null) {
-      console.error("FileUploader:", message.filename, message.error, message.details);
+      console.error(
+        "FileUploader:",
+        message.filename,
+        message.error,
+        message.details
+      );
     } else {
       console.error("FileUploader:", message);
     }
@@ -3670,32 +3792,33 @@ export default class FileUploader {
    * @returns {Object} - Alert-compatible error object
    */
   formatServerError(serverError) {
-    const { filename, error, allowed, moreCount, limit, fileType, mimeType } = serverError;
+    const { filename, error, allowed, moreCount, limit, fileType, mimeType } =
+      serverError;
 
-    let details = '';
+    let details = "";
 
     // Handle file type not allowed error
     if (allowed && Array.isArray(allowed)) {
-      const displayExts = allowed.map(ext => `.${ext}`);
+      const displayExts = allowed.map((ext) => `.${ext}`);
       if (moreCount > 0) {
         displayExts.push(`+${moreCount} more`);
       }
-      details = this.formatAlertDetails('Allowed:', displayExts);
+      details = this.formatAlertDetails("Allowed:", displayExts);
     }
     // Handle file size limit error
     else if (limit) {
-      const limitLabel = fileType ? `Max ${fileType} size:` : 'Max size:';
+      const limitLabel = fileType ? `Max ${fileType} size:` : "Max size:";
       details = this.formatAlertDetails(limitLabel, limit);
     }
     // Handle MIME type error
     else if (mimeType) {
-      details = this.formatAlertDetails('Detected:', mimeType);
+      details = this.formatAlertDetails("Detected:", mimeType);
     }
 
     return {
       filename: filename,
       error: error,
-      details: details
+      details: details,
     };
   }
 
