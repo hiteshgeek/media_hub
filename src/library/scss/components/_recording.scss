@@ -181,3 +181,85 @@
   margin-top: var(--fu-spacing-md);
   padding: var(--fu-spacing-sm) 0;
 }
+
+// ============================================================================
+// Collapsible/Expandable Capture Buttons Container
+// ============================================================================
+
+.file-uploader-capture-expandable {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+// Toggle button for expandable media buttons
+.file-uploader-capture-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--fu-color-primary, #6366f1);
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+
+  &:hover {
+    background-color: var(--fu-color-primary-dark, #4f46e5);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .toggle-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// Wrapper for buttons with animated reveal
+.file-uploader-capture-buttons-wrapper {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.3s ease, opacity 0.2s ease;
+
+  // Hide buttons when collapsed
+  .file-uploader-capture-container {
+    transform: translateX(-10px);
+    pointer-events: none;
+    transition: transform 0.3s ease;
+  }
+}
+
+// Expanded state
+.file-uploader-capture-expandable.expanded {
+  .file-uploader-capture-toggle .toggle-chevron {
+    transform: rotate(180deg);
+  }
+
+  .file-uploader-capture-buttons-wrapper {
+    max-width: 300px;
+    opacity: 1;
+
+    .file-uploader-capture-container {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+  }
+}

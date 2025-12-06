@@ -2138,11 +2138,14 @@ $builder-prefix: "fu-config-builder";
   color: #9ca3af;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
 
   &:hover {
     border-color: #6366f1;
     color: #6366f1;
     background: rgba(99, 102, 241, 0.05);
+    z-index: 10; // Raise z-index on hover so tooltip appears above siblings
   }
 
   svg {
@@ -4672,7 +4675,7 @@ $builder-prefix: "fu-config-builder";
   align-items: center;
   max-width: 0;
   opacity: 0;
-  overflow: visible; // Allow tooltips to overflow
+  overflow: hidden; // Hide buttons when collapsed
   transition: max-width 0.3s ease, opacity 0.25s ease;
 
   // Hide buttons when collapsed using transform and pointer-events
@@ -4683,6 +4686,11 @@ $builder-prefix: "fu-config-builder";
   }
 }
 
+// Allow tooltip overflow only when expanded
+.file-uploader-capture-expandable.expanded .file-uploader-capture-buttons-wrapper {
+  overflow: visible;
+}
+
 // Expanded state
 .file-uploader-capture-expandable.expanded {
   .file-uploader-capture-toggle .toggle-chevron {
@@ -4690,7 +4698,7 @@ $builder-prefix: "fu-config-builder";
   }
 
   .file-uploader-capture-buttons-wrapper {
-    max-width: 200px;
+    max-width: 300px; // Increased to fit 5 buttons
     opacity: 1;
 
     .file-uploader-capture-container {
@@ -4872,6 +4880,27 @@ $builder-prefix: "fu-config-builder";
   &.has-files {
     background: #eff6ff;
     border-color: #bfdbfe;
+  }
+
+  // Pulse animation when files are added
+  &.file-added-pulse {
+    animation: file-added-pulse 0.6s ease-out;
+  }
+}
+
+// File added pulse animation
+@keyframes file-added-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
 }
 

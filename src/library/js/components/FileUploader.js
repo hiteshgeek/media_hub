@@ -9,6 +9,7 @@ import ScreenCapture from "../utils/ScreenCapture.js";
 import VideoRecorder from "../utils/VideoRecorder.js";
 import AudioWorkletRecorder from "../utils/AudioWorkletRecorder.js";
 import RecordingUI from "../utils/RecordingUI.js";
+import PageCapture from "../utils/PageCapture.js";
 import Tooltip from "./tooltip/index.js";
 import { FileCarousel } from "./carousel/index.js";
 import Alert from "./Alert.js";
@@ -17,7 +18,235 @@ import Alert from "./Alert.js";
 const uploaderRegistry = new Map();
 let instanceCounter = 0;
 
+/**
+ * Default options organized by category for better readability and control.
+ * Each category groups related options together.
+ * Supports both grouped and flat option formats for backward compatibility.
+ */
+const DEFAULT_OPTIONS = {
+  // ============================================================================
+  // URL Configuration
+  // ============================================================================
+  urls: {
+    uploadUrl: "./upload.php",
+    deleteUrl: "./delete.php",
+    downloadAllUrl: "./download-all.php",
+    cleanupZipUrl: "./cleanup-zip.php",
+    copyFileUrl: "./copy-file.php",
+    configUrl: "./get-config.php",
+    uploadDir: "",
+  },
+
+  // ============================================================================
+  // File Size Limits
+  // ============================================================================
+  limits: {
+    perFileMaxSize: 10 * 1024 * 1024, // 10MB
+    perFileMaxSizeDisplay: "10MB",
+    totalMaxSize: 100 * 1024 * 1024, // 100MB
+    totalMaxSizeDisplay: "100MB",
+    maxFiles: 10,
+  },
+
+  // ============================================================================
+  // Per-Type Limits
+  // ============================================================================
+  perTypeLimits: {
+    perFileMaxSizePerType: {},
+    perFileMaxSizePerTypeDisplay: {},
+    perTypeMaxTotalSize: {},
+    perTypeMaxTotalSizeDisplay: {},
+    perTypeMaxFileCount: {},
+  },
+
+  // ============================================================================
+  // Allowed File Types
+  // ============================================================================
+  fileTypes: {
+    allowedExtensions: [],
+    imageExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+    videoExtensions: ["mp4", "mpeg", "mov", "avi", "webm"],
+    audioExtensions: ["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"],
+    documentExtensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"],
+    archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
+  },
+
+  // ============================================================================
+  // Upload Behavior
+  // ============================================================================
+  behavior: {
+    multiple: true,
+    autoFetchConfig: true,
+    confirmBeforeDelete: false,
+    preventDuplicates: false,
+    duplicateCheckBy: "name-size",
+    cleanupOnUnload: true,
+    cleanupOnDestroy: true,
+  },
+
+  // ============================================================================
+  // Limits Display
+  // ============================================================================
+  limitsDisplay: {
+    showLimits: true,
+    showProgressBar: false,
+    showTypeProgressBar: true,
+    showPerFileLimit: true,
+    showTypeGroupSize: true,
+    showTypeGroupCount: true,
+    defaultLimitsView: "concise",
+    allowLimitsViewToggle: true,
+    showLimitsToggle: true,
+    defaultLimitsVisible: true,
+  },
+
+  // ============================================================================
+  // Alert Notifications
+  // ============================================================================
+  alerts: {
+    alertAnimation: "shake",
+    alertDuration: 5000,
+  },
+
+  // ============================================================================
+  // Buttons Configuration
+  // ============================================================================
+  buttons: {
+    showDownloadAllButton: true,
+    downloadAllButtonText: "Download All",
+    downloadAllButtonClasses: [],
+    downloadAllButtonElement: null,
+    showClearAllButton: true,
+    clearAllButtonText: "Clear All",
+    clearAllButtonClasses: [],
+    clearAllButtonElement: null,
+  },
+
+  // ============================================================================
+  // Media Capture
+  // ============================================================================
+  mediaCapture: {
+    enableFullPageCapture: true,
+    enableRegionCapture: true,
+    enableScreenCapture: true,
+    enableVideoRecording: true,
+    enableAudioRecording: true,
+    collapsibleCaptureButtons: false,
+    maxVideoRecordingDuration: 300,
+    maxAudioRecordingDuration: 300,
+    recordingCountdownDuration: 3,
+    enableMicrophoneAudio: true,
+    enableSystemAudio: true,
+    showRecordingSize: true,
+    videoBitsPerSecond: 2500000,
+    audioBitsPerSecond: 128000,
+    maxVideoRecordingFileSize: null,
+    maxAudioRecordingFileSize: null,
+    externalRecordingToolbarContainer: null,
+  },
+
+  // ============================================================================
+  // Carousel Preview
+  // ============================================================================
+  carousel: {
+    enableCarouselPreview: true,
+    carouselAutoPreload: true,
+    carouselEnableManualLoading: true,
+    carouselVisibleTypes: ["image", "video", "audio", "pdf", "excel", "csv", "text"],
+    carouselPreviewableTypes: ["image", "video", "audio", "pdf", "csv", "excel", "text"],
+    carouselMaxPreviewRows: 100,
+    carouselMaxTextPreviewChars: 50000,
+    carouselShowDownloadButton: true,
+  },
+
+  // ============================================================================
+  // Cross-Uploader & External Drop Zone
+  // ============================================================================
+  dragDrop: {
+    enableCrossUploaderDrag: true,
+    externalDropZone: null,
+    externalDropZoneActiveClass: "file-uploader-drop-active",
+  },
+
+  // ============================================================================
+  // Callbacks
+  // ============================================================================
+  callbacks: {
+    onUploadStart: null,
+    onUploadSuccess: null,
+    onUploadError: null,
+    onDeleteSuccess: null,
+    onDeleteError: null,
+    onDuplicateFile: null,
+  },
+};
+
+/**
+ * Flatten grouped options into a flat object
+ * @param {Object} groupedOptions - Options organized by category
+ * @returns {Object} - Flat options object
+ */
+function flattenOptions(groupedOptions) {
+  const flat = {};
+  for (const category of Object.values(groupedOptions)) {
+    if (typeof category === "object" && category !== null && !Array.isArray(category)) {
+      Object.assign(flat, category);
+    }
+  }
+  return flat;
+}
+
+/**
+ * Merge user options with defaults, supporting both flat and grouped formats
+ * @param {Object} userOptions - User-provided options (can be flat or grouped)
+ * @param {Object} defaults - Default grouped options
+ * @returns {Object} - Merged flat options object
+ */
+function mergeOptions(userOptions, defaults) {
+  // Start with flattened defaults
+  const flatDefaults = flattenOptions(defaults);
+
+  // Check if user options are grouped (has category keys that match our structure)
+  const groupKeys = Object.keys(defaults);
+  const userKeys = Object.keys(userOptions);
+  const isGrouped = userKeys.some(key => groupKeys.includes(key) && typeof userOptions[key] === "object" && !Array.isArray(userOptions[key]));
+
+  if (isGrouped) {
+    // User is using grouped format - flatten and merge
+    const flatUserOptions = {};
+    for (const [key, value] of Object.entries(userOptions)) {
+      if (groupKeys.includes(key) && typeof value === "object" && !Array.isArray(value) && value !== null) {
+        // This is a category object - flatten it
+        Object.assign(flatUserOptions, value);
+      } else {
+        // This is a flat option (mixed usage)
+        flatUserOptions[key] = value;
+      }
+    }
+    return { ...flatDefaults, ...flatUserOptions };
+  } else {
+    // User is using flat format - direct merge
+    return { ...flatDefaults, ...userOptions };
+  }
+}
+
 export default class FileUploader {
+  /**
+   * Get default options organized by category
+   * @returns {Object} Default options grouped by category
+   */
+  static getDefaultOptions() {
+    return JSON.parse(JSON.stringify(DEFAULT_OPTIONS));
+  }
+
+  /**
+   * Get flattened default options
+   * @returns {Object} Default options as flat object
+   */
+  static getDefaultOptionsFlat() {
+    return flattenOptions(DEFAULT_OPTIONS);
+  }
+
   constructor(element, options = {}) {
     this.element =
       typeof element === "string" ? document.querySelector(element) : element;
@@ -31,121 +260,8 @@ export default class FileUploader {
     this.instanceId = `file-uploader-${++instanceCounter}`;
     uploaderRegistry.set(this.instanceId, this);
 
-    // Default options
-    // URLs default to current directory - override with absolute paths if needed
-    this.options = {
-      uploadUrl: "./upload.php",
-      deleteUrl: "./delete.php",
-      downloadAllUrl: "./download-all.php",
-      cleanupZipUrl: "./cleanup-zip.php",
-      copyFileUrl: "./copy-file.php", // URL for copying files between directories (cross-uploader)
-      configUrl: "./get-config.php",
-      uploadDir: "", // Target folder for uploads (relative to server's base upload directory, e.g., "profile_pictures" or "documents/2024")
-      allowedExtensions: [],
-      perFileMaxSize: 10 * 1024 * 1024, // 10MB (fallback)
-      perFileMaxSizeDisplay: "10MB",
-      perFileMaxSizePerType: {}, // Per file max size per type - max size for a SINGLE file of each type
-      perFileMaxSizePerTypeDisplay: {},
-      perTypeMaxTotalSize: {}, // Per type max total size - TOTAL size for all files of that type combined
-      perTypeMaxTotalSizeDisplay: {},
-      perTypeMaxFileCount: {}, // Per type max file count - max files allowed per type (e.g., { image: 5, video: 3 })
-      totalMaxSize: 100 * 1024 * 1024, // 100MB - total for all files combined
-      totalMaxSizeDisplay: "100MB",
-      maxFiles: 10, // Total max file count - max files across all types
-      imageExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
-      videoExtensions: ["mp4", "mpeg", "mov", "avi", "webm"],
-      audioExtensions: ["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"],
-      documentExtensions: [
-        "pdf",
-        "doc",
-        "docx",
-        "xls",
-        "xlsx",
-        "ppt",
-        "pptx",
-        "txt",
-        "csv",
-      ],
-      archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
-      multiple: true,
-      autoFetchConfig: true,
-      showLimits: true,
-      showProgressBar: false, // Show progress bar background for Total Size and File Count
-      showTypeProgressBar: true, // Show progress bar in type grid cards (when showTypeGroupSize is true)
-      showPerFileLimit: true, // Show per file size limit in type groups
-      showTypeGroupSize: true, // Show total uploaded size per type group
-      showTypeGroupCount: true, // Show file count per type group
-      defaultLimitsView: "concise", // Default view mode for limits: 'concise' or 'detailed'
-      allowLimitsViewToggle: true, // Allow toggling between concise and detailed view
-      showLimitsToggle: true, // Show toggle button to show/hide limits section
-      defaultLimitsVisible: true, // Default visibility state of limits section (true = shown, false = hidden)
-      confirmBeforeDelete: false, // Show confirmation dialog before deleting files
-      preventDuplicates: false, // Prevent uploading the same file again
-      duplicateCheckBy: "name-size", // How to check duplicates: 'name', 'size', 'name-size', 'hash'
-      // Alert notification options
-      alertAnimation: "shake", // Animation for error alerts: 'fade', 'shake', 'bounce', 'slideDown', 'pop', 'flip'
-      alertDuration: 5000, // Auto-dismiss duration in ms (0 = no auto-dismiss)
-      showDownloadAllButton: true, // Show internal download-all button
-      downloadAllButtonText: "Download All", // Text for download-all button
-      downloadAllButtonClasses: [], // Custom classes for download-all button (Bootstrap, etc.)
-      downloadAllButtonElement: null, // External element selector for download-all (cannot be used with showDownloadAllButton)
-      showClearAllButton: true, // Show internal clear-all button
-      clearAllButtonText: "Clear All", // Text for clear-all button
-      clearAllButtonClasses: [], // Custom classes for clear-all button (Bootstrap, etc.)
-      clearAllButtonElement: null, // External element selector for clear-all (cannot be used with showClearAllButton)
-      cleanupOnUnload: true, // Automatically delete uploaded files from server when leaving the page
-      cleanupOnDestroy: false, // Automatically delete uploaded files from server when instance is destroyed
-      enableScreenCapture: true, // Enable screenshot capture button
-      enableVideoRecording: true, // Enable video recording button
-      enableAudioRecording: true, // Enable audio recording button
-      maxVideoRecordingDuration: 300, // Max video recording duration in seconds (default 5 minutes)
-      maxAudioRecordingDuration: 300, // Max audio recording duration in seconds (default 5 minutes)
-      recordingCountdownDuration: 3, // Countdown duration before recording starts in seconds (default 3)
-      enableMicrophoneAudio: true, // Enable microphone audio recording
-      enableSystemAudio: true, // Enable system audio recording
-      showRecordingSize: true, // Show approximate file size during recording
-      videoBitsPerSecond: 2500000, // Video bitrate in bits per second (default 2.5 Mbps)
-      audioBitsPerSecond: 128000, // Audio bitrate in bits per second (default 128 Kbps)
-      maxVideoRecordingFileSize: null, // Max video/screen recording file size in bytes (null = no limit, uses perFileMaxSize if set)
-      maxAudioRecordingFileSize: null, // Max audio recording file size in bytes (null = no limit, uses perFileMaxSize if set)
-      externalRecordingToolbarContainer: null, // External element/selector for recording toolbar (for modal/external button modes)
-      // Carousel preview options
-      enableCarouselPreview: true, // Enable carousel preview modal on file click
-      carouselAutoPreload: true, // Auto-preload files in carousel (true, false, or array of types like ['image', 'video'])
-      carouselEnableManualLoading: true, // Show "Load All" button in carousel
-      carouselVisibleTypes: [
-        "image",
-        "video",
-        "audio",
-        "pdf",
-        "excel",
-        "csv",
-        "text",
-      ], // File types visible in carousel
-      carouselPreviewableTypes: [
-        "image",
-        "video",
-        "audio",
-        "pdf",
-        "csv",
-        "excel",
-        "text",
-      ], // File types that can be previewed
-      carouselMaxPreviewRows: 100, // Max rows to show for CSV/Excel preview
-      carouselMaxTextPreviewChars: 50000, // Max characters for text file preview
-      onUploadStart: null,
-      onUploadSuccess: null,
-      onUploadError: null,
-      onDeleteSuccess: null,
-      onDeleteError: null,
-      onDuplicateFile: null, // Callback when duplicate file is detected
-      // Cross-uploader drag-drop options
-      enableCrossUploaderDrag: true, // Allow dragging files between uploaders
-      // External drop zone options
-      externalDropZone: null, // Element or selector for external drop zone (e.g., modal trigger button)
-      externalDropZoneActiveClass: 'file-uploader-drop-active', // Class added when dragging over external drop zone
-      ...options,
-    };
+    // Merge user options with defaults (supports both flat and grouped formats)
+    this.options = mergeOptions(options, DEFAULT_OPTIONS);
 
     // Validate download-all button configuration
     if (
@@ -173,6 +289,7 @@ export default class FileUploader {
     this.screenCapture = null;
     this.videoRecorder = null;
     this.audioRecorder = null;
+    this.pageCapture = null;
     this.recordingUI = new RecordingUI(this);
     this.carousel = null;
     this.carouselContainer = null;
@@ -475,6 +592,36 @@ export default class FileUploader {
     this.captureButtonContainer = document.createElement("div");
     this.captureButtonContainer.className = "file-uploader-capture-container";
 
+    // Full page capture button
+    if (this.options.enableFullPageCapture && PageCapture.isSupported()) {
+      this.fullPageCaptureBtn = document.createElement("button");
+      this.fullPageCaptureBtn.type = "button";
+      this.fullPageCaptureBtn.className = "file-uploader-capture-btn has-tooltip";
+      this.fullPageCaptureBtn.setAttribute("data-tooltip", "Capture Full Page");
+      this.fullPageCaptureBtn.setAttribute("data-tooltip-position", "top");
+      this.fullPageCaptureBtn.innerHTML = getIcon("fullpage_capture");
+      this.fullPageCaptureBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.captureFullPage();
+      });
+      this.captureButtonContainer.appendChild(this.fullPageCaptureBtn);
+    }
+
+    // Region capture button
+    if (this.options.enableRegionCapture && PageCapture.isSupported()) {
+      this.regionCaptureBtn = document.createElement("button");
+      this.regionCaptureBtn.type = "button";
+      this.regionCaptureBtn.className = "file-uploader-capture-btn has-tooltip";
+      this.regionCaptureBtn.setAttribute("data-tooltip", "Capture Region");
+      this.regionCaptureBtn.setAttribute("data-tooltip-position", "top");
+      this.regionCaptureBtn.innerHTML = getIcon("region_capture");
+      this.regionCaptureBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.captureRegion();
+      });
+      this.captureButtonContainer.appendChild(this.regionCaptureBtn);
+    }
+
     // Screenshot button
     if (this.options.enableScreenCapture && ScreenCapture.isSupported()) {
       this.screenshotBtn = document.createElement("button");
@@ -490,12 +637,12 @@ export default class FileUploader {
       this.captureButtonContainer.appendChild(this.screenshotBtn);
     }
 
-    // Video recording button
+    // Screen recording button
     if (this.options.enableVideoRecording && VideoRecorder.isSupported()) {
       this.videoRecordBtn = document.createElement("button");
       this.videoRecordBtn.type = "button";
       this.videoRecordBtn.className = "file-uploader-capture-btn has-tooltip";
-      this.videoRecordBtn.setAttribute("data-tooltip", "Record Video");
+      this.videoRecordBtn.setAttribute("data-tooltip", "Record Screen");
       this.videoRecordBtn.setAttribute("data-tooltip-position", "top");
       this.videoRecordBtn.innerHTML = getIcon("video");
       this.videoRecordBtn.addEventListener("click", (e) => {
@@ -595,13 +742,48 @@ export default class FileUploader {
 
     // Append capture buttons to action container
     if (this.captureButtonContainer.children.length > 0) {
-      this.actionContainer.appendChild(this.captureButtonContainer);
+      if (this.options.collapsibleCaptureButtons) {
+        // Wrap in collapsible expandable container
+        this.captureExpandable = document.createElement("div");
+        this.captureExpandable.className = "file-uploader-capture-expandable";
+
+        // Create toggle button
+        this.captureToggleBtn = document.createElement("button");
+        this.captureToggleBtn.type = "button";
+        this.captureToggleBtn.className = "file-uploader-capture-toggle has-tooltip";
+        this.captureToggleBtn.setAttribute("data-tooltip", "Media Capture");
+        this.captureToggleBtn.setAttribute("data-tooltip-position", "top");
+        this.captureToggleBtn.innerHTML = `<span class="toggle-chevron">${getIcon("chevron_right")}</span>`;
+        this.captureToggleBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.toggleCaptureButtons();
+        });
+
+        // Create wrapper for buttons
+        const buttonsWrapper = document.createElement("div");
+        buttonsWrapper.className = "file-uploader-capture-buttons-wrapper";
+        buttonsWrapper.appendChild(this.captureButtonContainer);
+
+        this.captureExpandable.appendChild(this.captureToggleBtn);
+        this.captureExpandable.appendChild(buttonsWrapper);
+        this.actionContainer.appendChild(this.captureExpandable);
+      } else {
+        this.actionContainer.appendChild(this.captureButtonContainer);
+      }
     }
 
     // Append action container to dropzone if it has children
     if (this.actionContainer.children.length > 0) {
       this.dropZone.appendChild(this.actionContainer);
     }
+  }
+
+  /**
+   * Toggle capture buttons expanded/collapsed state
+   */
+  toggleCaptureButtons() {
+    if (!this.captureExpandable) return;
+    this.captureExpandable.classList.toggle("expanded");
   }
 
   createLimitsToggleButton() {
@@ -698,6 +880,88 @@ export default class FileUploader {
     }
   }
 
+  async captureFullPage() {
+    try {
+      // Disable button during capture
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.disabled = true;
+      }
+
+      // Initialize page capture if not already done
+      if (!this.pageCapture) {
+        this.pageCapture = new PageCapture({
+          onCaptureStart: () => {
+            // Could show a loading indicator here
+          },
+          onCaptureComplete: (blob, type) => {
+            // Capture completed
+          },
+          onCaptureError: (error) => {
+            this.showError(error.message);
+          }
+        });
+      }
+
+      // Capture full page screenshot
+      const blob = await this.pageCapture.captureFullPage();
+      const file = this.pageCapture.blobToFile(blob, 'fullpage');
+
+      // Add captured file
+      this.handleCapturedFile(file, "fullpage-screenshot");
+    } catch (error) {
+      this.showError(error.message);
+    } finally {
+      // Re-enable button
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.disabled = false;
+      }
+    }
+  }
+
+  async captureRegion() {
+    try {
+      // Disable button during capture
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.disabled = true;
+      }
+
+      // Initialize page capture if not already done
+      if (!this.pageCapture) {
+        this.pageCapture = new PageCapture({
+          onSelectionStart: () => {
+            // Region selection started
+          },
+          onSelectionComplete: (region) => {
+            // Region selected
+          },
+          onSelectionCancel: () => {
+            // User cancelled selection
+          },
+          onCaptureError: (error) => {
+            this.showError(error.message);
+          }
+        });
+      }
+
+      // Start region selection and capture
+      const blob = await this.pageCapture.captureRegion();
+      const file = this.pageCapture.blobToFile(blob, 'region');
+
+      // Add captured file
+      this.handleCapturedFile(file, "region-screenshot");
+    } catch (error) {
+      // Don't show error for user cancellation
+      if (error.message !== 'Selection cancelled') {
+        this.showError(error.message);
+      }
+    } finally {
+      // Re-enable button
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.disabled = false;
+      }
+    }
+  }
+
   async toggleVideoRecording() {
     if (
       this.videoRecorder &&
@@ -742,12 +1006,18 @@ export default class FileUploader {
       // Set up handler for when user stops sharing from system button
       this.recordingUI.setupStreamEndedHandler();
 
-      // Hide screenshot and audio buttons during recording
+      // Hide screenshot, audio, and page capture buttons during recording
       if (this.screenshotBtn) {
         this.screenshotBtn.style.display = "none";
       }
       if (this.audioRecordBtn) {
         this.audioRecordBtn.style.display = "none";
+      }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "none";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "none";
       }
 
       // Create recording toolbar
@@ -770,6 +1040,12 @@ export default class FileUploader {
       }
       if (this.screenshotBtn) {
         this.screenshotBtn.style.display = "";
+      }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
       }
     }
   }
@@ -806,6 +1082,14 @@ export default class FileUploader {
       if (this.audioRecordBtn) {
         this.audioRecordBtn.style.display = "";
       }
+
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
+      }
     } catch (error) {
       this.showError(error.message);
 
@@ -822,6 +1106,12 @@ export default class FileUploader {
       }
       if (this.audioRecordBtn) {
         this.audioRecordBtn.style.display = "";
+      }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
       }
     }
   }
@@ -851,6 +1141,14 @@ export default class FileUploader {
 
     if (this.audioRecordBtn) {
       this.audioRecordBtn.style.display = "";
+    }
+
+    if (this.fullPageCaptureBtn) {
+      this.fullPageCaptureBtn.style.display = "";
+    }
+
+    if (this.regionCaptureBtn) {
+      this.regionCaptureBtn.style.display = "";
     }
   }
 
@@ -1018,6 +1316,12 @@ export default class FileUploader {
       if (this.videoRecordBtn) {
         this.videoRecordBtn.style.display = "none";
       }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "none";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "none";
+      }
 
       // Create audio recording toolbar
       this.recordingUI.createAudioRecordingToolbar();
@@ -1042,6 +1346,12 @@ export default class FileUploader {
       }
       if (this.videoRecordBtn) {
         this.videoRecordBtn.style.display = "";
+      }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
       }
     }
   }
@@ -1078,6 +1388,14 @@ export default class FileUploader {
       if (this.videoRecordBtn) {
         this.videoRecordBtn.style.display = "";
       }
+
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
+      }
     } catch (error) {
       this.showError(error.message);
 
@@ -1094,6 +1412,12 @@ export default class FileUploader {
       }
       if (this.videoRecordBtn) {
         this.videoRecordBtn.style.display = "";
+      }
+      if (this.fullPageCaptureBtn) {
+        this.fullPageCaptureBtn.style.display = "";
+      }
+      if (this.regionCaptureBtn) {
+        this.regionCaptureBtn.style.display = "";
       }
     }
   }
@@ -1123,6 +1447,14 @@ export default class FileUploader {
 
     if (this.videoRecordBtn) {
       this.videoRecordBtn.style.display = "";
+    }
+
+    if (this.fullPageCaptureBtn) {
+      this.fullPageCaptureBtn.style.display = "";
+    }
+
+    if (this.regionCaptureBtn) {
+      this.regionCaptureBtn.style.display = "";
     }
   }
 
@@ -3834,6 +4166,7 @@ export default class FileUploader {
       files: [],
       autoPreload: this.options.carouselAutoPreload,
       enableManualLoading: this.options.carouselEnableManualLoading,
+      showDownloadButton: this.options.carouselShowDownloadButton,
       visibleTypes: this.options.carouselVisibleTypes,
       previewableTypes: this.options.carouselPreviewableTypes,
       maxPreviewRows: this.options.carouselMaxPreviewRows,

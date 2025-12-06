@@ -267,7 +267,7 @@ export default class ConfigBuilder {
           },
           cleanupOnDestroy: {
             type: "boolean",
-            default: false,
+            default: true,
             label: "Cleanup On Destroy",
             hint: "Delete uploaded files from server when the uploader instance is destroyed",
           },
@@ -438,21 +438,37 @@ export default class ConfigBuilder {
         title: "Media Capture",
         icon: "camera",
         options: {
+          enableFullPageCapture: {
+            type: "boolean",
+            default: true,
+            label: "Enable Full Page Capture",
+            hint: "Enable full page screenshot capture button (captures entire scrollable page)",
+            affectsOptions: ["modalMediaButtons", "collapsibleCaptureButtons"],
+          },
+          enableRegionCapture: {
+            type: "boolean",
+            default: true,
+            label: "Enable Region Capture",
+            hint: "Enable region selection screenshot capture button (user selects area to capture)",
+            affectsOptions: ["modalMediaButtons", "collapsibleCaptureButtons"],
+          },
           enableScreenCapture: {
             type: "boolean",
             default: true,
-            label: "Enable Screen Capture",
+            label: "Enable Screenshot Capture",
             hint: "Enable screenshot capture button",
-            affectsOptions: ["enableMicrophoneAudio", "enableSystemAudio"],
+            affectsOptions: ["enableMicrophoneAudio", "enableSystemAudio", "modalMediaButtons", "collapsibleCaptureButtons"],
           },
           enableVideoRecording: {
             type: "boolean",
             default: true,
-            label: "Enable Video Recording",
-            hint: "Enable video recording button",
+            label: "Enable Screen Recording",
+            hint: "Enable screen recording button",
             affectsOptions: [
               "maxVideoRecordingDuration",
               "recordingCountdownDuration",
+              "modalMediaButtons",
+              "collapsibleCaptureButtons",
             ],
           },
           enableAudioRecording: {
@@ -460,7 +476,19 @@ export default class ConfigBuilder {
             default: true,
             label: "Enable Audio Recording",
             hint: "Enable audio recording button",
-            affectsOptions: ["maxAudioRecordingDuration"],
+            affectsOptions: ["maxAudioRecordingDuration", "modalMediaButtons", "collapsibleCaptureButtons"],
+          },
+          collapsibleCaptureButtons: {
+            type: "boolean",
+            default: false,
+            label: "Collapsible Capture Buttons",
+            hint: "Show capture buttons in a collapsible/expandable format with toggle button",
+            showWhen: (config) =>
+              config.enableFullPageCapture ||
+              config.enableRegionCapture ||
+              config.enableScreenCapture ||
+              config.enableVideoRecording ||
+              config.enableAudioRecording,
           },
           maxVideoRecordingDuration: {
             type: "number",
@@ -589,6 +617,7 @@ export default class ConfigBuilder {
             affectsOptions: [
               "carouselAutoPreload",
               "carouselEnableManualLoading",
+              "carouselShowDownloadButton",
               "carouselMaxPreviewRows",
               "carouselMaxTextPreviewChars",
               "carouselVisibleTypes",
@@ -607,6 +636,13 @@ export default class ConfigBuilder {
             default: true,
             label: "Enable Manual Loading",
             hint: 'Show "Load All" button in carousel',
+            dependsOn: "enableCarouselPreview",
+          },
+          carouselShowDownloadButton: {
+            type: "boolean",
+            default: true,
+            label: "Show Download Button",
+            hint: "Show download button in carousel preview",
             dependsOn: "enableCarouselPreview",
           },
           carouselMaxPreviewRows: {
@@ -760,12 +796,24 @@ export default class ConfigBuilder {
             type: "multiSelect",
             default: [],
             label: "Media Capture Buttons",
-            hint: "Show media capture buttons alongside the modal button for quick access",
-            options: ["screenshot", "video", "audio"],
+            hint: "Show media capture buttons alongside the modal button for quick access (only enabled options from Media Capture section are available)",
+            options: ["fullpage", "region", "screenshot", "video", "audio"],
             optionLabels: {
+              fullpage: "Full Page Capture",
+              region: "Region Capture",
               screenshot: "Screenshot Capture",
               video: "Screen Recording",
               audio: "Audio Recording",
+            },
+            filterOptions: (config) => {
+              // Only show options that are enabled in Media Capture settings
+              const available = [];
+              if (config.enableFullPageCapture) available.push("fullpage");
+              if (config.enableRegionCapture) available.push("region");
+              if (config.enableScreenCapture) available.push("screenshot");
+              if (config.enableVideoRecording) available.push("video");
+              if (config.enableAudioRecording) available.push("audio");
+              return available;
             },
             showWhen: (config) =>
               config.displayMode === "modal-minimal" ||
@@ -1902,7 +1950,7 @@ export default class ConfigBuilder {
               <div class="fu-config-builder-tab-content active" id="tab-preview">
                 <!-- Uploader Selector -->
                 <div class="fu-config-builder-uploader-selector">
-                  <button class="fu-config-builder-add-uploader" id="add-uploader" data-tooltip-text="Add new uploader" data-tooltip-position="bottom">
+                  <button class="fu-config-builder-add-uploader has-tooltip" id="add-uploader" data-tooltip="Add new uploader" data-tooltip-position="right">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="12" y1="5" x2="12" y2="19"/>
                       <line x1="5" y1="12" x2="19" y2="12"/>
@@ -3572,16 +3620,31 @@ export default class ConfigBuilder {
    */
   renderMultiSelect(key, def, isDisabled = false, dependencyIndicator = "") {
     const selected = this.config[key] || [];
+
+    // Get available options - use filterOptions if defined, otherwise use all options
+    const availableOptions = def.filterOptions
+      ? def.filterOptions(this.config)
+      : def.options;
+
+    // Filter out any selected values that are no longer available
+    const validSelected = selected.filter((s) => availableOptions.includes(s));
+    if (validSelected.length !== selected.length) {
+      // Update config to remove invalid selections
+      this.config[key] = validSelected;
+    }
+
     const tags = def.options
-      .map(
-        (opt) => {
-          const label = def.optionLabels ? def.optionLabels[opt] || opt : opt;
-          return `<span class="fu-config-builder-tag ${
-            selected.includes(opt) ? "selected" : ""
-          } ${isDisabled ? "disabled" : ""}"
-              data-value="${opt}">${label}</span>`;
-        }
-      )
+      .map((opt) => {
+        const label = def.optionLabels ? def.optionLabels[opt] || opt : opt;
+        const isAvailable = availableOptions.includes(opt);
+        const isSelected = validSelected.includes(opt);
+
+        return `<span class="fu-config-builder-tag ${
+          isSelected ? "selected" : ""
+        } ${isDisabled || !isAvailable ? "disabled" : ""}"
+              data-value="${opt}"
+              ${!isAvailable ? 'title="Enable this option in Media Capture settings first"' : ""}>${label}</span>`;
+      })
       .join("");
 
     return `
@@ -5418,6 +5481,8 @@ export default class ConfigBuilder {
         this.config.enableScreenCapture = false;
         this.config.enableVideoRecording = false;
         this.config.enableAudioRecording = false;
+        this.config.enableFullPageCapture = false;
+        this.config.enableRegionCapture = false;
         this.config.showDownloadAllButton = false;
         this.config.showClearAllButton = false;
         break;
@@ -5451,6 +5516,8 @@ export default class ConfigBuilder {
         this.config.enableScreenCapture = false;
         this.config.enableVideoRecording = false;
         this.config.enableAudioRecording = false;
+        this.config.enableFullPageCapture = false;
+        this.config.enableRegionCapture = false;
         break;
 
       case "media":
@@ -5941,7 +6008,8 @@ export default class ConfigBuilder {
     const modalTitle = config.modalTitle || "Upload Files";
     const modalSize = config.modalSize || "lg";
     const bootstrapVersion = config.bootstrapVersion || "5";
-    const mediaButtons = config.modalMediaButtons || [];
+    // Filter media buttons to only include those whose capture option is enabled
+    const mediaButtons = this.filterEnabledMediaButtons(config.modalMediaButtons || [], config);
 
     const modalId = `${varName}Modal`;
     const containerId = `${varName}Container`;
@@ -5959,7 +6027,8 @@ export default class ConfigBuilder {
     const displayMode = config.displayMode;
     const bootstrapVersion = config.bootstrapVersion || "5";
     const isMinimal = displayMode === "modal-minimal";
-    const mediaButtons = config.modalMediaButtons || [];
+    // Filter media buttons to only include those whose capture option is enabled
+    const mediaButtons = this.filterEnabledMediaButtons(config.modalMediaButtons || [], config);
     const enableModalDropZone = config.enableModalDropZone !== false;
 
     const modalId = `${varName}Modal`;
@@ -6263,7 +6332,8 @@ export default class ConfigBuilder {
     const modalTitle = config.modalTitle || "Upload Files";
     const modalSize = config.modalSize || "lg";
     const bootstrapVersion = config.bootstrapVersion || "5";
-    const mediaButtons = config.modalMediaButtons || [];
+    // Filter media buttons to only include those whose capture option is enabled
+    const mediaButtons = this.filterEnabledMediaButtons(config.modalMediaButtons || [], config);
     const enableModalDropZone = config.enableModalDropZone !== false;
 
     const modalId = `${varName}Modal`;
@@ -6751,6 +6821,18 @@ export default class ConfigBuilder {
         code += `        }\n`;
         code += `        break;\n`;
       }
+      if (mediaButtons.includes('fullpage')) {
+        code += `      case 'fullpage':\n`;
+        code += `        // Capture full page screenshot\n`;
+        code += `        ${varName}.captureFullPage();\n`;
+        code += `        break;\n`;
+      }
+      if (mediaButtons.includes('region')) {
+        code += `      case 'region':\n`;
+        code += `        // Capture selected region screenshot\n`;
+        code += `        ${varName}.captureRegion();\n`;
+        code += `        break;\n`;
+      }
       code += `    }\n`;
       code += `  });\n`;
       code += `});\n`;
@@ -6848,6 +6930,10 @@ export default class ConfigBuilder {
     video: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor"><path d="M96 64c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L96 64zM464 336l73.5 58.8c4.2 3.4 9.4 5.2 14.8 5.2 13.1 0 23.7-10.6 23.7-23.7l0-240.6c0-13.1-10.6-23.7-23.7-23.7-5.4 0-10.6 1.8-14.8 5.2L464 176 464 336z"/></svg>`,
     // Audio/mic icon (matches icons.js mic icon)
     audio: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="currentColor"><path d="M192 0C139 0 96 43 96 96l0 128c0 53 43 96 96 96s96-43 96-96l0-128c0-53-43-96-96-96zM48 184c0-13.3-10.7-24-24-24S0 170.7 0 184l0 40c0 97.9 73.3 178.7 168 190.5l0 49.5-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-49.5c94.7-11.8 168-92.6 168-190.5l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 79.5-64.5 144-144 144S48 303.5 48 224l0-40z"/></svg>`,
+    // Full page capture icon
+    fullpage: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM96 96l320 0c17.7 0 32 14.3 32 32l0 256c0 17.7-14.3 32-32 32L96 416c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32zM200 208c0-13.3-10.7-24-24-24l-32 0c-13.3 0-24 10.7-24 24l0 32c0 13.3 10.7 24 24 24s24-10.7 24-24l0-8 8 0c13.3 0 24-10.7 24-24zm192 0c0-13.3-10.7-24-24-24l-32 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l8 0 0 8c0 13.3 10.7 24 24 24s24-10.7 24-24l0-32zm-192 96c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 32c0 13.3 10.7 24 24 24l32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-8 0 0-8zm192 0c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 8-8 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0c13.3 0 24-10.7 24-24l0-32z"/></svg>`,
+    // Region capture icon
+    region: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M0 80C0 53.5 21.5 32 48 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 96l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32L0 80zM0 432c0-17.7 14.3-32 32-32l0-64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 64 64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L48 464c-26.5 0-48-21.5-48-48zM464 96l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0c26.5 0 48 21.5 48 48l0 80c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64zM512 336l0 64c0 26.5-21.5 48-48 48l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0 0-64c0-17.7 14.3-32 32-32s32 14.3 32 32zM176 224l160 0c8.8 0 16 7.2 16 16l0 96c0 8.8-7.2 16-16 16l-160 0c-8.8 0-16-7.2-16-16l0-96c0-8.8 7.2-16 16-16z"/></svg>`,
     // Chevron right icon for expandable media buttons toggle
     chevron_right: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" fill="currentColor"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>`
   };
@@ -6855,8 +6941,28 @@ export default class ConfigBuilder {
   static MEDIA_CAPTURE_TITLES = {
     screenshot: "Capture Screenshot",
     video: "Record Screen",
-    audio: "Record Audio"
+    audio: "Record Audio",
+    fullpage: "Capture Full Page",
+    region: "Capture Region"
   };
+
+  /**
+   * Filter media buttons to only include those whose capture option is enabled
+   * @param {string[]} buttons - Array of button types
+   * @param {Object} config - The config object
+   * @returns {string[]} Filtered array of button types
+   */
+  filterEnabledMediaButtons(buttons, config) {
+    if (!buttons || buttons.length === 0) return [];
+    return buttons.filter(btn => {
+      if (btn === 'screenshot') return config.enableScreenCapture !== false;
+      if (btn === 'fullpage') return config.enableFullPageCapture !== false;
+      if (btn === 'region') return config.enableRegionCapture !== false;
+      if (btn === 'video') return config.enableVideoRecording !== false;
+      if (btn === 'audio') return config.enableAudioRecording !== false;
+      return false;
+    });
+  }
 
   /**
    * Generate media capture buttons HTML with expandable toggle
@@ -6926,6 +7032,16 @@ export default class ConfigBuilder {
           } else if (captureType === 'audio') {
             if (typeof uploader.toggleAudioRecording === 'function') {
               await uploader.toggleAudioRecording();
+              this.updatePreviewFileInfo(uploaderId);
+            }
+          } else if (captureType === 'fullpage') {
+            if (typeof uploader.captureFullPage === 'function') {
+              await uploader.captureFullPage();
+              this.updatePreviewFileInfo(uploaderId);
+            }
+          } else if (captureType === 'region') {
+            if (typeof uploader.captureRegion === 'function') {
+              await uploader.captureRegion();
               this.updatePreviewFileInfo(uploaderId);
             }
           }
@@ -7026,6 +7142,9 @@ export default class ConfigBuilder {
 
     const files = data.instance.getFiles ? data.instance.getFiles() : [];
     const fileCount = files.length;
+    const previousCount = data.previousFileCount || 0;
+    const filesAdded = fileCount > previousCount;
+    data.previousFileCount = fileCount;
 
     // Format size helper
     const formatSize = (bytes) => {
@@ -7075,6 +7194,14 @@ export default class ConfigBuilder {
           <span class="badge-separator">|</span>
           <span class="badge-size">${formatSize(totalSize)}</span>
         `;
+
+        // Add pulse animation when files are added
+        if (filesAdded) {
+          badge.classList.remove('file-added-pulse');
+          // Force reflow to restart animation
+          void badge.offsetWidth;
+          badge.classList.add('file-added-pulse');
+        }
       }
     } else {
       // Update detailed summary
@@ -7148,6 +7275,14 @@ export default class ConfigBuilder {
             <div class="summary-types">${typeBadges}</div>
           </div>
         `;
+
+        // Add pulse animation when files are added
+        if (filesAdded) {
+          summary.classList.remove('file-added-pulse');
+          // Force reflow to restart animation
+          void summary.offsetWidth;
+          summary.classList.add('file-added-pulse');
+        }
       }
     }
   }
@@ -7878,7 +8013,9 @@ export default class ConfigBuilder {
       const modalSize = data.config.modalSize || "lg";
       const bootstrapVersion = data.config.bootstrapVersion || "5";
       const isMinimal = displayMode === "modal-minimal";
-      const mediaButtons = data.config.modalMediaButtons || [];
+
+      // Filter media buttons to only include those whose capture option is enabled
+      const mediaButtons = this.filterEnabledMediaButtons(data.config.modalMediaButtons || [], data.config);
 
       // Get the button icon SVG
       const buttonIconSvg = this.getModalButtonIcon(buttonIcon);
@@ -7988,6 +8125,12 @@ export default class ConfigBuilder {
           }
           if (mediaButtons.includes('audio')) {
             previewConfig.enableAudioRecording = true;
+          }
+          if (mediaButtons.includes('fullpage')) {
+            previewConfig.enableFullPageCapture = true;
+          }
+          if (mediaButtons.includes('region')) {
+            previewConfig.enableRegionCapture = true;
           }
 
           // Set external recording toolbar container for video/audio recording

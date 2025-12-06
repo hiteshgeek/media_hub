@@ -1,0 +1,292 @@
+// ============================================================================
+// Page Capture Component - Full Page & Region Screenshot
+// ============================================================================
+
+@use "../variables" as *;
+@use "../mixins" as *;
+
+$component-prefix: $file-uploader-prefix !default;
+
+// ============================================================================
+// Theme Variables
+// ============================================================================
+
+:root {
+  // Overlay
+  --#{$component-prefix}-page-capture-overlay-bg: rgba(0, 0, 0, 0.5);
+
+  // Instructions
+  --#{$component-prefix}-page-capture-instructions-bg: rgba(0, 0, 0, 0.8);
+  --#{$component-prefix}-page-capture-instructions-text: #ffffff;
+  --#{$component-prefix}-page-capture-instructions-hint: rgba(255, 255, 255, 0.6);
+
+  // Selection box
+  --#{$component-prefix}-page-capture-selection-border: #6366f1;
+  --#{$component-prefix}-page-capture-selection-bg: rgba(99, 102, 241, 0.1);
+  --#{$component-prefix}-page-capture-selection-handle: #6366f1;
+}
+
+// Light theme adjustments
+@if $file-uploader-enable-dark-mode {
+  [data-theme="light"] {
+    --#{$component-prefix}-page-capture-overlay-bg: rgba(0, 0, 0, 0.4);
+    --#{$component-prefix}-page-capture-instructions-bg: rgba(30, 30, 30, 0.9);
+  }
+}
+
+// ============================================================================
+// Full-screen Overlay
+// ============================================================================
+
+.#{$component-prefix}-page-capture-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999998;
+  background-color: var(--#{$component-prefix}-page-capture-overlay-bg);
+  cursor: crosshair;
+  user-select: none;
+
+  @if $file-uploader-enable-animations {
+    animation: #{$component-prefix}-page-capture-fade-in 0.2s ease-out;
+  }
+}
+
+@keyframes #{$component-prefix}-page-capture-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// ============================================================================
+// Instructions Banner
+// ============================================================================
+
+.#{$component-prefix}-page-capture-instructions {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fu-spacing-xs);
+  padding: var(--fu-spacing-md) var(--fu-spacing-xl);
+  background: var(--#{$component-prefix}-page-capture-instructions-bg);
+  border-radius: var(--fu-radius-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(10px);
+    animation: #{$component-prefix}-page-capture-slide-down 0.3s ease-out;
+  }
+}
+
+@keyframes #{$component-prefix}-page-capture-slide-down {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.#{$component-prefix}-page-capture-instructions-text {
+  color: var(--#{$component-prefix}-page-capture-instructions-text);
+  font-size: var(--fu-font-size-base);
+  font-weight: var(--fu-font-weight-medium);
+  font-family: var(--fu-font-family-base);
+}
+
+.#{$component-prefix}-page-capture-instructions-hint {
+  color: var(--#{$component-prefix}-page-capture-instructions-hint);
+  font-size: var(--fu-font-size-sm);
+  font-family: var(--fu-font-family-base);
+
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 0 2px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--fu-radius-sm);
+    font-family: var(--fu-font-family-mono, 'Courier New', monospace);
+    font-size: 11px;
+    font-weight: var(--fu-font-weight-semibold);
+  }
+}
+
+// ============================================================================
+// Selection Box - Clear cutout area with border
+// ============================================================================
+
+.#{$component-prefix}-page-capture-selection-box {
+  position: fixed;
+  display: none;
+  border: 3px dashed var(--fu-color-primary, #6366f1);
+  background-color: transparent; // Clear/transparent to show content beneath
+  pointer-events: none;
+  z-index: 999999;
+
+  // Corner resize handles (visual only for now)
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--fu-color-primary, #6366f1);
+    border-radius: 2px;
+  }
+
+  // Top-left and bottom-right corners
+  &::before {
+    top: -4px;
+    left: -4px;
+  }
+
+  &::after {
+    bottom: -4px;
+    right: -4px;
+  }
+}
+
+// Additional corner handles using inner elements
+.#{$component-prefix}-page-capture-selection-box-handles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+
+  .handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--fu-color-primary, #6366f1);
+    border-radius: 2px;
+
+    &.top-right {
+      top: -4px;
+      right: -4px;
+    }
+
+    &.bottom-left {
+      bottom: -4px;
+      left: -4px;
+    }
+  }
+}
+
+// When selecting, the overlay uses clip-path to cut out the selection area
+.#{$component-prefix}-page-capture-overlay.selecting {
+  // clip-path is set dynamically via JavaScript
+}
+
+// ============================================================================
+// Selection Dimensions Display
+// ============================================================================
+
+.#{$component-prefix}-page-capture-dimensions {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: var(--#{$component-prefix}-page-capture-instructions-bg);
+  color: var(--#{$component-prefix}-page-capture-instructions-text);
+  border-radius: var(--fu-radius-sm);
+  font-size: 11px;
+  font-family: var(--fu-font-family-mono, 'Courier New', monospace);
+  font-weight: var(--fu-font-weight-medium);
+  white-space: nowrap;
+  pointer-events: none;
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(5px);
+  }
+}
+
+// ============================================================================
+// Capture Progress Indicator
+// ============================================================================
+
+.#{$component-prefix}-page-capture-progress {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fu-spacing-md);
+  padding: var(--fu-spacing-xl) var(--fu-spacing-2xl);
+  background: var(--#{$component-prefix}-page-capture-instructions-bg);
+  border-radius: var(--fu-radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  @if $file-uploader-enable-animations {
+    @include backdrop-blur(10px);
+  }
+}
+
+.#{$component-prefix}-page-capture-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--fu-color-primary);
+  border-radius: 50%;
+  animation: #{$component-prefix}-page-capture-spin 0.8s linear infinite;
+}
+
+@keyframes #{$component-prefix}-page-capture-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.#{$component-prefix}-page-capture-progress-text {
+  color: var(--#{$component-prefix}-page-capture-instructions-text);
+  font-size: var(--fu-font-size-sm);
+  font-weight: var(--fu-font-weight-medium);
+}
+
+// ============================================================================
+// Capture Buttons (in toolbar)
+// ============================================================================
+
+.#{$component-prefix}-capture-page-btn,
+.#{$component-prefix}-capture-region-btn {
+  // These inherit from .file-uploader-capture-btn styles
+  // Additional specific styles can be added here if needed
+}
+
+// ============================================================================
+// Responsive Adjustments
+// ============================================================================
+
+@include respond-below("sm") {
+  .#{$component-prefix}-page-capture-instructions {
+    padding: var(--fu-spacing-sm) var(--fu-spacing-md);
+    max-width: calc(100vw - 40px);
+  }
+
+  .#{$component-prefix}-page-capture-instructions-text {
+    font-size: var(--fu-font-size-sm);
+  }
+
+  .#{$component-prefix}-page-capture-instructions-hint {
+    font-size: var(--fu-font-size-xs);
+  }
+}

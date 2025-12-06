@@ -48,7 +48,7 @@ $fc-modal-border: rgba(71, 85, 105, 0.5);
   display: none;
   position: fixed;
   inset: 0;
-  z-index: calc(var(--fu-z-modal) + 10000);
+  z-index: 1060000; // Must be higher than Bootstrap modal (1055) and modal backdrop (1050)
   background: $fc-modal-bg;
   backdrop-filter: blur(5px);
   opacity: 0;

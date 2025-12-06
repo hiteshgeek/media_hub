@@ -28,6 +28,10 @@ export default class FileCarousel {
         options.enableManualLoading !== undefined
           ? options.enableManualLoading
           : true,
+      showDownloadButton:
+        options.showDownloadButton !== undefined
+          ? options.showDownloadButton
+          : true,
       visibleTypes: options.visibleTypes || [
         "image",
         "video",
@@ -135,12 +139,16 @@ export default class FileCarousel {
               `
                   : ""
               }
-              <button class="fc-modal-btn fc-download-btn" data-fc-download title="Download (D)">
+              ${
+                this.options.showDownloadButton
+                  ? `<button class="fc-modal-btn fc-download-btn" data-fc-download title="Download (D)">
                 <svg class="fc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                 </svg>
-              </button>
+              </button>`
+                  : ""
+              }
               <button class="fc-modal-btn fc-close-btn" data-fc-close title="Close (Esc)">
                 <svg class="fc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
