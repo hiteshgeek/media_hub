@@ -497,6 +497,229 @@ $builder-prefix: "fu-config-builder";
 }
 
 // ============================================================================
+// Search
+// ============================================================================
+
+.#{$builder-prefix}-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.#{$builder-prefix}-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.#{$builder-prefix}-search-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.#{$builder-prefix}-search-input {
+  width: 100%;
+  padding: 10px 36px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  outline: none;
+  transition: all 0.15s ease;
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+}
+
+.#{$builder-prefix}-search-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.#{$builder-prefix}-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.#{$builder-prefix}-search-empty {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.#{$builder-prefix}-search-result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+
+  &:hover,
+  &.active {
+    background: #f3f4f6;
+
+    .#{$builder-prefix}-search-result-icon {
+      background: #ffffff;
+      border-color: #e5e7eb;
+    }
+  }
+
+  &.active {
+    background: #eef2ff;
+
+    .#{$builder-prefix}-search-result-icon {
+      background: #ffffff;
+      border-color: #c7d2fe;
+    }
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.#{$builder-prefix}-search-result-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #6b7280;
+  transition: background 0.1s ease, border-color 0.1s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.#{$builder-prefix}-search-result-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// Line 1: Option title
+.#{$builder-prefix}-search-result-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+
+  mark {
+    background: #fef08a;
+    color: inherit;
+    padding: 0;
+    border-radius: 2px;
+  }
+}
+
+// Line 2: Option key
+.#{$builder-prefix}-search-result-key {
+  font-family: "SF Mono", Monaco, monospace;
+  font-size: 11px;
+  color: #6366f1;
+  background: #ffffff;
+  border: 1px solid #e0e7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+// Line 3: Option description
+.#{$builder-prefix}-search-result-hint {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Category badge (shown after key)
+.#{$builder-prefix}-search-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.#{$builder-prefix}-search-result-category {
+  background: #e5e7eb;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+// Highlight animation for navigated options
+.#{$builder-prefix}-highlight {
+  animation: configBuilderHighlight 2s ease;
+}
+
+@keyframes configBuilderHighlight {
+  0% {
+    background: rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+// ============================================================================
 // Presets
 // ============================================================================
 
@@ -707,7 +930,7 @@ $builder-prefix: "fu-config-builder";
 // Slider Configuration Panel
 .#{$builder-prefix}-slider-config {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: auto repeat(4, 1fr);
   gap: 8px;
   padding: 12px;
   background: #f3f4f6;
@@ -738,6 +961,55 @@ $builder-prefix: "fu-config-builder";
     background: #ffffff;
     color: #1f2937;
     text-align: center;
+
+    &:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+    }
+  }
+
+  // Unit dropdown in slider config
+  &.#{$builder-prefix}-slider-config-unit-item {
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #1f2937;
+      cursor: pointer;
+      min-width: 70px;
+
+      &:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+      }
+    }
+  }
+}
+
+// Input group for slider config with unit dropdown
+.#{$builder-prefix}-slider-config-input-group {
+  display: flex;
+  gap: 4px;
+
+  input {
+    flex: 1;
+    min-width: 50px;
+  }
+
+  select {
+    width: auto;
+    padding: 6px 4px;
+    font-size: 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #1f2937;
+    cursor: pointer;
 
     &:focus {
       outline: none;
@@ -1010,18 +1282,43 @@ $builder-prefix: "fu-config-builder";
 .#{$builder-prefix}-type-slider-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
+  gap: 10px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+// Header with icon and title (like filetype-card-header)
+.#{$builder-prefix}-type-slider-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 1px solid #e5e7eb;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: #6366f1;
+    fill: none;
+  }
 }
 
 .#{$builder-prefix}-type-slider-title {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
-  text-transform: capitalize;
+}
+
+// Slider controls container (below header)
+.#{$builder-prefix}-type-slider-block > .#{$builder-prefix}-type-slider-controls {
+  padding: 0 14px;
+}
+
+.#{$builder-prefix}-type-slider-block > .#{$builder-prefix}-slider-labels-sm {
+  padding: 0 14px 14px 14px;
 }
 
 .#{$builder-prefix}-type-slider-controls {
@@ -2716,6 +3013,93 @@ $builder-prefix: "fu-config-builder";
     }
   }
 
+  // Search
+  .#{$builder-prefix}-search-input {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+
+    &::placeholder {
+      color: #718096;
+    }
+
+    &:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+  }
+
+  .#{$builder-prefix}-search-icon {
+    color: #718096;
+  }
+
+  .#{$builder-prefix}-search-clear {
+    color: #718096;
+
+    &:hover {
+      background: #2d3748;
+      color: #a0aec0;
+    }
+  }
+
+  .#{$builder-prefix}-search-results {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .#{$builder-prefix}-search-empty {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-search-result-item {
+    &:hover,
+    &.active {
+      background: #2d3748;
+
+      .#{$builder-prefix}-search-result-icon {
+        background: #1a202c;
+        border-color: #4a5568;
+      }
+    }
+
+    &.active {
+      background: #312e81;
+
+      .#{$builder-prefix}-search-result-icon {
+        background: #1e1b4b;
+        border-color: #4338ca;
+      }
+    }
+
+    &:not(:last-child) {
+      border-bottom-color: #2d3748;
+    }
+  }
+
+  .#{$builder-prefix}-search-result-icon {
+    background: #2d3748;
+    border-color: transparent;
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-search-result-label {
+    color: #e2e8f0;
+
+    mark {
+      background: #854d0e;
+      color: #fef08a;
+    }
+  }
+
+  .#{$builder-prefix}-search-result-meta {
+    color: #a0aec0;
+  }
+
+  .#{$builder-prefix}-search-result-category {
+    background: #374151;
+    color: #a0aec0;
+  }
+
   // Presets
   .#{$builder-prefix}-presets {
     border-bottom-color: #4a5568;
@@ -3269,7 +3653,8 @@ $builder-prefix: "fu-config-builder";
       color: #a0aec0;
     }
 
-    input {
+    input,
+    select {
       background: #2d3748;
       border-color: #4a5568;
       color: #e2e8f0;
@@ -3327,4 +3712,419 @@ $builder-prefix: "fu-config-builder";
 
 .file-uploader-limits {
   margin-bottom: 0;
+}
+
+// ============================================================================
+// Tooltip Overrides for Config Builder
+// ============================================================================
+
+// Ensure tooltip elements have proper positioning
+.#{$builder-prefix} {
+  // Elements with tooltips need position:relative
+  .has-tooltip {
+    position: relative;
+  }
+
+  // Ensure tooltips appear above all other elements
+  .has-tooltip::before,
+  .has-tooltip::after {
+    z-index: 10000;
+  }
+
+  // Tooltip wrapper (JS-based with shortcut) also needs high z-index
+  .tooltip-wrapper {
+    z-index: 10000;
+  }
+
+  // Header elements need overflow visible for tooltips
+  .#{$builder-prefix}-header {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-header-left {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-theme-switcher {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-theme-btn {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-home-link {
+    overflow: visible;
+  }
+
+  // Vertical tabs need overflow visible for right-positioned tooltips
+  .#{$builder-prefix}-vertical-tabs {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-vertical-tab {
+    overflow: visible;
+  }
+
+  // Style tabs container
+  .#{$builder-prefix}-style-tabs {
+    overflow: visible;
+  }
+
+  // Uploader selector elements
+  .#{$builder-prefix}-uploader-selector {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-uploader-list {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-uploader-tab {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-uploader-tab-actions {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-add-uploader {
+    overflow: visible;
+  }
+
+  // Code header and actions
+  .#{$builder-prefix}-code-header {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-code-actions {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-code-btn {
+    overflow: visible;
+  }
+
+  // Reset styles button
+  .#{$builder-prefix}-reset-styles-btn {
+    overflow: visible;
+  }
+
+  // Dependency indicators
+  .#{$builder-prefix}-depends-on {
+    overflow: visible;
+  }
+
+  // CSS variable items
+  .#{$builder-prefix}-css-vars-items {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-css-var-item {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-css-var-source {
+    overflow: visible;
+  }
+
+  // Panel header
+  .#{$builder-prefix}-panel-header {
+    overflow: visible;
+  }
+
+  // Main tabs
+  .#{$builder-prefix}-main-tabs {
+    overflow: visible;
+  }
+
+  .#{$builder-prefix}-main-tab {
+    overflow: visible;
+  }
+}
+
+// ============================================================================
+// Per-Type Limits View Toggle & File Type Cards
+// ============================================================================
+
+.#{$builder-prefix}-pertype-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.#{$builder-prefix}-pertype-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.#{$builder-prefix}-pertype-view-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.#{$builder-prefix}-pertype-view-buttons {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: #e5e7eb;
+  border-radius: 6px;
+}
+
+.#{$builder-prefix}-pertype-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #374151;
+  }
+
+  &.active {
+    background: #ffffff;
+    color: #6366f1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    svg {
+      stroke: #6366f1;
+    }
+  }
+}
+
+// By File Type view container
+.#{$builder-prefix}-pertype-by-filetype {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// File Type Card
+.#{$builder-prefix}-filetype-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.#{$builder-prefix}-filetype-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 1px solid #e5e7eb;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: #6366f1;
+    fill: none;
+  }
+}
+
+.#{$builder-prefix}-filetype-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.#{$builder-prefix}-filetype-card-content {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// Limit Row within File Type Card
+.#{$builder-prefix}-filetype-limit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.#{$builder-prefix}-filetype-limit-label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+
+  code {
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 9px;
+    padding: 2px 5px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    color: #6366f1;
+  }
+}
+
+// Count label (for "files" text)
+.#{$builder-prefix}-count-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  flex-shrink: 0;
+  min-width: 35px;
+}
+
+// Dark mode adjustments for pertype components
+.#{$builder-prefix}.dark-mode {
+  .#{$builder-prefix}-pertype-view-label {
+    color: #9ca3af;
+  }
+
+  .#{$builder-prefix}-pertype-view-buttons {
+    background: #374151;
+  }
+
+  .#{$builder-prefix}-pertype-view-btn {
+    color: #9ca3af;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e5e7eb;
+    }
+
+    &.active {
+      background: #4b5563;
+      color: #818cf8;
+
+      svg {
+        stroke: #818cf8;
+      }
+    }
+  }
+
+  .#{$builder-prefix}-filetype-card {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .#{$builder-prefix}-filetype-card-header {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    border-bottom-color: #374151;
+
+    svg {
+      stroke: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-filetype-card-title {
+    color: #e5e7eb;
+  }
+
+  .#{$builder-prefix}-filetype-limit-label {
+    color: #9ca3af;
+
+    code {
+      background: #374151;
+      color: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-count-label {
+    color: #9ca3af;
+  }
+
+  // Search results dark mode
+  .#{$builder-prefix}-search-results {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .#{$builder-prefix}-search-result-item {
+    &:hover,
+    &.active {
+      background: #374151;
+
+      .#{$builder-prefix}-search-result-icon {
+        background: #1f2937;
+        border-color: #4b5563;
+      }
+    }
+
+    &.active {
+      background: #312e81;
+
+      .#{$builder-prefix}-search-result-icon {
+        background: #1e1b4b;
+        border-color: #4338ca;
+      }
+    }
+
+    &:not(:last-child) {
+      border-bottom-color: #374151;
+    }
+  }
+
+  .#{$builder-prefix}-search-result-icon {
+    background: #374151;
+    border-color: transparent;
+    color: #9ca3af;
+  }
+
+  .#{$builder-prefix}-search-result-label {
+    color: #e5e7eb;
+  }
+
+  .#{$builder-prefix}-search-result-key {
+    background: #1f2937;
+    border-color: #4338ca;
+    color: #a5b4fc;
+  }
+
+  .#{$builder-prefix}-search-result-hint {
+    color: #9ca3af;
+  }
+
+  .#{$builder-prefix}-search-result-category {
+    background: #374151;
+    color: #9ca3af;
+  }
+
+  .#{$builder-prefix}-search-empty {
+    color: #9ca3af;
+  }
+
+  // Type slider block dark mode
+  .#{$builder-prefix}-type-slider-block {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .#{$builder-prefix}-type-slider-header {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    border-bottom-color: #374151;
+
+    svg {
+      stroke: #818cf8;
+    }
+  }
+
+  .#{$builder-prefix}-type-slider-title {
+    color: #e5e7eb;
+  }
 }

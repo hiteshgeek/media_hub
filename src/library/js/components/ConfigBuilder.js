@@ -4,6 +4,8 @@
  * Allows users to explore all options and generate configuration code
  */
 
+import Tooltip from "./tooltip/Tooltip.js";
+
 export default class ConfigBuilder {
   constructor(element, options = {}) {
     this.element =
@@ -36,10 +38,11 @@ export default class ConfigBuilder {
 
     // Slider configuration for size inputs
     this.sliderConfig = {
-      minMB: 5, // Minimum value in MB
-      maxMB: 500, // Maximum value in MB
-      sliderStep: 50, // Slider step in MB
-      buttonStep: 10, // +/- button step in MB
+      minValue: 5, // Minimum value
+      maxValue: 500, // Maximum value
+      unit: "MB", // Unit for min/max (bytes, KB, MB, GB)
+      sliderStep: 50, // Slider step
+      buttonStep: 10, // +/- button step
     };
 
     // Store panel width for persistence across re-renders
@@ -62,6 +65,11 @@ export default class ConfigBuilder {
 
     // Theme mode (light, dark, system)
     this.theme = localStorage.getItem("fu-config-builder-theme") || "system";
+
+    // Restore active main tab and category from localStorage
+    this.activeMainTab = localStorage.getItem("fu-config-builder-main-tab") || "config";
+    this.currentCategory = localStorage.getItem("fu-config-builder-category") || "urls";
+    this.currentStyleSection = localStorage.getItem("fu-config-builder-style-section") || "primaryColors";
 
     this.init();
   }
@@ -271,8 +279,8 @@ export default class ConfigBuilder {
             label: "Show Limits",
             hint: "Display file limits section",
             affectsOptions: [
-              "showFileTypeCount",
               "showProgressBar",
+              "showTypeProgressBar",
               "showPerFileLimit",
               "showTypeGroupSize",
               "showTypeGroupCount",
@@ -282,18 +290,18 @@ export default class ConfigBuilder {
               "defaultLimitsVisible",
             ],
           },
-          showFileTypeCount: {
-            type: "boolean",
-            default: false,
-            label: "Show File Type Count",
-            hint: "Show count of files per type",
-            dependsOn: "showLimits",
-          },
           showProgressBar: {
             type: "boolean",
             default: false,
-            label: "Show Progress Bar",
-            hint: "Show progress bar for size/count limits",
+            label: "Show Summary Progress Bar",
+            hint: "Show progress bar for Total Size and File Count summary",
+            dependsOn: "showLimits",
+          },
+          showTypeProgressBar: {
+            type: "boolean",
+            default: true,
+            label: "Show Type Progress Bar",
+            hint: "Show progress bar in type grid cards",
             dependsOn: "showLimits",
           },
           showPerFileLimit: {
@@ -1393,9 +1401,17 @@ export default class ConfigBuilder {
   init() {
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.updateCodeOutput();
     this.updatePreview();
     this.applyTheme();
+  }
+
+  /**
+   * Initialize tooltips for all elements with data-tooltip-text attribute
+   */
+  initTooltips() {
+    Tooltip.initAll(this.element);
   }
 
   /**
@@ -1515,31 +1531,36 @@ export default class ConfigBuilder {
    * Render the config builder UI
    */
   render() {
-    // Get first category key for default active tab
+    // Get category keys and validate saved category exists
     const categoryKeys = Object.keys(this.optionDefinitions);
     const firstCategoryKey = categoryKeys[0] || "urls";
+
+    // Use saved category if valid, otherwise use first category
+    const activeCategory = categoryKeys.includes(this.currentCategory)
+      ? this.currentCategory
+      : firstCategoryKey;
 
     this.element.innerHTML = `
       <div class="fu-config-builder" data-theme="${this.theme}">
         <div class="fu-config-builder-header">
           <div class="fu-config-builder-header-left">
-            <a href="index.php" class="fu-config-builder-home-link" title="Back to Home">
+            <a href="index.php" class="fu-config-builder-home-link" data-tooltip-text="Back to Home" data-tooltip-position="bottom">
               <svg viewBox="0 0 576 512" fill="currentColor"><path d="M575.8 255.5c0 18-15 32.1-32 32.1l-32 0 0 160c0 35.3-28.7 64-64 64l-320 0c-35.3 0-64-28.7-64-64l0-160-32 0c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z"/></svg>
             </a>
             <div class="fu-config-builder-theme-switcher" id="theme-switcher">
               <button class="fu-config-builder-theme-btn ${
                 this.theme === "light" ? "active" : ""
-              }" data-theme="light" title="Light Mode">
+              }" data-theme="light" data-tooltip-text="Light Mode" data-tooltip-position="bottom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               </button>
               <button class="fu-config-builder-theme-btn ${
                 this.theme === "dark" ? "active" : ""
-              }" data-theme="dark" title="Dark Mode">
+              }" data-theme="dark" data-tooltip-text="Dark Mode" data-tooltip-position="bottom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
               </button>
               <button class="fu-config-builder-theme-btn ${
                 this.theme === "system" ? "active" : ""
-              }" data-theme="system" title="System Default">
+              }" data-theme="system" data-tooltip-text="System Default" data-tooltip-position="bottom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               </button>
             </div>
@@ -1578,11 +1599,29 @@ export default class ConfigBuilder {
               }" id="main-tab-config">
                 <!-- Vertical Tabs -->
                 <div class="fu-config-builder-vertical-tabs">
-                  ${this.renderVerticalTabs(firstCategoryKey)}
+                  ${this.renderVerticalTabs(activeCategory)}
                 </div>
 
                 <!-- Options Content -->
                 <div class="fu-config-builder-options-content">
+                  <!-- Search -->
+                  <div class="fu-config-builder-search">
+                    <div class="fu-config-builder-search-wrapper">
+                      <svg class="fu-config-builder-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                      </svg>
+                      <input type="text" class="fu-config-builder-search-input" id="option-search" placeholder="Search options..." autocomplete="off">
+                      <button type="button" class="fu-config-builder-search-clear" id="search-clear" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="fu-config-builder-search-results" id="search-results" style="display: none;"></div>
+                  </div>
+
                   <!-- Presets -->
                   <div class="fu-config-builder-presets">
                     <button class="fu-config-builder-preset ${
@@ -1609,7 +1648,7 @@ export default class ConfigBuilder {
                   </div>
 
                   <!-- Category Panels -->
-                  ${this.renderCategoryPanels(firstCategoryKey)}
+                  ${this.renderCategoryPanels(activeCategory)}
                 </div>
               </div>
 
@@ -1621,7 +1660,7 @@ export default class ConfigBuilder {
                 <div class="fu-config-builder-vertical-tabs fu-config-builder-style-tabs">
                   ${this.renderStyleVerticalTabs()}
                   <div class="fu-config-builder-vertical-tabs-spacer"></div>
-                  <button class="fu-config-builder-reset-styles-btn" id="reset-styles" title="Reset All Styles">
+                  <button class="fu-config-builder-reset-styles-btn" id="reset-styles" data-tooltip-text="Reset All Styles" data-tooltip-position="right">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>
                     <span>Reset</span>
                   </button>
@@ -1669,15 +1708,15 @@ export default class ConfigBuilder {
               <div class="fu-config-builder-tab-content active" id="tab-preview">
                 <!-- Uploader Selector -->
                 <div class="fu-config-builder-uploader-selector">
-                  <div class="fu-config-builder-uploader-list" id="uploader-list">
-                    ${this.renderUploaderTabs()}
-                  </div>
-                  <button class="fu-config-builder-add-uploader" id="add-uploader" title="Add new uploader">
+                  <button class="fu-config-builder-add-uploader" id="add-uploader" data-tooltip-text="Add new uploader" data-tooltip-position="bottom">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="12" y1="5" x2="12" y2="19"/>
                       <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
                   </button>
+                  <div class="fu-config-builder-uploader-list" id="uploader-list">
+                    ${this.renderUploaderTabs()}
+                  </div>
                 </div>
                 <div class="fu-config-builder-preview-area" id="uploader-preview"></div>
               </div>
@@ -1700,11 +1739,11 @@ export default class ConfigBuilder {
                       <div class="fu-config-builder-code-header">
                         <span class="fu-config-builder-code-title">Custom CSS Variables</span>
                         <div class="fu-config-builder-code-actions">
-                          <button class="fu-config-builder-code-btn" id="copy-css" title="Copy to clipboard">
+                          <button class="fu-config-builder-code-btn" id="copy-css" data-tooltip-text="Copy to clipboard" data-tooltip-position="top">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                             Copy
                           </button>
-                          <button class="fu-config-builder-code-btn" id="download-css" title="Download CSS file">
+                          <button class="fu-config-builder-code-btn" id="download-css" data-tooltip-text="Download CSS file" data-tooltip-position="top">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Download
                           </button>
@@ -1723,8 +1762,8 @@ export default class ConfigBuilder {
       </div>
     `;
 
-    // Initialize current category
-    this.currentCategory = firstCategoryKey;
+    // Initialize current category (use validated activeCategory)
+    this.currentCategory = activeCategory;
   }
 
   /**
@@ -1739,7 +1778,7 @@ export default class ConfigBuilder {
       html += `
         <button class="fu-config-builder-vertical-tab ${
           isActive ? "active" : ""
-        }" data-category="${categoryKey}" title="${category.title}">
+        }" data-category="${categoryKey}" data-tooltip-text="${category.title}" data-tooltip-position="right">
           ${this.getCategoryIcon(category.icon)}
           <span class="fu-config-builder-vertical-tab-label">${this.getShortCategoryName(
             category.title
@@ -1785,9 +1824,7 @@ export default class ConfigBuilder {
       html += `
         <button class="fu-config-builder-vertical-tab ${
           isActive ? "active" : ""
-        } ${modeClass}" data-style-section="${sectionKey}" title="${
-        section.title
-      }">
+        } ${modeClass}" data-style-section="${sectionKey}" data-tooltip-text="${section.title}" data-tooltip-position="right">
           ${this.getCategoryIcon(section.icon)}
           <span class="fu-config-builder-vertical-tab-label">${this.getShortStyleName(
             section.title
@@ -2096,6 +2133,17 @@ export default class ConfigBuilder {
       const isActive = categoryKey === activeCategory;
       const sliderConfigHtml =
         categoryKey === "sizeLimits" ? this.renderSliderConfig() : "";
+      const perTypeLimitsConfigHtml =
+        categoryKey === "perTypeLimits" ? this.renderPerTypeLimitsConfig() : "";
+
+      // Render category content based on view mode
+      let categoryContent;
+      if (categoryKey === "perTypeLimits") {
+        categoryContent = this.renderPerTypeLimitsContent(category.options);
+      } else {
+        categoryContent = this.renderCategoryOptions(category.options);
+      }
+
       html += `
         <div class="fu-config-builder-category-panel ${
           isActive ? "active" : ""
@@ -2104,8 +2152,9 @@ export default class ConfigBuilder {
             <h3>${category.title}</h3>
           </div>
           ${sliderConfigHtml}
+          ${perTypeLimitsConfigHtml}
           <div class="fu-config-builder-category-options">
-            ${this.renderCategoryOptions(category.options)}
+            ${categoryContent}
           </div>
         </div>
       `;
@@ -2117,19 +2166,30 @@ export default class ConfigBuilder {
    * Render slider configuration panel
    */
   renderSliderConfig() {
+    const units = ["bytes", "KB", "MB", "GB"];
+    const unitOptions = units.map(u =>
+      `<option value="${u}" ${this.sliderConfig.unit === u ? "selected" : ""}>${u}</option>`
+    ).join("");
+
     return `
       <div class="fu-config-builder-slider-config">
-        <div class="fu-config-builder-slider-config-item">
-          <label>Min (MB)</label>
-          <input type="number" id="slider-config-min" value="${this.sliderConfig.minMB}" min="1" max="100">
+        <div class="fu-config-builder-slider-config-item fu-config-builder-slider-config-unit-item">
+          <label>Unit</label>
+          <select id="slider-config-unit" class="fu-config-builder-slider-config-unit">
+            ${unitOptions}
+          </select>
         </div>
         <div class="fu-config-builder-slider-config-item">
-          <label>Max (MB)</label>
-          <input type="number" id="slider-config-max" value="${this.sliderConfig.maxMB}" min="10" max="10000">
+          <label>Min (${this.sliderConfig.unit})</label>
+          <input type="number" id="slider-config-min" value="${this.sliderConfig.minValue}" min="1" max="10000">
+        </div>
+        <div class="fu-config-builder-slider-config-item">
+          <label>Max (${this.sliderConfig.unit})</label>
+          <input type="number" id="slider-config-max" value="${this.sliderConfig.maxValue}" min="10" max="100000">
         </div>
         <div class="fu-config-builder-slider-config-item">
           <label>Slider Step</label>
-          <input type="number" id="slider-config-step" value="${this.sliderConfig.sliderStep}" min="1" max="100">
+          <input type="number" id="slider-config-step" value="${this.sliderConfig.sliderStep}" min="1" max="1000">
         </div>
         <div class="fu-config-builder-slider-config-item">
           <label>+/- Step</label>
@@ -2137,6 +2197,544 @@ export default class ConfigBuilder {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Render per-type limits configuration panel with view toggle
+   */
+  renderPerTypeLimitsConfig() {
+    const viewMode = this.perTypeLimitsViewMode || "byLimitType";
+    const units = ["bytes", "KB", "MB", "GB"];
+    const unitOptions = units.map(u =>
+      `<option value="${u}" ${this.sliderConfig.unit === u ? "selected" : ""}>${u}</option>`
+    ).join("");
+
+    return `
+      <div class="fu-config-builder-pertype-config">
+        <div class="fu-config-builder-pertype-view-toggle">
+          <span class="fu-config-builder-pertype-view-label">Group by:</span>
+          <div class="fu-config-builder-pertype-view-buttons">
+            <button type="button" class="fu-config-builder-pertype-view-btn ${viewMode === "byLimitType" ? "active" : ""}" data-view="byLimitType">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+              By Limit Type
+            </button>
+            <button type="button" class="fu-config-builder-pertype-view-btn ${viewMode === "byFileType" ? "active" : ""}" data-view="byFileType">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4h6a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2H9a2 2 0 0 1 -2 -2V6a2 2 0 0 1 2 -2z"/><path d="M9 4v0a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0"/></svg>
+              By File Type
+            </button>
+          </div>
+        </div>
+        <div class="fu-config-builder-slider-config">
+          <div class="fu-config-builder-slider-config-item fu-config-builder-slider-config-unit-item">
+            <label>Unit</label>
+            <select id="pertype-slider-config-unit" class="fu-config-builder-slider-config-unit">
+              ${unitOptions}
+            </select>
+          </div>
+          <div class="fu-config-builder-slider-config-item">
+            <label>Min (${this.sliderConfig.unit})</label>
+            <input type="number" id="pertype-slider-config-min" value="${this.sliderConfig.minValue}" min="1" max="10000">
+          </div>
+          <div class="fu-config-builder-slider-config-item">
+            <label>Max (${this.sliderConfig.unit})</label>
+            <input type="number" id="pertype-slider-config-max" value="${this.sliderConfig.maxValue}" min="10" max="100000">
+          </div>
+          <div class="fu-config-builder-slider-config-item">
+            <label>Slider Step</label>
+            <input type="number" id="pertype-slider-config-step" value="${this.sliderConfig.sliderStep}" min="1" max="1000">
+          </div>
+          <div class="fu-config-builder-slider-config-item">
+            <label>+/- Step</label>
+            <input type="number" id="pertype-slider-config-btn-step" value="${this.sliderConfig.buttonStep}" min="1" max="100">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render per-type limits content based on view mode
+   */
+  renderPerTypeLimitsContent(options) {
+    const viewMode = this.perTypeLimitsViewMode || "byLimitType";
+
+    if (viewMode === "byFileType") {
+      return this.renderPerTypeLimitsByFileType(options);
+    }
+
+    // Default: by limit type (current behavior)
+    return this.renderCategoryOptions(options);
+  }
+
+  /**
+   * Render per-type limits grouped by file type
+   */
+  renderPerTypeLimitsByFileType(options) {
+    const types = ["image", "video", "audio", "document", "archive"];
+    const perFileMaxSizeValues = this.config.perFileMaxSizePerType || {};
+    const perTypeMaxTotalSizeValues = this.config.perTypeMaxTotalSize || {};
+    const perTypeMaxFileCountValues = this.config.perTypeMaxFileCount || {};
+    const perFileMaxSizePerTypeDef = options.perFileMaxSizePerType || {};
+    const perTypeMaxTotalSizeDef = options.perTypeMaxTotalSize || {};
+    const perTypeMaxFileCountDef = options.perTypeMaxFileCount || {};
+
+    const maxBytes = this.getSliderMaxBytes();
+    const units = ["bytes", "KB", "MB", "GB"];
+
+    const minusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z"/></svg>`;
+    const plusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg>`;
+
+    let html = '<div class="fu-config-builder-pertype-by-filetype">';
+
+    for (const type of types) {
+      const typeIcon = this.getFileTypeIcon(type);
+      const perFileSizeBytes = perFileMaxSizeValues[type] || 0;
+      const totalSizeBytes = perTypeMaxTotalSizeValues[type] || 0;
+      const fileCount = perTypeMaxFileCountValues[type] || 0;
+
+      // Calculate display values for sizes
+      const perFileDisplay = perFileSizeBytes > 0 ? this.bytesToBestUnit(perFileSizeBytes) : { value: 0, unit: this.sliderConfig.unit };
+      const totalSizeDisplay = totalSizeBytes > 0 ? this.bytesToBestUnit(totalSizeBytes) : { value: 0, unit: this.sliderConfig.unit };
+      const perFileMaxValue = this.bytesToUnit(maxBytes, perFileDisplay.unit);
+      const totalSizeMaxValue = this.bytesToUnit(maxBytes, totalSizeDisplay.unit);
+      const stepBytes = this.getSliderStepBytes();
+      const perFileStepValue = Math.max(1, this.bytesToUnit(stepBytes, perFileDisplay.unit));
+      const totalSizeStepValue = Math.max(1, this.bytesToUnit(stepBytes, totalSizeDisplay.unit));
+
+      const perFileUnitOptions = units.map(u =>
+        `<option value="${u}" ${perFileDisplay.unit === u ? "selected" : ""}>${u}</option>`
+      ).join("");
+      const totalSizeUnitOptions = units.map(u =>
+        `<option value="${u}" ${totalSizeDisplay.unit === u ? "selected" : ""}>${u}</option>`
+      ).join("");
+
+      html += `
+        <div class="fu-config-builder-filetype-card" data-file-type="${type}">
+          <div class="fu-config-builder-filetype-card-header">
+            ${typeIcon}
+            <span class="fu-config-builder-filetype-card-title">${this.capitalizeFirst(type)}</span>
+          </div>
+          <div class="fu-config-builder-filetype-card-content">
+            <!-- Per File Max Size -->
+            <div class="fu-config-builder-filetype-limit-row">
+              <label class="fu-config-builder-filetype-limit-label">
+                Per File Max
+                <code>perFileMaxSizePerType.${type}</code>
+              </label>
+              <div class="fu-config-builder-type-slider-controls" data-option="perFileMaxSizePerType" data-type-key="${type}" data-unit="${perFileDisplay.unit}">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="decrease">
+                  ${minusIcon}
+                </button>
+                <input type="range"
+                       class="fu-config-builder-slider-input"
+                       data-slider-type="${type}"
+                       value="${perFileDisplay.value}"
+                       min="0"
+                       max="${perFileMaxValue}"
+                       step="${perFileStepValue}">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="increase">
+                  ${plusIcon}
+                </button>
+                <input type="number"
+                       class="fu-config-builder-slider-value-input fu-config-builder-slider-value-input-sm"
+                       data-value-type="${type}"
+                       value="${perFileDisplay.value || ""}"
+                       min="0"
+                       max="${perFileMaxValue}"
+                       placeholder="0">
+                <select class="fu-config-builder-unit-dropdown fu-config-builder-unit-dropdown-sm" data-unit-type="${type}">
+                  ${perFileUnitOptions}
+                </select>
+              </div>
+              <div class="fu-config-builder-slider-labels fu-config-builder-slider-labels-sm">
+                <span class="fu-config-builder-slider-label">0 ${perFileDisplay.unit}</span>
+                <span class="fu-config-builder-slider-label">${perFileMaxValue} ${perFileDisplay.unit}</span>
+              </div>
+            </div>
+            <!-- Total Size Max -->
+            <div class="fu-config-builder-filetype-limit-row">
+              <label class="fu-config-builder-filetype-limit-label">
+                Total Max Size
+                <code>perTypeMaxTotalSize.${type}</code>
+              </label>
+              <div class="fu-config-builder-type-slider-controls" data-option="perTypeMaxTotalSize" data-type-key="${type}" data-unit="${totalSizeDisplay.unit}">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="decrease">
+                  ${minusIcon}
+                </button>
+                <input type="range"
+                       class="fu-config-builder-slider-input"
+                       data-slider-type="${type}"
+                       value="${totalSizeDisplay.value}"
+                       min="0"
+                       max="${totalSizeMaxValue}"
+                       step="${totalSizeStepValue}">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="increase">
+                  ${plusIcon}
+                </button>
+                <input type="number"
+                       class="fu-config-builder-slider-value-input fu-config-builder-slider-value-input-sm"
+                       data-value-type="${type}"
+                       value="${totalSizeDisplay.value || ""}"
+                       min="0"
+                       max="${totalSizeMaxValue}"
+                       placeholder="0">
+                <select class="fu-config-builder-unit-dropdown fu-config-builder-unit-dropdown-sm" data-unit-type="${type}">
+                  ${totalSizeUnitOptions}
+                </select>
+              </div>
+              <div class="fu-config-builder-slider-labels fu-config-builder-slider-labels-sm">
+                <span class="fu-config-builder-slider-label">0 ${totalSizeDisplay.unit}</span>
+                <span class="fu-config-builder-slider-label">${totalSizeMaxValue} ${totalSizeDisplay.unit}</span>
+              </div>
+            </div>
+            <!-- Max File Count -->
+            <div class="fu-config-builder-filetype-limit-row">
+              <label class="fu-config-builder-filetype-limit-label">
+                Max Files
+                <code>perTypeMaxFileCount.${type}</code>
+              </label>
+              <div class="fu-config-builder-type-slider-controls fu-config-builder-type-count-controls" data-option="perTypeMaxFileCount" data-type-key="${type}">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="decrease">
+                  ${minusIcon}
+                </button>
+                <input type="range"
+                       class="fu-config-builder-slider-input"
+                       data-slider-type="${type}"
+                       value="${fileCount}"
+                       min="0"
+                       max="100"
+                       step="1">
+                <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="increase">
+                  ${plusIcon}
+                </button>
+                <input type="number"
+                       class="fu-config-builder-slider-value-input fu-config-builder-slider-value-input-sm"
+                       data-value-type="${type}"
+                       value="${fileCount || ""}"
+                       min="0"
+                       max="100"
+                       placeholder="0">
+                <span class="fu-config-builder-count-label">files</span>
+              </div>
+              <div class="fu-config-builder-slider-labels fu-config-builder-slider-labels-sm">
+                <span class="fu-config-builder-slider-label">0</span>
+                <span class="fu-config-builder-slider-label">100 files</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Get file type icon
+   */
+  getFileTypeIcon(type) {
+    const icons = {
+      image: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+      video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+      audio: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+      document: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+      archive: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`
+    };
+    return icons[type] || icons.document;
+  }
+
+  /**
+   * Capitalize first letter
+   */
+  capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Re-render the perTypeLimits panel content when view mode changes
+   */
+  rerenderPerTypeLimitsPanel() {
+    const panel = this.element.querySelector('[data-category-panel="perTypeLimits"]');
+    if (!panel) return;
+
+    const optionsContainer = panel.querySelector('.fu-config-builder-category-options');
+    if (!optionsContainer) return;
+
+    const category = this.optionDefinitions.perTypeLimits;
+    optionsContainer.innerHTML = this.renderPerTypeLimitsContent(category.options);
+
+    // Re-attach events for the new content
+    this.attachPerTypeByFileTypeEvents();
+
+    // Also re-attach the original type slider events for "By Limit Type" view
+    if (this.perTypeLimitsViewMode !== "byFileType") {
+      // Re-attach type size slider events
+      panel.querySelectorAll('[data-type="typeSizeSlider"]').forEach((container) => {
+        this.attachTypeSizeSliderEvents(container);
+      });
+      // Re-attach type count slider events
+      panel.querySelectorAll('[data-type="typeCountSlider"]').forEach((container) => {
+        this.attachTypeCountSliderEvents(container);
+      });
+    }
+  }
+
+  /**
+   * Attach events for type size sliders within a container
+   */
+  attachTypeSizeSliderEvents(container) {
+    const optionKey = container.dataset.option;
+
+    container.querySelectorAll(".fu-config-builder-type-slider-block").forEach((block) => {
+      const typeKey = block.dataset.typeKey;
+      const slider = block.querySelector(".fu-config-builder-slider-input");
+      const valueInput = block.querySelector(".fu-config-builder-slider-value-input");
+      const unitDropdown = block.querySelector(".fu-config-builder-unit-dropdown");
+      const decreaseBtn = block.querySelector('[data-action="decrease"]');
+      const increaseBtn = block.querySelector('[data-action="increase"]');
+
+      if (!slider || !valueInput || !decreaseBtn || !increaseBtn || !unitDropdown) return;
+
+      const getCurrentUnit = () => unitDropdown.value;
+
+      const updateTypeValue = (value, unit) => {
+        const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
+        value = Math.max(0, Math.min(maxValue, value));
+
+        slider.value = value;
+        valueInput.value = value || "";
+
+        if (!this.config[optionKey]) {
+          this.config[optionKey] = {};
+        }
+
+        const displayKey = optionKey + "Display";
+        if (!this.config[displayKey]) {
+          this.config[displayKey] = {};
+        }
+
+        if (value > 0) {
+          const bytes = this.unitToBytes(value, unit);
+          this.config[optionKey][typeKey] = bytes;
+          this.config[displayKey][typeKey] = value + " " + unit;
+        } else {
+          delete this.config[optionKey][typeKey];
+          delete this.config[displayKey][typeKey];
+        }
+        this.onConfigChange();
+      };
+
+      unitDropdown.addEventListener("change", () => {
+        const newUnit = unitDropdown.value;
+        const currentBytes = this.config[optionKey]?.[typeKey] || 0;
+        const newValue = currentBytes > 0 ? this.bytesToUnit(currentBytes, newUnit) : 0;
+        slider.value = newValue;
+        valueInput.value = newValue || "";
+        block.dataset.unit = newUnit;
+      });
+
+      slider.addEventListener("input", () => {
+        updateTypeValue(parseInt(slider.value) || 0, getCurrentUnit());
+      });
+
+      valueInput.addEventListener("input", () => {
+        updateTypeValue(parseInt(valueInput.value) || 0, getCurrentUnit());
+      });
+
+      decreaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const unit = getCurrentUnit();
+        const buttonStep = this.bytesToUnit(this.sliderConfig.buttonStep * 1024 * 1024, unit);
+        const currentValue = parseInt(valueInput.value) || 0;
+        updateTypeValue(currentValue - buttonStep, unit);
+      });
+
+      increaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const unit = getCurrentUnit();
+        const buttonStep = this.bytesToUnit(this.sliderConfig.buttonStep * 1024 * 1024, unit);
+        const currentValue = parseInt(valueInput.value) || 0;
+        updateTypeValue(currentValue + buttonStep, unit);
+      });
+    });
+  }
+
+  /**
+   * Attach events for type count sliders within a container
+   */
+  attachTypeCountSliderEvents(container) {
+    const optionKey = container.dataset.option;
+
+    container.querySelectorAll(".fu-config-builder-type-slider-block").forEach((block) => {
+      const typeKey = block.dataset.typeKey;
+      const slider = block.querySelector(".fu-config-builder-slider-input");
+      const valueInput = block.querySelector(".fu-config-builder-slider-value-input");
+      const decreaseBtn = block.querySelector('[data-action="decrease"]');
+      const increaseBtn = block.querySelector('[data-action="increase"]');
+
+      if (!slider || !valueInput || !decreaseBtn || !increaseBtn) return;
+
+      const updateTypeValue = (value) => {
+        value = Math.max(0, Math.min(100, value));
+
+        slider.value = value;
+        valueInput.value = value || "";
+
+        if (!this.config[optionKey]) {
+          this.config[optionKey] = {};
+        }
+
+        if (value > 0) {
+          this.config[optionKey][typeKey] = value;
+        } else {
+          delete this.config[optionKey][typeKey];
+        }
+        this.onConfigChange();
+      };
+
+      slider.addEventListener("input", () => {
+        updateTypeValue(parseInt(slider.value) || 0);
+      });
+
+      valueInput.addEventListener("input", () => {
+        updateTypeValue(parseInt(valueInput.value) || 0);
+      });
+
+      decreaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        updateTypeValue((parseInt(valueInput.value) || 0) - 1);
+      });
+
+      increaseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        updateTypeValue((parseInt(valueInput.value) || 0) + 1);
+      });
+    });
+  }
+
+  /**
+   * Attach events for "By File Type" view sliders
+   */
+  attachPerTypeByFileTypeEvents() {
+    // Handle slider controls in the "By File Type" view
+    this.element.querySelectorAll('.fu-config-builder-pertype-by-filetype .fu-config-builder-type-slider-controls').forEach((controls) => {
+      const optionKey = controls.dataset.option;
+      const typeKey = controls.dataset.typeKey;
+      const isCountSlider = controls.classList.contains('fu-config-builder-type-count-controls');
+
+      const slider = controls.querySelector(".fu-config-builder-slider-input");
+      const valueInput = controls.querySelector(".fu-config-builder-slider-value-input");
+      const unitDropdown = controls.querySelector(".fu-config-builder-unit-dropdown");
+      const decreaseBtn = controls.querySelector('[data-action="decrease"]');
+      const increaseBtn = controls.querySelector('[data-action="increase"]');
+
+      if (!slider || !valueInput || !decreaseBtn || !increaseBtn) return;
+
+      if (isCountSlider) {
+        // Count slider logic
+        const updateTypeValue = (value) => {
+          value = Math.max(0, Math.min(100, value));
+          slider.value = value;
+          valueInput.value = value || "";
+
+          if (!this.config[optionKey]) {
+            this.config[optionKey] = {};
+          }
+
+          if (value > 0) {
+            this.config[optionKey][typeKey] = value;
+          } else {
+            delete this.config[optionKey][typeKey];
+          }
+          this.onConfigChange();
+        };
+
+        slider.addEventListener("input", () => updateTypeValue(parseInt(slider.value) || 0));
+        valueInput.addEventListener("input", () => updateTypeValue(parseInt(valueInput.value) || 0));
+        decreaseBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          updateTypeValue((parseInt(valueInput.value) || 0) - 1);
+        });
+        increaseBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          updateTypeValue((parseInt(valueInput.value) || 0) + 1);
+        });
+      } else {
+        // Size slider logic
+        const getCurrentUnit = () => unitDropdown?.value || this.sliderConfig.unit;
+
+        const updateTypeValue = (value, unit) => {
+          const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
+          value = Math.max(0, Math.min(maxValue, value));
+
+          slider.value = value;
+          valueInput.value = value || "";
+
+          if (!this.config[optionKey]) {
+            this.config[optionKey] = {};
+          }
+
+          const displayKey = optionKey + "Display";
+          if (!this.config[displayKey]) {
+            this.config[displayKey] = {};
+          }
+
+          if (value > 0) {
+            const bytes = this.unitToBytes(value, unit);
+            this.config[optionKey][typeKey] = bytes;
+            this.config[displayKey][typeKey] = value + " " + unit;
+          } else {
+            delete this.config[optionKey][typeKey];
+            delete this.config[displayKey][typeKey];
+          }
+          this.onConfigChange();
+        };
+
+        if (unitDropdown) {
+          unitDropdown.addEventListener("change", () => {
+            const newUnit = unitDropdown.value;
+            const currentBytes = this.config[optionKey]?.[typeKey] || 0;
+            const newValue = currentBytes > 0 ? this.bytesToUnit(currentBytes, newUnit) : 0;
+            slider.value = newValue;
+            valueInput.value = newValue || "";
+            controls.dataset.unit = newUnit;
+          });
+        }
+
+        slider.addEventListener("input", () => {
+          updateTypeValue(parseInt(slider.value) || 0, getCurrentUnit());
+        });
+
+        valueInput.addEventListener("input", () => {
+          updateTypeValue(parseInt(valueInput.value) || 0, getCurrentUnit());
+        });
+
+        decreaseBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const unit = getCurrentUnit();
+          const buttonStep = this.bytesToUnit(this.sliderConfig.buttonStep * 1024 * 1024, unit);
+          const currentValue = parseInt(valueInput.value) || 0;
+          updateTypeValue(currentValue - buttonStep, unit);
+        });
+
+        increaseBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const unit = getCurrentUnit();
+          const buttonStep = this.bytesToUnit(this.sliderConfig.buttonStep * 1024 * 1024, unit);
+          const currentValue = parseInt(valueInput.value) || 0;
+          updateTypeValue(currentValue + buttonStep, unit);
+        });
+      }
+    });
   }
 
   /**
@@ -2166,7 +2764,7 @@ export default class ConfigBuilder {
         data.name
       }</span>
           <div class="fu-config-builder-uploader-tab-actions">
-            <button class="fu-config-builder-uploader-tab-duplicate" data-uploader-id="${id}" title="Duplicate uploader">
+            <button class="fu-config-builder-uploader-tab-duplicate" data-uploader-id="${id}" data-tooltip-text="Duplicate uploader" data-tooltip-position="bottom">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
@@ -2175,7 +2773,7 @@ export default class ConfigBuilder {
             ${
               Object.keys(this.uploaderInstances).length > 1
                 ? `
-              <button class="fu-config-builder-uploader-tab-close" data-uploader-id="${id}" title="Remove uploader">
+              <button class="fu-config-builder-uploader-tab-close" data-uploader-id="${id}" data-tooltip-text="Remove uploader" data-tooltip-position="bottom">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
                   <line x1="6" y1="6" x2="18" y2="18"/>
@@ -2249,7 +2847,7 @@ export default class ConfigBuilder {
     const isDisabled = !this.isDependencySatisfied(def);
     const dependencyClass = isDisabled ? "fu-config-builder-disabled" : "";
     const dependencyIndicator = def.dependsOn
-      ? `<span class="fu-config-builder-depends-on" title="Requires: ${def.dependsOn}">
+      ? `<span class="fu-config-builder-depends-on" data-tooltip-text="Requires: ${def.dependsOn}" data-tooltip-position="top">
            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
              <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
@@ -2470,13 +3068,12 @@ export default class ConfigBuilder {
     // Determine best unit and value for display
     const { value: displayValue, unit: displayUnit } =
       this.bytesToBestUnit(bytes);
-    const { minMB, maxMB, sliderStep } = this.sliderConfig;
 
     // Convert to current slider unit for slider display
     const sliderValue = this.bytesToUnit(bytes, displayUnit);
-    const minValue = this.bytesToUnit(minMB * 1024 * 1024, displayUnit);
-    const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, displayUnit);
-    const stepValue = this.bytesToUnit(sliderStep * 1024 * 1024, displayUnit);
+    const minValue = this.bytesToUnit(this.getSliderMinBytes(), displayUnit);
+    const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), displayUnit);
+    const stepValue = this.bytesToUnit(this.getSliderStepBytes(), displayUnit);
 
     const minusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z"/></svg>`;
     const plusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg>`;
@@ -2569,6 +3166,27 @@ export default class ConfigBuilder {
     };
     const multiplier = multipliers[unit] || 1;
     return (value || 0) * multiplier;
+  }
+
+  /**
+   * Get slider config min value in bytes
+   */
+  getSliderMinBytes() {
+    return this.unitToBytes(this.sliderConfig.minValue, this.sliderConfig.unit);
+  }
+
+  /**
+   * Get slider config max value in bytes
+   */
+  getSliderMaxBytes() {
+    return this.unitToBytes(this.sliderConfig.maxValue, this.sliderConfig.unit);
+  }
+
+  /**
+   * Get slider step value in bytes
+   */
+  getSliderStepBytes() {
+    return this.unitToBytes(this.sliderConfig.sliderStep, this.sliderConfig.unit);
   }
 
   /**
@@ -2720,7 +3338,6 @@ export default class ConfigBuilder {
   renderTypeSizeInputs(key, def) {
     const types = def.types || [];
     const values = this.config[key] || {};
-    const { minMB, maxMB, sliderStep } = this.sliderConfig;
 
     const minusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z"/></svg>`;
     const plusIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/></svg>`;
@@ -2740,11 +3357,11 @@ export default class ConfigBuilder {
     for (const type of types) {
       const bytes = values[type] || 0;
       const { value: displayValue, unit: displayUnit } =
-        bytes > 0 ? this.bytesToBestUnit(bytes) : { value: 0, unit: "MB" };
-      const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, displayUnit);
+        bytes > 0 ? this.bytesToBestUnit(bytes) : { value: 0, unit: this.sliderConfig.unit };
+      const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), displayUnit);
       const stepValue = Math.max(
         1,
-        this.bytesToUnit(sliderStep * 1024 * 1024, displayUnit)
+        this.bytesToUnit(this.getSliderStepBytes(), displayUnit)
       );
 
       const unitOptions = units
@@ -2756,9 +3373,14 @@ export default class ConfigBuilder {
         )
         .join("");
 
+      const typeIcon = this.getFileTypeIcon(type);
+
       html += `
         <div class="fu-config-builder-type-slider-block" data-type-key="${type}" data-unit="${displayUnit}">
-          <div class="fu-config-builder-type-slider-title">${type}</div>
+          <div class="fu-config-builder-type-slider-header">
+            ${typeIcon}
+            <span class="fu-config-builder-type-slider-title">${this.capitalizeFirst(type)}</span>
+          </div>
           <div class="fu-config-builder-type-slider-controls">
             <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="decrease">
               ${minusIcon}
@@ -2818,10 +3440,14 @@ export default class ConfigBuilder {
 
     for (const type of types) {
       const value = values[type] || 0;
+      const typeIcon = this.getFileTypeIcon(type);
 
       html += `
         <div class="fu-config-builder-type-slider-block" data-type-key="${type}">
-          <div class="fu-config-builder-type-slider-title">${type}</div>
+          <div class="fu-config-builder-type-slider-header">
+            ${typeIcon}
+            <span class="fu-config-builder-type-slider-title">${this.capitalizeFirst(type)}</span>
+          </div>
           <div class="fu-config-builder-type-slider-controls">
             <button type="button" class="fu-config-builder-slider-btn fu-config-builder-slider-btn-sm" data-action="decrease">
               ${minusIcon}
@@ -3084,6 +3710,9 @@ export default class ConfigBuilder {
    * Attach event handlers
    */
   attachEvents() {
+    // Search functionality
+    this.attachSearchEvents();
+
     // Theme switcher buttons
     this.element
       .querySelectorAll(".fu-config-builder-theme-btn")
@@ -3133,6 +3762,7 @@ export default class ConfigBuilder {
           }
 
           this.activeMainTab = mainTab;
+          localStorage.setItem("fu-config-builder-main-tab", mainTab);
 
           // Update CSS output when switching to styles
           if (mainTab === "styles") {
@@ -3175,6 +3805,7 @@ export default class ConfigBuilder {
           }
 
           this.currentCategory = categoryKey;
+          localStorage.setItem("fu-config-builder-category", categoryKey);
         });
       });
 
@@ -3210,6 +3841,7 @@ export default class ConfigBuilder {
           }
 
           this.currentStyleSection = sectionKey;
+          localStorage.setItem("fu-config-builder-style-section", sectionKey);
         });
       });
 
@@ -3563,6 +4195,7 @@ export default class ConfigBuilder {
       });
 
     // Slider configuration inputs
+    const sliderConfigUnit = this.element.querySelector("#slider-config-unit");
     const sliderConfigMin = this.element.querySelector("#slider-config-min");
     const sliderConfigMax = this.element.querySelector("#slider-config-max");
     const sliderConfigStep = this.element.querySelector("#slider-config-step");
@@ -3570,15 +4203,30 @@ export default class ConfigBuilder {
       "#slider-config-btn-step"
     );
 
+    // Helper to update label text when unit changes
+    const updateSliderConfigLabels = () => {
+      const minLabel = this.element.querySelector("#slider-config-min")?.closest(".fu-config-builder-slider-config-item")?.querySelector("label");
+      const maxLabel = this.element.querySelector("#slider-config-max")?.closest(".fu-config-builder-slider-config-item")?.querySelector("label");
+      if (minLabel) minLabel.textContent = `Min (${this.sliderConfig.unit})`;
+      if (maxLabel) maxLabel.textContent = `Max (${this.sliderConfig.unit})`;
+    };
+
+    if (sliderConfigUnit) {
+      sliderConfigUnit.addEventListener("change", () => {
+        this.sliderConfig.unit = sliderConfigUnit.value;
+        updateSliderConfigLabels();
+        this.updateAllSizeSliders();
+      });
+    }
     if (sliderConfigMin) {
       sliderConfigMin.addEventListener("input", () => {
-        this.sliderConfig.minMB = parseInt(sliderConfigMin.value) || 5;
+        this.sliderConfig.minValue = parseInt(sliderConfigMin.value) || 5;
         this.updateAllSizeSliders();
       });
     }
     if (sliderConfigMax) {
       sliderConfigMax.addEventListener("input", () => {
-        this.sliderConfig.maxMB = parseInt(sliderConfigMax.value) || 500;
+        this.sliderConfig.maxValue = parseInt(sliderConfigMax.value) || 500;
         this.updateAllSizeSliders();
       });
     }
@@ -3631,10 +4279,9 @@ export default class ConfigBuilder {
         const getCurrentUnit = () => unitDropdown.value;
 
         const updateSliderRange = (unit) => {
-          const { minMB, maxMB, sliderStep } = this.sliderConfig;
-          const minValue = this.bytesToUnit(minMB * 1024 * 1024, unit);
-          const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, unit);
-          const stepValue = this.bytesToUnit(sliderStep * 1024 * 1024, unit);
+          const minValue = this.bytesToUnit(this.getSliderMinBytes(), unit);
+          const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
+          const stepValue = this.bytesToUnit(this.getSliderStepBytes(), unit);
 
           slider.min = minValue;
           slider.max = maxValue;
@@ -3651,9 +4298,8 @@ export default class ConfigBuilder {
 
         const updateValue = (value, unit) => {
           // Clamp to slider range
-          const { minMB, maxMB } = this.sliderConfig;
-          const minValue = this.bytesToUnit(minMB * 1024 * 1024, unit);
-          const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, unit);
+          const minValue = this.bytesToUnit(this.getSliderMinBytes(), unit);
+          const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
           value = Math.max(minValue, Math.min(maxValue, value));
 
           // Update UI
@@ -3912,11 +4558,10 @@ export default class ConfigBuilder {
             const getCurrentUnit = () => unitDropdown.value;
 
             const updateSliderRange = (unit) => {
-              const { maxMB, sliderStep } = this.sliderConfig;
-              const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, unit);
+              const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
               const stepValue = Math.max(
                 1,
-                this.bytesToUnit(sliderStep * 1024 * 1024, unit)
+                this.bytesToUnit(this.getSliderStepBytes(), unit)
               );
 
               slider.max = maxValue;
@@ -3932,8 +4577,7 @@ export default class ConfigBuilder {
 
             const updateTypeValue = (value, unit) => {
               // Clamp to slider range (0 means no limit)
-              const { maxMB } = this.sliderConfig;
-              const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, unit);
+              const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), unit);
               value = Math.max(0, Math.min(maxValue, value));
 
               // Update UI
@@ -4077,6 +4721,74 @@ export default class ConfigBuilder {
           });
       });
 
+    // Per-Type Limits view toggle buttons
+    this.element
+      .querySelectorAll(".fu-config-builder-pertype-view-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const view = btn.dataset.view;
+          this.perTypeLimitsViewMode = view;
+
+          // Update button active states
+          this.element
+            .querySelectorAll(".fu-config-builder-pertype-view-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Re-render the perTypeLimits panel content
+          this.rerenderPerTypeLimitsPanel();
+        });
+      });
+
+    // Per-Type slider configuration inputs
+    const pertypeSliderUnit = this.element.querySelector("#pertype-slider-config-unit");
+    const pertypeSliderMin = this.element.querySelector("#pertype-slider-config-min");
+    const pertypeSliderMax = this.element.querySelector("#pertype-slider-config-max");
+    const pertypeSliderStep = this.element.querySelector("#pertype-slider-config-step");
+    const pertypeSliderBtnStep = this.element.querySelector("#pertype-slider-config-btn-step");
+
+    // Helper to update pertype label text when unit changes
+    const updatePertypeSliderConfigLabels = () => {
+      const minLabel = this.element.querySelector("#pertype-slider-config-min")?.closest(".fu-config-builder-slider-config-item")?.querySelector("label");
+      const maxLabel = this.element.querySelector("#pertype-slider-config-max")?.closest(".fu-config-builder-slider-config-item")?.querySelector("label");
+      if (minLabel) minLabel.textContent = `Min (${this.sliderConfig.unit})`;
+      if (maxLabel) maxLabel.textContent = `Max (${this.sliderConfig.unit})`;
+    };
+
+    if (pertypeSliderUnit) {
+      pertypeSliderUnit.addEventListener("change", () => {
+        this.sliderConfig.unit = pertypeSliderUnit.value;
+        updatePertypeSliderConfigLabels();
+        this.rerenderPerTypeLimitsPanel();
+      });
+    }
+    if (pertypeSliderMin) {
+      pertypeSliderMin.addEventListener("input", () => {
+        this.sliderConfig.minValue = parseInt(pertypeSliderMin.value) || 5;
+        this.rerenderPerTypeLimitsPanel();
+      });
+    }
+    if (pertypeSliderMax) {
+      pertypeSliderMax.addEventListener("input", () => {
+        this.sliderConfig.maxValue = parseInt(pertypeSliderMax.value) || 500;
+        this.rerenderPerTypeLimitsPanel();
+      });
+    }
+    if (pertypeSliderStep) {
+      pertypeSliderStep.addEventListener("input", () => {
+        this.sliderConfig.sliderStep = parseInt(pertypeSliderStep.value) || 50;
+        this.rerenderPerTypeLimitsPanel();
+      });
+    }
+    if (pertypeSliderBtnStep) {
+      pertypeSliderBtnStep.addEventListener("input", () => {
+        this.sliderConfig.buttonStep = parseInt(pertypeSliderBtnStep.value) || 10;
+      });
+    }
+
+    // Attach events for "By File Type" view sliders
+    this.attachPerTypeByFileTypeEvents();
+
     // Note: Copy/Download button events are now attached dynamically per-card in updateCodeOutput()
   }
 
@@ -4141,8 +4853,6 @@ export default class ConfigBuilder {
    * Update all size sliders with current slider config
    */
   updateAllSizeSliders() {
-    const { minMB, maxMB, sliderStep } = this.sliderConfig;
-
     this.element
       .querySelectorAll(
         '.fu-config-builder-size-slider[data-type="sizeSlider"]'
@@ -4161,13 +4871,13 @@ export default class ConfigBuilder {
           ".fu-config-builder-slider-label"
         );
 
-        // Get current unit from dropdown or fallback to MB
-        const currentUnit = unitDropdown?.value || "MB";
-        const minValue = this.bytesToUnit(minMB * 1024 * 1024, currentUnit);
-        const maxValue = this.bytesToUnit(maxMB * 1024 * 1024, currentUnit);
+        // Get current unit from dropdown or fallback to configured unit
+        const currentUnit = unitDropdown?.value || this.sliderConfig.unit;
+        const minValue = this.bytesToUnit(this.getSliderMinBytes(), currentUnit);
+        const maxValue = this.bytesToUnit(this.getSliderMaxBytes(), currentUnit);
         const stepValue = Math.max(
           1,
-          this.bytesToUnit(sliderStep * 1024 * 1024, currentUnit)
+          this.bytesToUnit(this.getSliderStepBytes(), currentUnit)
         );
 
         if (slider) {
@@ -4288,6 +4998,7 @@ export default class ConfigBuilder {
     // Re-render and update
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.onConfigChange(true); // Pass true to indicate this is from preset (don't clear selection)
   }
 
@@ -4624,10 +5335,8 @@ export default class ConfigBuilder {
     const entries = Object.entries(changedConfig);
     entries.forEach(([key, value], index) => {
       const comma = index < entries.length - 1 ? "," : "";
-      code += `  ${key}: ${JSON.stringify(value, null, 2).replace(
-        /\n/g,
-        "\n  "
-      )}${comma}\n`;
+      const formattedValue = this.formatJsValue(key, value, "  ", comma);
+      code += `  ${key}: ${formattedValue}\n`;
     });
 
     code += `});`;
@@ -4646,7 +5355,7 @@ export default class ConfigBuilder {
     const entries = Object.entries(changedConfig);
     entries.forEach(([key, value], index) => {
       const comma = index < entries.length - 1 ? "," : "";
-      const phpValue = this.jsValueToPhp(value);
+      const phpValue = this.jsValueToPhp(value, key);
       code += `    '${key}' => ${phpValue}${comma}\n`;
     });
 
@@ -4858,10 +5567,8 @@ export default class ConfigBuilder {
       const entries = Object.entries(changedConfig);
       entries.forEach(([key, value], index) => {
         const comma = index < entries.length - 1 ? "," : "";
-        code += `  ${key}: ${JSON.stringify(value, null, 2).replace(
-          /\n/g,
-          "\n  "
-        )}${comma}\n`;
+        const formattedValue = this.formatJsValue(key, value, "  ", comma);
+        code += `  ${key}: ${formattedValue}\n`;
       });
 
       code += `});\n`;
@@ -4939,7 +5646,7 @@ export default class ConfigBuilder {
       const entries = Object.entries(changedConfig);
       entries.forEach(([key, value], index) => {
         const comma = index < entries.length - 1 ? "," : "";
-        const phpValue = this.jsValueToPhp(value);
+        const phpValue = this.jsValueToPhp(value, key);
         code += `        '${key}' => ${phpValue}${comma}\n`;
       });
 
@@ -4958,13 +5665,119 @@ export default class ConfigBuilder {
   }
 
   /**
-   * Convert JavaScript value to PHP syntax
+   * Format a byte size value as a readable multiplication expression
+   * e.g., 10485760 becomes "10 * 1024 * 1024" with comment "// 10 MB"
+   * @param {number} bytes - Size in bytes
+   * @returns {Object} - { expression: string, comment: string }
    */
-  jsValueToPhp(value) {
+  formatSizeExpression(bytes) {
+    if (bytes === 0) return { expression: "0", comment: "" };
+
+    const GB = 1024 * 1024 * 1024;
+    const MB = 1024 * 1024;
+    const KB = 1024;
+
+    // Check for clean GB values
+    if (bytes >= GB && bytes % GB === 0) {
+      const value = bytes / GB;
+      return {
+        expression: `${value} * 1024 * 1024 * 1024`,
+        comment: `// ${value} GB`,
+      };
+    }
+
+    // Check for clean MB values
+    if (bytes >= MB && bytes % MB === 0) {
+      const value = bytes / MB;
+      return {
+        expression: `${value} * 1024 * 1024`,
+        comment: `// ${value} MB`,
+      };
+    }
+
+    // Check for clean KB values
+    if (bytes >= KB && bytes % KB === 0) {
+      const value = bytes / KB;
+      return {
+        expression: `${value} * 1024`,
+        comment: `// ${value} KB`,
+      };
+    }
+
+    // No clean unit, just return the raw value
+    return { expression: String(bytes), comment: `// ${bytes} bytes` };
+  }
+
+  /**
+   * Check if a key represents a size value (in bytes)
+   * @param {string} key - Config key name
+   * @returns {boolean}
+   */
+  isSizeKey(key) {
+    const sizeKeys = [
+      "perFileMaxSize",
+      "totalMaxSize",
+      "perTypeMaxTotalSize",
+      "perFileMaxSizePerType",
+    ];
+    return sizeKeys.includes(key);
+  }
+
+  /**
+   * Format a config value for JavaScript output
+   * Handles size values specially to show readable expressions
+   * @param {string} key - Config key
+   * @param {any} value - Config value
+   * @param {string} indent - Current indentation
+   * @param {string} trailingComma - Optional comma to place before any trailing comment
+   * @returns {string} - Formatted value with optional comment
+   */
+  formatJsValue(key, value, indent = "  ", trailingComma = "") {
+    // Handle size objects (perTypeMaxTotalSize, perFileMaxSizePerType)
+    if (this.isSizeKey(key) && typeof value === "object" && value !== null) {
+      const entries = Object.entries(value);
+      if (entries.length === 0) return `{}${trailingComma}`;
+
+      let result = "{\n";
+      entries.forEach(([k, v], idx) => {
+        const innerComma = idx < entries.length - 1 ? "," : "";
+        const formatted = this.formatSizeExpression(v);
+        // Use quotes for non-identifier keys (like "image", "video", etc.)
+        const quotedKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : `"${k}"`;
+        result += `${indent}  ${quotedKey}: ${formatted.expression}${innerComma} ${formatted.comment}\n`;
+      });
+      result += `${indent}}${trailingComma}`;
+      return result;
+    }
+
+    // Handle single size value (perFileMaxSize, totalMaxSize)
+    if (this.isSizeKey(key) && typeof value === "number") {
+      const formatted = this.formatSizeExpression(value);
+      // Place comma before the comment
+      return `${formatted.expression}${trailingComma} ${formatted.comment}`;
+    }
+
+    // Default: use JSON.stringify
+    return JSON.stringify(value, null, 2).replace(/\n/g, `\n${indent}`) + trailingComma;
+  }
+
+  /**
+   * Convert JavaScript value to PHP syntax
+   * @param {any} value - The value to convert
+   * @param {string} key - Optional key name for context (to detect size values)
+   */
+  jsValueToPhp(value, key = "") {
     if (value === null) return "null";
     if (value === true) return "true";
     if (value === false) return "false";
-    if (typeof value === "number") return String(value);
+    if (typeof value === "number") {
+      // Check if this is a size value
+      if (key && this.isSizeKey(key)) {
+        const formatted = this.formatSizeExpression(value);
+        return `${formatted.expression} ${formatted.comment}`;
+      }
+      return String(value);
+    }
     if (typeof value === "string") return `'${value.replace(/'/g, "\\'")}'`;
 
     if (Array.isArray(value)) {
@@ -4976,10 +5789,22 @@ export default class ConfigBuilder {
     if (typeof value === "object") {
       const entries = Object.entries(value);
       if (entries.length === 0) return "[]";
+
+      // Check if this is a size object
+      if (key && this.isSizeKey(key)) {
+        const items = entries
+          .map(([k, v]) => {
+            const formatted = this.formatSizeExpression(v);
+            return `'${k}' => ${formatted.expression}, ${formatted.comment}`;
+          })
+          .join("\n            ");
+        return `[\n            ${items}\n        ]`;
+      }
+
       const items = entries
         .map(([k, v]) => `'${k}' => ${this.jsValueToPhp(v)}`)
-        .join(",\n        ");
-      return `[\n        ${items}\n    ]`;
+        .join(",\n            ");
+      return `[\n            ${items}\n        ]`;
     }
 
     return String(value);
@@ -5102,7 +5927,6 @@ export default class ConfigBuilder {
               const previewConfig = {
                 ...activeData.config,
                 autoFetchConfig: false,
-                cleanupOnUnload: false,
               };
               activeData.instance = new window.FileUploader(
                 `#${containerId}`,
@@ -5166,7 +5990,6 @@ export default class ConfigBuilder {
       const previewConfig = {
         ...data.config,
         autoFetchConfig: false,
-        cleanupOnUnload: false,
       };
       data.instance = new window.FileUploader(`#${containerId}`, previewConfig);
       data.containerId = containerId;
@@ -5615,7 +6438,7 @@ export default class ConfigBuilder {
 
         // Show source variable if this semantic variable references a palette variable
         const sourceDisplay = v.sourceVar
-          ? `<code class="fu-config-builder-css-var-source" data-source-var="${v.sourceVar}" title="Uses ${v.sourceVar}">← ${v.sourceVar}</code>`
+          ? `<code class="fu-config-builder-css-var-source" data-source-var="${v.sourceVar}" data-tooltip-text="Uses ${v.sourceVar}" data-tooltip-position="top">← ${v.sourceVar}</code>`
           : "";
 
         // If there's a source var, clicking should navigate to it
@@ -5626,7 +6449,7 @@ export default class ConfigBuilder {
             v.isModified ? "modified" : ""
           }${v.sourceVar ? " has-source" : ""}" data-var-name="${
           v.name
-        }" data-section="${sectionKey}" ${dataSourceAttr} title="${v.sourceVar ? `Uses ${v.sourceVar} - Click to edit source` : "Click to edit in Styles panel"}">
+        }" data-section="${sectionKey}" ${dataSourceAttr} data-tooltip-text="${v.sourceVar ? `Uses ${v.sourceVar} - Click to edit source` : "Click to edit in Styles panel"}" data-tooltip-position="top">
             ${valueDisplay}
             <span class="fu-config-builder-css-var-label">${v.label}</span>
             <code class="fu-config-builder-css-var-name">${v.name}</code>
@@ -5933,6 +6756,7 @@ export default class ConfigBuilder {
     this.updateUploaderTabsUI();
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.refreshAllPreviews(); // Refresh all to show the new uploader
     this.updateCodeOutput();
   }
@@ -5978,6 +6802,7 @@ export default class ConfigBuilder {
     this.updateUploaderTabsUI();
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.refreshAllPreviews(); // Refresh all to show the new uploader
     this.updateCodeOutput();
   }
@@ -6009,6 +6834,7 @@ export default class ConfigBuilder {
     // Re-render options to reflect new config
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.refreshAllPreviews(); // Refresh all to update active states
     this.updateCodeOutput();
   }
@@ -6042,6 +6868,7 @@ export default class ConfigBuilder {
     this.updateUploaderTabsUI();
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.refreshAllPreviews();
     this.updateCodeOutput();
   }
@@ -6207,6 +7034,9 @@ export default class ConfigBuilder {
             this.editUploaderName(nameEl.dataset.uploaderId);
           });
         });
+
+      // Initialize tooltips for new uploader tab elements
+      Tooltip.initAll(listEl);
     }
   }
 
@@ -6224,6 +7054,7 @@ export default class ConfigBuilder {
     this.config = { ...this.getDefaultConfig(), ...config };
     this.render();
     this.attachEvents();
+    this.initTooltips();
     this.onConfigChange();
   }
 
@@ -6244,5 +7075,398 @@ export default class ConfigBuilder {
       name: data.name,
       config: { ...data.config },
     }));
+  }
+
+  // ============================================================================
+  // Search Functionality
+  // ============================================================================
+
+  /**
+   * Attach search event handlers
+   */
+  attachSearchEvents() {
+    const searchInput = this.element.querySelector("#option-search");
+    const clearBtn = this.element.querySelector("#search-clear");
+    const resultsContainer = this.element.querySelector("#search-results");
+
+    if (!searchInput) return;
+
+    // Build search index on first focus
+    searchInput.addEventListener("focus", () => {
+      if (!this.searchIndex) {
+        this.buildSearchIndex();
+      }
+    });
+
+    // Handle input with debounce
+    let debounceTimer;
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+
+      // Show/hide clear button
+      if (clearBtn) {
+        clearBtn.style.display = query ? "flex" : "none";
+      }
+
+      // Debounce search
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (query.length >= 1) {
+          const results = this.fuzzySearch(query);
+          this.renderSearchResults(results, query);
+        } else {
+          this.hideSearchResults();
+        }
+      }, 150);
+    });
+
+    // Clear button
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        clearBtn.style.display = "none";
+        this.hideSearchResults();
+        searchInput.focus();
+      });
+    }
+
+    // Handle keyboard navigation
+    searchInput.addEventListener("keydown", (e) => {
+      if (!resultsContainer || resultsContainer.style.display === "none") return;
+
+      const items = resultsContainer.querySelectorAll(".fu-config-builder-search-result-item");
+      const activeItem = resultsContainer.querySelector(".fu-config-builder-search-result-item.active");
+      let activeIndex = Array.from(items).indexOf(activeItem);
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          if (activeIndex < items.length - 1) {
+            items[activeIndex]?.classList.remove("active");
+            items[activeIndex + 1]?.classList.add("active");
+            items[activeIndex + 1]?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (activeIndex > 0) {
+            items[activeIndex]?.classList.remove("active");
+            items[activeIndex - 1]?.classList.add("active");
+            items[activeIndex - 1]?.scrollIntoView({ block: "nearest" });
+          }
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (activeItem) {
+            activeItem.click();
+          }
+          break;
+        case "Escape":
+          this.hideSearchResults();
+          searchInput.blur();
+          break;
+      }
+    });
+
+    // Close results when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".fu-config-builder-search")) {
+        this.hideSearchResults();
+      }
+    });
+  }
+
+  /**
+   * Build search index from option definitions
+   */
+  buildSearchIndex() {
+    this.searchIndex = [];
+
+    // Index config options
+    for (const [categoryKey, category] of Object.entries(this.optionDefinitions)) {
+      for (const [optionKey, option] of Object.entries(category.options)) {
+        this.searchIndex.push({
+          key: optionKey,
+          label: option.label || optionKey,
+          hint: option.hint || "",
+          category: category.title,
+          categoryKey: categoryKey,
+          icon: category.icon,
+          type: "config",
+          searchText: `${option.label || optionKey} ${option.hint || ""} ${optionKey}`.toLowerCase()
+        });
+      }
+    }
+
+    // Index style options
+    for (const [sectionKey, section] of Object.entries(this.styleDefinitions)) {
+      // Handle variables as object (key-value pairs)
+      if (section.variables && typeof section.variables === 'object') {
+        for (const [varKey, variable] of Object.entries(section.variables)) {
+          this.searchIndex.push({
+            key: varKey,
+            label: variable.label || varKey,
+            hint: variable.hint || "",
+            category: section.title,
+            categoryKey: sectionKey,
+            icon: section.icon,
+            type: "style",
+            searchText: `${variable.label || varKey} ${variable.hint || ""} ${varKey}`.toLowerCase()
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * Fuzzy search implementation
+   * @param {string} query - Search query
+   * @returns {Array} Matching results sorted by relevance
+   */
+  fuzzySearch(query) {
+    if (!this.searchIndex) return [];
+
+    const queryLower = query.toLowerCase();
+    const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+    const results = [];
+
+    for (const item of this.searchIndex) {
+      const score = this.calculateFuzzyScore(item, queryWords, queryLower);
+      if (score > 0) {
+        results.push({ ...item, score });
+      }
+    }
+
+    // Sort by score (higher is better) and limit results
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15);
+  }
+
+  /**
+   * Calculate fuzzy match score for an item
+   * @param {Object} item - Search index item
+   * @param {Array} queryWords - Query split into words
+   * @param {string} queryLower - Lowercase query
+   * @returns {number} Match score (0 = no match)
+   */
+  calculateFuzzyScore(item, queryWords, queryLower) {
+    let score = 0;
+    const labelLower = item.label.toLowerCase();
+    const keyLower = item.key.toLowerCase();
+    const hintLower = item.hint.toLowerCase();
+
+    // Exact match in label (highest priority)
+    if (labelLower === queryLower) {
+      score += 100;
+    } else if (labelLower.startsWith(queryLower)) {
+      score += 80;
+    } else if (labelLower.includes(queryLower)) {
+      score += 60;
+    }
+
+    // Match in key
+    if (keyLower.includes(queryLower)) {
+      score += 40;
+    }
+
+    // Match in hint
+    if (hintLower.includes(queryLower)) {
+      score += 20;
+    }
+
+    // Word-by-word matching for multi-word queries
+    if (queryWords.length > 1) {
+      let wordMatches = 0;
+      for (const word of queryWords) {
+        if (labelLower.includes(word) || keyLower.includes(word) || hintLower.includes(word)) {
+          wordMatches++;
+        }
+      }
+      if (wordMatches === queryWords.length) {
+        score += 30; // All words found
+      } else if (wordMatches > 0) {
+        score += wordMatches * 5;
+      }
+    }
+
+    // Fuzzy character matching (for typos)
+    if (score === 0) {
+      const fuzzyScore = this.fuzzyCharMatch(queryLower, labelLower);
+      if (fuzzyScore > 0.6) {
+        score += fuzzyScore * 30;
+      }
+    }
+
+    return score;
+  }
+
+  /**
+   * Fuzzy character matching using Levenshtein-like approach
+   * @param {string} query - Query string
+   * @param {string} target - Target string to match against
+   * @returns {number} Match ratio (0-1)
+   */
+  fuzzyCharMatch(query, target) {
+    if (query.length === 0) return 0;
+    if (target.length === 0) return 0;
+
+    let matchCount = 0;
+    let targetIndex = 0;
+
+    for (const char of query) {
+      const foundIndex = target.indexOf(char, targetIndex);
+      if (foundIndex !== -1) {
+        matchCount++;
+        targetIndex = foundIndex + 1;
+      }
+    }
+
+    return matchCount / query.length;
+  }
+
+  /**
+   * Render search results dropdown
+   * @param {Array} results - Search results
+   * @param {string} query - Original query for highlighting
+   */
+  renderSearchResults(results, query) {
+    const container = this.element.querySelector("#search-results");
+    if (!container) return;
+
+    if (results.length === 0) {
+      container.innerHTML = `
+        <div class="fu-config-builder-search-empty">
+          No options found for "${query}"
+        </div>
+      `;
+      container.style.display = "block";
+      return;
+    }
+
+    const html = results.map((result, index) => {
+      const highlightedLabel = this.highlightMatch(result.label, query);
+      // Use category icon if available, otherwise fall back to type-based icon
+      const iconHtml = result.icon
+        ? this.getCategoryIcon(result.icon)
+        : (result.type === "config"
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"/></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21a9 9 0 0 1 0 -18c4.97 0 9 3.582 9 8c0 1.06 -.474 2.078 -1.318 2.828c-.844 .75 -1.989 1.172 -3.182 1.172h-2.5a2 2 0 0 0 -1 3.75a1.3 1.3 0 0 1 -1 2.25"/></svg>`);
+
+      return `
+        <div class="fu-config-builder-search-result-item ${index === 0 ? "active" : ""}"
+             data-option-key="${result.key}"
+             data-category-key="${result.categoryKey}"
+             data-type="${result.type}">
+          <div class="fu-config-builder-search-result-icon">${iconHtml}</div>
+          <div class="fu-config-builder-search-result-content">
+            <div class="fu-config-builder-search-result-label">${highlightedLabel}</div>
+            <div class="fu-config-builder-search-result-key">${result.key}</div>
+            ${result.hint ? `<div class="fu-config-builder-search-result-hint">${result.hint}</div>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    container.innerHTML = html;
+    container.style.display = "block";
+
+    // Add click handlers
+    container.querySelectorAll(".fu-config-builder-search-result-item").forEach(item => {
+      item.addEventListener("click", () => {
+        this.navigateToOption(
+          item.dataset.optionKey,
+          item.dataset.categoryKey,
+          item.dataset.type
+        );
+      });
+    });
+  }
+
+  /**
+   * Highlight matching parts of text
+   * @param {string} text - Text to highlight
+   * @param {string} query - Query to highlight
+   * @returns {string} HTML with highlighted matches
+   */
+  highlightMatch(text, query) {
+    if (!query) return text;
+
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return text.replace(regex, "<mark>$1</mark>");
+  }
+
+  /**
+   * Hide search results dropdown
+   */
+  hideSearchResults() {
+    const container = this.element.querySelector("#search-results");
+    if (container) {
+      container.style.display = "none";
+    }
+  }
+
+  /**
+   * Navigate to a specific option
+   * @param {string} optionKey - Option key
+   * @param {string} categoryKey - Category key
+   * @param {string} type - 'config' or 'style'
+   */
+  navigateToOption(optionKey, categoryKey, type) {
+    // Hide search results and clear input
+    this.hideSearchResults();
+    const searchInput = this.element.querySelector("#option-search");
+    if (searchInput) {
+      searchInput.value = "";
+      const clearBtn = this.element.querySelector("#search-clear");
+      if (clearBtn) clearBtn.style.display = "none";
+    }
+
+    // Switch to correct main tab
+    const mainTab = type === "style" ? "styles" : "config";
+    const mainTabBtn = this.element.querySelector(`[data-main-tab="${mainTab}"]`);
+    if (mainTabBtn && !mainTabBtn.classList.contains("active")) {
+      mainTabBtn.click();
+    }
+
+    // Small delay to allow tab switch animation
+    setTimeout(() => {
+      if (type === "config") {
+        // Switch to correct category tab
+        const categoryTab = this.element.querySelector(`[data-category="${categoryKey}"]`);
+        if (categoryTab && !categoryTab.classList.contains("active")) {
+          categoryTab.click();
+        }
+
+        // Find and highlight the option
+        setTimeout(() => {
+          const optionEl = this.element.querySelector(`[data-option="${optionKey}"]`);
+          if (optionEl) {
+            const row = optionEl.closest(".fu-config-builder-option-row");
+            if (row) {
+              row.scrollIntoView({ behavior: "smooth", block: "center" });
+              row.classList.add("fu-config-builder-highlight");
+              setTimeout(() => row.classList.remove("fu-config-builder-highlight"), 2000);
+            }
+          }
+        }, 100);
+      } else {
+        // Style option - switch to correct style section
+        const styleTab = this.element.querySelector(`[data-style-section="${categoryKey}"]`);
+        if (styleTab && !styleTab.classList.contains("active")) {
+          styleTab.click();
+        }
+
+        // Find and highlight the variable
+        setTimeout(() => {
+          const varItem = this.element.querySelector(`[data-css-var="${optionKey}"]`);
+          if (varItem) {
+            varItem.scrollIntoView({ behavior: "smooth", block: "center" });
+            varItem.classList.add("fu-config-builder-highlight");
+            setTimeout(() => varItem.classList.remove("fu-config-builder-highlight"), 2000);
+          }
+        }, 100);
+      }
+    }, 50);
   }
 }

@@ -70,8 +70,8 @@ export default class FileUploader {
       multiple: true,
       autoFetchConfig: true,
       showLimits: true,
-      showFileTypeCount: false, // Show count of files per type (image, video, document)
       showProgressBar: false, // Show progress bar background for Total Size and File Count
+      showTypeProgressBar: true, // Show progress bar in type grid cards (when showTypeGroupSize is true)
       showPerFileLimit: true, // Show per file size limit in type groups
       showTypeGroupSize: true, // Show total uploaded size per type group
       showTypeGroupCount: true, // Show file count per type group
@@ -1117,8 +1117,13 @@ export default class FileUploader {
           const typeSize = this.getFileTypeSize(type);
           const typeSizeFormatted = this.formatFileSize(typeSize);
           const typeLimitBytes = this.options.perTypeMaxTotalSize[type] || 0;
-          const typeSizePercentage =
-            typeLimitBytes > 0 ? (typeSize / typeLimitBytes) * 100 : 0;
+          // Calculate progress percentage - use size limit if available, otherwise use file count ratio
+          let typeProgressPercentage = 0;
+          if (typeLimitBytes > 0) {
+            typeProgressPercentage = (typeSize / typeLimitBytes) * 100;
+          } else if (typeCountLimit > 0) {
+            typeProgressPercentage = (typeCount / typeCountLimit) * 100;
+          }
           const typeIcon = getIcon(type, { class: "file-uploader-type-icon" });
 
           // Get per-file limit for this type (if exists)
@@ -1151,18 +1156,24 @@ export default class FileUploader {
                     : ""
                 }
                 ${
-                  this.options.showTypeGroupSize && typeLimitBytes > 0 && limit
+                  this.options.showTypeGroupSize
                     ? `
                   <div class="file-uploader-type-stat">
                     <span class="file-uploader-type-stat-label">Used</span>
-                    <span class="file-uploader-type-stat-value">${typeSizeFormatted} / ${limit}</span>
+                    <span class="file-uploader-type-stat-value">${typeSizeFormatted}${typeLimitBytes > 0 && limit ? ` / ${limit}` : ""}</span>
                   </div>
+                  ${
+                    this.options.showTypeProgressBar
+                      ? `
                   <div class="file-uploader-type-progress">
                     <div class="file-uploader-type-progress-bar" style="width: ${Math.min(
                       100,
-                      typeSizePercentage
+                      typeProgressPercentage
                     )}%"></div>
                   </div>
+                  `
+                      : ""
+                  }
                 `
                     : ""
                 }
@@ -1451,12 +1462,18 @@ export default class FileUploader {
         this.options.totalMaxSizeDisplay
       }</span>
           </div>
+          ${
+            this.options.showProgressBar
+              ? `
           <div class="file-uploader-compact-progress">
             <div class="file-uploader-compact-progress-bar" style="width: ${Math.min(
               100,
               sizePercentage
             )}%"></div>
           </div>
+          `
+              : ""
+          }
         </div>
       `;
 
@@ -1469,12 +1486,18 @@ export default class FileUploader {
         this.options.maxFiles
       }</span>
           </div>
+          ${
+            this.options.showProgressBar
+              ? `
           <div class="file-uploader-compact-progress">
             <div class="file-uploader-compact-progress-bar" style="width: ${Math.min(
               100,
               filePercentage
             )}%"></div>
           </div>
+          `
+              : ""
+          }
         </div>
       `;
 
@@ -2114,13 +2137,39 @@ export default class FileUploader {
     this.fileInput.value = "";
   }
 
+  /**
+   * Format alert details with label and chip HTML
+   * @param {string} label - The label text (e.g., "Allowed:", "Limit:")
+   * @param {string|string[]} values - The value(s) to display as chips
+   * @returns {string} - HTML string with label and chip elements
+   */
+  formatAlertDetails(label, values) {
+    const chipClass = "file-uploader-alert-details-chip";
+    const labelClass = "file-uploader-alert-details-label";
+
+    let chipsHtml;
+    if (Array.isArray(values)) {
+      chipsHtml = values
+        .map((v) => `<span class="${chipClass}">${v}</span>`)
+        .join(" ");
+    } else {
+      chipsHtml = `<span class="${chipClass}">${values}</span>`;
+    }
+
+    return `<span class="${labelClass}">${label}</span> ${chipsHtml}`;
+  }
+
   validateFile(file) {
     // Check max files limit - count all files (uploaded + uploading + pending)
     const totalFileCount = this.files.length;
     if (totalFileCount >= this.options.maxFiles) {
       return {
         valid: false,
-        error: `Maximum number of files (${this.options.maxFiles}) reached. Please delete some files before uploading more.`,
+        error: {
+          filename: file.name,
+          error: "Maximum file limit reached",
+          details: this.formatAlertDetails("Limit:", `${this.options.maxFiles} files`),
+        },
       };
     }
 
@@ -2130,17 +2179,20 @@ export default class FileUploader {
       this.options.allowedExtensions.length > 0 &&
       !this.options.allowedExtensions.includes(extension)
     ) {
-      const allowedList = this.options.allowedExtensions
+      const allowedExtensions = this.options.allowedExtensions
         .slice(0, 5)
-        .map((ext) => `.${ext}`)
-        .join(", ");
-      const moreText =
-        this.options.allowedExtensions.length > 5
-          ? ` and ${this.options.allowedExtensions.length - 5} more`
-          : "";
+        .map((ext) => `.${ext}`);
+      const moreCount = this.options.allowedExtensions.length - 5;
+      if (moreCount > 0) {
+        allowedExtensions.push(`+${moreCount} more`);
+      }
       return {
         valid: false,
-        error: `"${file.name}" file type is not allowed. Allowed types: ${allowedList}${moreText}.`,
+        error: {
+          filename: file.name,
+          error: "File type not allowed",
+          details: this.formatAlertDetails("Allowed:", allowedExtensions),
+        },
       };
     }
 
@@ -2158,7 +2210,14 @@ export default class FileUploader {
     if (file.size > perFileLimit) {
       return {
         valid: false,
-        error: `"${file.name}" exceeds the maximum ${fileType} file size of ${perFileLimitDisplay}.`,
+        error: {
+          filename: file.name,
+          error: `Exceeds max ${fileType} file size`,
+          details:
+            this.formatAlertDetails("Size:", this.formatFileSize(file.size)) +
+            " " +
+            this.formatAlertDetails("Limit:", perFileLimitDisplay),
+        },
       };
     }
 
@@ -2171,11 +2230,14 @@ export default class FileUploader {
         const remaining = typeLimit - currentTypeSize;
         return {
           valid: false,
-          error: `Adding "${
-            file.name
-          }" would exceed the total ${fileType} size limit of ${limitDisplay}. Available: ${this.formatFileSize(
-            remaining
-          )}.`,
+          error: {
+            filename: file.name,
+            error: `Exceeds total ${fileType} size limit`,
+            details:
+              this.formatAlertDetails("Limit:", limitDisplay) +
+              " " +
+              this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+          },
         };
       }
     }
@@ -2186,9 +2248,14 @@ export default class FileUploader {
       const remaining = this.options.totalMaxSize - currentTotalSize;
       return {
         valid: false,
-        error: `Adding "${file.name}" would exceed the total size limit of ${
-          this.options.totalMaxSizeDisplay
-        }. Available: ${this.formatFileSize(remaining)}.`,
+        error: {
+          filename: file.name,
+          error: "Exceeds total upload size limit",
+          details:
+            this.formatAlertDetails("Limit:", this.options.totalMaxSizeDisplay) +
+            " " +
+            this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+        },
       };
     }
 
@@ -2199,7 +2266,7 @@ export default class FileUploader {
    * Validate a file from cross-uploader drag-drop operation
    * Checks all constraints (extension, size limits, file count, etc.)
    * @param {Object} fileObj - The source file object from another uploader
-   * @returns {Object} - { valid: boolean, error?: string }
+   * @returns {Object} - { valid: boolean, error?: string|object }
    */
   validateCrossUploaderFile(fileObj) {
     // Check max files limit
@@ -2207,7 +2274,11 @@ export default class FileUploader {
     if (totalFileCount >= this.options.maxFiles) {
       return {
         valid: false,
-        error: `Maximum number of files (${this.options.maxFiles}) reached. Please delete some files before adding more.`,
+        error: {
+          filename: fileObj.name,
+          error: "Maximum file limit reached",
+          details: this.formatAlertDetails("Limit:", `${this.options.maxFiles} files`),
+        },
       };
     }
 
@@ -2217,17 +2288,20 @@ export default class FileUploader {
       this.options.allowedExtensions.length > 0 &&
       !this.options.allowedExtensions.includes(extension)
     ) {
-      const allowedList = this.options.allowedExtensions
+      const allowedExtensions = this.options.allowedExtensions
         .slice(0, 5)
-        .map((ext) => `.${ext}`)
-        .join(", ");
-      const moreText =
-        this.options.allowedExtensions.length > 5
-          ? ` and ${this.options.allowedExtensions.length - 5} more`
-          : "";
+        .map((ext) => `.${ext}`);
+      const moreCount = this.options.allowedExtensions.length - 5;
+      if (moreCount > 0) {
+        allowedExtensions.push(`+${moreCount} more`);
+      }
       return {
         valid: false,
-        error: `"${fileObj.name}" file type (.${extension}) is not allowed in this uploader. Allowed types: ${allowedList}${moreText}.`,
+        error: {
+          filename: fileObj.name,
+          error: "File type not allowed",
+          details: this.formatAlertDetails("Allowed:", allowedExtensions),
+        },
       };
     }
 
@@ -2243,7 +2317,14 @@ export default class FileUploader {
     if (fileObj.size > perFileLimit) {
       return {
         valid: false,
-        error: `"${fileObj.name}" exceeds the maximum ${fileType} file size of ${perFileLimitDisplay}.`,
+        error: {
+          filename: fileObj.name,
+          error: `Exceeds max ${fileType} file size`,
+          details:
+            this.formatAlertDetails("Size:", this.formatFileSize(fileObj.size)) +
+            " " +
+            this.formatAlertDetails("Limit:", perFileLimitDisplay),
+        },
       };
     }
 
@@ -2256,11 +2337,14 @@ export default class FileUploader {
         const remaining = typeLimit - currentTypeSize;
         return {
           valid: false,
-          error: `Adding "${
-            fileObj.name
-          }" would exceed the total ${fileType} size limit of ${limitDisplay}. Available: ${this.formatFileSize(
-            remaining
-          )}.`,
+          error: {
+            filename: fileObj.name,
+            error: `Exceeds total ${fileType} size limit`,
+            details:
+              this.formatAlertDetails("Limit:", limitDisplay) +
+              " " +
+              this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+          },
         };
       }
     }
@@ -2272,7 +2356,11 @@ export default class FileUploader {
       if (currentTypeCount >= typeCountLimit) {
         return {
           valid: false,
-          error: `Maximum number of ${fileType} files (${typeCountLimit}) reached. Please delete some ${fileType} files before adding more.`,
+          error: {
+            filename: fileObj.name,
+            error: `Maximum ${fileType} file count reached`,
+            details: this.formatAlertDetails("Limit:", `${typeCountLimit} ${fileType} files`),
+          },
         };
       }
     }
@@ -2283,9 +2371,14 @@ export default class FileUploader {
       const remaining = this.options.totalMaxSize - currentTotalSize;
       return {
         valid: false,
-        error: `Adding "${fileObj.name}" would exceed the total size limit of ${
-          this.options.totalMaxSizeDisplay
-        }. Available: ${this.formatFileSize(remaining)}.`,
+        error: {
+          filename: fileObj.name,
+          error: "Exceeds total upload size limit",
+          details:
+            this.formatAlertDetails("Limit:", this.options.totalMaxSizeDisplay) +
+            " " +
+            this.formatAlertDetails("Available:", this.formatFileSize(remaining)),
+        },
       };
     }
 
@@ -3033,9 +3126,14 @@ export default class FileUploader {
   }
 
   showError(message) {
-    console.error("FileUploader:", message);
+    // Log error - handle both string and object messages
+    if (typeof message === "object" && message !== null) {
+      console.error("FileUploader:", message.filename, message.error, message.details);
+    } else {
+      console.error("FileUploader:", message);
+    }
 
-    // Use the Alert notification system
+    // Use the Alert notification system (supports both string and object)
     Alert.error(message, {
       animation: this.options.alertAnimation,
       duration: this.options.alertDuration,

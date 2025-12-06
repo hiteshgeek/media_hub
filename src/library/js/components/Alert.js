@@ -2,6 +2,7 @@
  * Alert Notification System
  * Displays toast-like notifications at the top center of the page
  * with support for various animations (fade, shake, bounce, slideDown)
+ * and rich card-style content for detailed error information
  */
 
 class Alert {
@@ -28,7 +29,7 @@ class Alert {
 
   /**
    * Show an alert notification
-   * @param {string} message - The message to display
+   * @param {string|Object} message - The message to display (string or object with details)
    * @param {Object} options - Alert options
    * @returns {HTMLElement} - The alert element
    */
@@ -55,11 +56,22 @@ class Alert {
     // Icon based on type
     const icon = Alert.getIcon(config.type);
 
+    // Build alert content based on message type
+    let contentHtml;
+    if (typeof message === "object" && message !== null) {
+      // Rich content with structured details
+      contentHtml = Alert.buildRichContent(message);
+      alert.classList.add("file-uploader-alert-card");
+    } else {
+      // Simple string message
+      contentHtml = `<span class="file-uploader-alert-message">${message}</span>`;
+    }
+
     // Build alert HTML
     alert.innerHTML = `
       <div class="file-uploader-alert-icon">${icon}</div>
       <div class="file-uploader-alert-content">
-        <span class="file-uploader-alert-message">${message}</span>
+        ${contentHtml}
       </div>
       ${
         config.dismissible
@@ -97,6 +109,39 @@ class Alert {
     }
 
     return alert;
+  }
+
+  /**
+   * Build rich content HTML for detailed alerts
+   * @param {Object} details - Object with filename, error, and details
+   * @returns {string} - HTML string
+   */
+  static buildRichContent(details) {
+    let html = '<div class="file-uploader-alert-card-content">';
+
+    // Line 1: File name
+    if (details.filename) {
+      html += `<div class="file-uploader-alert-filename" title="${details.filename}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>${details.filename}</span>
+      </div>`;
+    }
+
+    // Line 2: Error message
+    if (details.error) {
+      html += `<div class="file-uploader-alert-error-text">${details.error}</div>`;
+    }
+
+    // Line 3: Additional details (limit info, allowed types, etc.)
+    if (details.details) {
+      html += `<div class="file-uploader-alert-details">${details.details}</div>`;
+    }
+
+    html += "</div>";
+    return html;
   }
 
   /**
