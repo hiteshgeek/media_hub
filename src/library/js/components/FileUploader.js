@@ -3123,7 +3123,10 @@ export default class FileUploader {
           this.options.onUploadSuccess(fileObj, result);
         }
       } else {
-        throw new Error(result.error || "Upload failed");
+        // Create error with server error data attached
+        const error = new Error(typeof result.error === 'string' ? result.error : 'Upload failed');
+        error.serverError = result.error;
+        throw error;
       }
     } catch (error) {
       fileObj.uploading = false;
@@ -3137,8 +3140,15 @@ export default class FileUploader {
       // Remove from files array
       this.files = this.files.filter((f) => f.id !== fileObj.id);
 
-      // Show error message
-      this.showError(error.message);
+      // Show error message - check if it's a structured error from server
+      let errorData = error.serverError || error.message;
+
+      // Convert server error format to Alert format
+      if (typeof errorData === 'object' && errorData !== null) {
+        errorData = this.formatServerError(errorData);
+      }
+
+      this.showError(errorData);
 
       if (this.options.onUploadError) {
         this.options.onUploadError(fileObj, error);
@@ -3336,6 +3346,41 @@ export default class FileUploader {
       animation: this.options.alertAnimation,
       duration: this.options.alertDuration,
     });
+  }
+
+  /**
+   * Format server error response to Alert-compatible format
+   * @param {Object} serverError - Error object from server
+   * @returns {Object} - Alert-compatible error object
+   */
+  formatServerError(serverError) {
+    const { filename, error, allowed, moreCount, limit, fileType, mimeType } = serverError;
+
+    let details = '';
+
+    // Handle file type not allowed error
+    if (allowed && Array.isArray(allowed)) {
+      const displayExts = allowed.map(ext => `.${ext}`);
+      if (moreCount > 0) {
+        displayExts.push(`+${moreCount} more`);
+      }
+      details = this.formatAlertDetails('Allowed:', displayExts);
+    }
+    // Handle file size limit error
+    else if (limit) {
+      const limitLabel = fileType ? `Max ${fileType} size:` : 'Max size:';
+      details = this.formatAlertDetails(limitLabel, limit);
+    }
+    // Handle MIME type error
+    else if (mimeType) {
+      details = this.formatAlertDetails('Detected:', mimeType);
+    }
+
+    return {
+      filename: filename,
+      error: error,
+      details: details
+    };
   }
 
   /**

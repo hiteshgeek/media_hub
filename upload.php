@@ -84,9 +84,18 @@ $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 
 // Validate file extension
 if (!in_array($extension, $config['allowed_extensions'])) {
+    // Return first 5 extensions with "+X more" if there are more
+    $displayExtensions = array_slice($config['allowed_extensions'], 0, 5);
+    $moreCount = count($config['allowed_extensions']) - 5;
+
     echo json_encode([
         'success' => false,
-        'error' => "\"{$originalName}\" file type is not allowed. Allowed types: " . implode(', ', $config['allowed_extensions'])
+        'error' => [
+            'filename' => $originalName,
+            'error' => 'File type not allowed',
+            'allowed' => $displayExtensions,
+            'moreCount' => $moreCount > 0 ? $moreCount : 0
+        ]
     ]);
     exit;
 }
@@ -113,7 +122,12 @@ if (isset($config['per_file_max_size_per_type'][$fileType])) {
     if ($file['size'] > $perFileLimit) {
         echo json_encode([
             'success' => false,
-            'error' => "\"{$originalName}\" exceeds the maximum {$fileType} file size of {$limitDisplay}"
+            'error' => [
+                'filename' => $originalName,
+                'error' => 'File size exceeds limit',
+                'limit' => $limitDisplay,
+                'fileType' => $fileType
+            ]
         ]);
         exit;
     }
@@ -122,7 +136,11 @@ if (isset($config['per_file_max_size_per_type'][$fileType])) {
     if ($file['size'] > $config['per_file_max_size']) {
         echo json_encode([
             'success' => false,
-            'error' => "\"{$originalName}\" exceeds maximum file size of " . $config['per_file_max_size_display']
+            'error' => [
+                'filename' => $originalName,
+                'error' => 'File size exceeds limit',
+                'limit' => $config['per_file_max_size_display']
+            ]
         ]);
         exit;
     }
@@ -136,7 +154,11 @@ finfo_close($finfo);
 if (!in_array($mimeType, $config['allowed_types'])) {
     echo json_encode([
         'success' => false,
-        'error' => "\"{$originalName}\" file type not allowed (MIME type: {$mimeType})"
+        'error' => [
+            'filename' => $originalName,
+            'error' => 'Invalid file type',
+            'mimeType' => $mimeType
+        ]
     ]);
     exit;
 }

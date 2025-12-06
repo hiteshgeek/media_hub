@@ -7047,36 +7047,73 @@ export default class ConfigBuilder {
       // Update detailed summary
       const summary = wrapper.querySelector(`[data-file-summary="${uploaderId}"]`);
       if (summary) {
-        // Group files by type
+        // Group files by type with icons
+        const typeConfig = {
+          'Images': { icon: 'image', color: '#8b5cf6' },
+          'Videos': { icon: 'video', color: '#ef4444' },
+          'Audio': { icon: 'audio', color: '#f59e0b' },
+          'Documents': { icon: 'document', color: '#3b82f6' },
+          'Archives': { icon: 'archive', color: '#6366f1' },
+          'Other': { icon: 'other', color: '#6b7280' }
+        };
+
         const typeGroups = {};
         files.forEach(file => {
           const ext = (file.name || '').split('.').pop().toLowerCase();
           let type = 'Other';
-          if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) type = 'Images';
-          else if (['pdf'].includes(ext)) type = 'PDF';
-          else if (['doc', 'docx', 'txt', 'rtf'].includes(ext)) type = 'Documents';
-          else if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) type = 'Videos';
-          else if (['mp3', 'wav', 'ogg'].includes(ext)) type = 'Audio';
+          if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(ext)) type = 'Images';
+          else if (['mp4', 'webm', 'avi', 'mov', 'mkv'].includes(ext)) type = 'Videos';
+          else if (['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext)) type = 'Audio';
+          else if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) type = 'Documents';
+          else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) type = 'Archives';
 
           if (!typeGroups[type]) typeGroups[type] = 0;
           typeGroups[type]++;
         });
 
+        const typeIcons = {
+          'Images': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+          'Videos': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+          'Audio': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+          'Documents': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>',
+          'Archives': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>',
+          'Other': '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>'
+        };
+
         const typeBadges = Object.entries(typeGroups)
-          .map(([type, count]) => `<span class="file-type-badge">${type} <span class="count">${count}</span></span>`)
+          .map(([type, count]) => {
+            const config = typeConfig[type] || typeConfig['Other'];
+            return `
+              <div class="summary-type">
+                <span class="type-icon icon-${config.icon}">${typeIcons[type] || typeIcons['Other']}</span>
+                <span class="type-name">${type}</span>
+                <span class="type-count">${count}</span>
+              </div>
+            `;
+          })
           .join('');
 
         summary.classList.add('has-files');
         summary.innerHTML = `
           <div class="summary-header">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Files Ready</span>
+            <div class="summary-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="summary-title">Files Ready</span>
           </div>
-          <div class="summary-stats">
-            <div class="stat-item"><span class="stat-value">${fileCount}</span><span class="stat-label">file${fileCount !== 1 ? 's' : ''}</span></div>
-            <div class="stat-item"><span class="stat-value">${formatSize(totalSize)}</span><span class="stat-label">total</span></div>
+          <div class="summary-content">
+            <div class="summary-stats">
+              <div class="summary-stat">
+                <span class="stat-value">${fileCount}</span>
+                <span class="stat-label">file${fileCount !== 1 ? 's' : ''}</span>
+              </div>
+              <div class="summary-stat">
+                <span class="stat-value">${formatSize(totalSize)}</span>
+                <span class="stat-label">total</span>
+              </div>
+            </div>
+            <div class="summary-types">${typeBadges}</div>
           </div>
-          <div class="file-types">${typeBadges}</div>
         `;
       }
     }
