@@ -1640,7 +1640,7 @@ export default class ConfigBuilder {
       : firstCategoryKey;
 
     this.element.innerHTML = `
-      <div class="fu-config-builder" data-theme="${this.theme}">
+      <div class="fu-config-builder theme-${this.getEffectiveThemeMode()}" data-theme="${this.theme}">
         <div class="fu-config-builder-header">
           <div class="fu-config-builder-header-left">
             <a href="index.php" class="fu-config-builder-home-link" data-tooltip-text="Back to Home" data-tooltip-position="bottom">
