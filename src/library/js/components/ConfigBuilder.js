@@ -511,11 +511,12 @@ export default class ConfigBuilder {
             dependsOn: "enableVideoRecording",
           },
           videoBitsPerSecond: {
-            type: "select",
+            type: "selectWithInput",
             default: 2500000,
             label: "Video Bitrate",
-            hint: "Video quality/bitrate for screen recording",
+            hint: "Video quality/bitrate for screen recording. Select a preset or enter a custom value.",
             dependsOn: "enableVideoRecording",
+            formatType: "bitrate",
             options: [
               { value: 1000000, label: "Low (1 Mbps)" },
               { value: 2500000, label: "Medium (2.5 Mbps)" },
@@ -524,11 +525,12 @@ export default class ConfigBuilder {
             ],
           },
           audioBitsPerSecond: {
-            type: "select",
+            type: "selectWithInput",
             default: 128000,
             label: "Audio Bitrate",
-            hint: "Audio quality/bitrate for recordings",
+            hint: "Audio quality/bitrate for recordings. Select a preset or enter a custom value.",
             dependsOn: "enableVideoRecording",
+            formatType: "bitrate",
             options: [
               { value: 64000, label: "Low (64 Kbps)" },
               { value: 128000, label: "Medium (128 Kbps)" },
@@ -536,12 +538,13 @@ export default class ConfigBuilder {
               { value: 320000, label: "Ultra (320 Kbps)" },
             ],
           },
-          maxRecordingFileSize: {
-            type: "select",
+          maxVideoRecordingFileSize: {
+            type: "selectWithInput",
             default: null,
-            label: "Max Recording File Size",
-            hint: "Maximum file size for recordings (auto-stops when reached)",
+            label: "Max Video Recording File Size",
+            hint: "Maximum file size for screen/video recordings (auto-stops when reached). Select a preset or enter a custom value.",
             dependsOn: "enableVideoRecording",
+            formatType: "size",
             options: [
               { value: null, label: "No Limit (use per-file limit)" },
               { value: 5242880, label: "5 MB" },
@@ -551,6 +554,23 @@ export default class ConfigBuilder {
               { value: 104857600, label: "100 MB" },
               { value: 262144000, label: "250 MB" },
               { value: 524288000, label: "500 MB" },
+            ],
+          },
+          maxAudioRecordingFileSize: {
+            type: "selectWithInput",
+            default: null,
+            label: "Max Audio Recording File Size",
+            hint: "Maximum file size for audio recordings (auto-stops when reached). Select a preset or enter a custom value.",
+            dependsOn: "enableAudioRecording",
+            formatType: "size",
+            options: [
+              { value: null, label: "No Limit (use per-file limit)" },
+              { value: 1048576, label: "1 MB" },
+              { value: 5242880, label: "5 MB" },
+              { value: 10485760, label: "10 MB" },
+              { value: 26214400, label: "25 MB" },
+              { value: 52428800, label: "50 MB" },
+              { value: 104857600, label: "100 MB" },
             ],
           },
         },
@@ -3108,6 +3128,9 @@ export default class ConfigBuilder {
       case "select":
         content = this.renderSelect(key, def, isDisabled, dependencyIndicator);
         break;
+      case "selectWithInput":
+        content = this.renderSelectWithInput(key, def, isDisabled, dependencyIndicator);
+        break;
       case "multiSelect":
         content = this.renderMultiSelect(
           key,
@@ -3451,6 +3474,94 @@ export default class ConfigBuilder {
     }>
           ${options}
         </select>
+        <div class="fu-config-builder-hint">${def.hint}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render select dropdown with custom input option
+   * Allows users to either select from presets or enter a custom value
+   */
+  renderSelectWithInput(key, def, isDisabled = false, dependencyIndicator = "") {
+    const currentValue = this.config[key];
+    const isCustomValue = currentValue !== null && !def.options.some(opt => opt.value === currentValue);
+
+    // Add "Custom" option if not already present
+    const optionsWithCustom = [
+      ...def.options,
+      { value: "__custom__", label: "Custom..." }
+    ];
+
+    const options = optionsWithCustom
+      .map(
+        (opt) =>
+          `<option value="${opt.value}" ${
+            (opt.value === "__custom__" && isCustomValue) ||
+            (!isCustomValue && this.config[key] === opt.value) ? "selected" : ""
+          }>${opt.label}</option>`
+      )
+      .join("");
+
+    // Format the current value for display in the input
+    let inputValue = "";
+    let inputUnit = def.inputUnit || "";
+    if (isCustomValue && currentValue !== null) {
+      if (def.formatType === "size") {
+        // Convert bytes to appropriate unit for display
+        const { value, unit } = this.bytesToBestUnit(currentValue);
+        inputValue = value;
+        inputUnit = unit;
+      } else if (def.formatType === "bitrate") {
+        // Convert bps to appropriate unit for display
+        if (currentValue >= 1000000) {
+          inputValue = currentValue / 1000000;
+          inputUnit = "Mbps";
+        } else if (currentValue >= 1000) {
+          inputValue = currentValue / 1000;
+          inputUnit = "Kbps";
+        } else {
+          inputValue = currentValue;
+          inputUnit = "bps";
+        }
+      } else {
+        inputValue = currentValue;
+      }
+    }
+
+    // Unit options based on format type
+    let unitOptions = "";
+    if (def.formatType === "size") {
+      unitOptions = `
+        <option value="bytes" ${inputUnit === "bytes" ? "selected" : ""}>bytes</option>
+        <option value="KB" ${inputUnit === "KB" ? "selected" : ""}>KB</option>
+        <option value="MB" ${inputUnit === "MB" ? "selected" : ""}>MB</option>
+        <option value="GB" ${inputUnit === "GB" ? "selected" : ""}>GB</option>
+      `;
+    } else if (def.formatType === "bitrate") {
+      unitOptions = `
+        <option value="bps" ${inputUnit === "bps" ? "selected" : ""}>bps</option>
+        <option value="Kbps" ${inputUnit === "Kbps" ? "selected" : ""}>Kbps</option>
+        <option value="Mbps" ${inputUnit === "Mbps" ? "selected" : ""}>Mbps</option>
+      `;
+    }
+
+    return `
+      <div class="fu-config-builder-group ${isDisabled ? "disabled" : ""}">
+        <label class="fu-config-builder-label">
+          ${def.label}
+          ${dependencyIndicator}
+          <code>${key}</code>
+        </label>
+        <div class="fu-config-builder-select-with-input" data-option="${key}" data-type="selectWithInput" data-format-type="${def.formatType || ""}">
+          <select class="fu-config-builder-select" data-role="preset" ${isDisabled ? "disabled" : ""}>
+            ${options}
+          </select>
+          <input type="number" class="fu-config-builder-input fu-config-builder-custom-value ${isCustomValue ? "visible" : ""}" data-role="custom-value"
+                 value="${inputValue}" placeholder="Value" ${isDisabled ? "disabled" : ""}
+                 min="0" step="any">
+          ${unitOptions ? `<select class="fu-config-builder-select fu-config-builder-custom-unit ${isCustomValue ? "visible" : ""}" data-role="custom-unit" ${isDisabled ? "disabled" : ""}>${unitOptions}</select>` : ""}
+        </div>
         <div class="fu-config-builder-hint">${def.hint}</div>
       </div>
     `;
@@ -4682,6 +4793,89 @@ export default class ConfigBuilder {
           this.config[select.dataset.option] = select.value;
           this.onConfigChange();
         });
+      });
+
+    // Select with custom input
+    this.element
+      .querySelectorAll('[data-type="selectWithInput"]')
+      .forEach((container) => {
+        const optionKey = container.dataset.option;
+        const formatType = container.dataset.formatType;
+        const presetSelect = container.querySelector('[data-role="preset"]');
+        const customValueInput = container.querySelector('[data-role="custom-value"]');
+        const customUnitSelect = container.querySelector('[data-role="custom-unit"]');
+
+        // Helper to convert value with unit to base unit (bytes or bps)
+        const convertToBaseUnit = (value, unit) => {
+          const numValue = parseFloat(value) || 0;
+          if (formatType === "size") {
+            switch (unit) {
+              case "GB": return numValue * 1024 * 1024 * 1024;
+              case "MB": return numValue * 1024 * 1024;
+              case "KB": return numValue * 1024;
+              default: return numValue;
+            }
+          } else if (formatType === "bitrate") {
+            switch (unit) {
+              case "Mbps": return numValue * 1000000;
+              case "Kbps": return numValue * 1000;
+              default: return numValue;
+            }
+          }
+          return numValue;
+        };
+
+        // Helper to show/hide custom inputs
+        const showCustomInputs = (show) => {
+          if (customValueInput) {
+            customValueInput.classList.toggle("visible", show);
+          }
+          if (customUnitSelect) {
+            customUnitSelect.classList.toggle("visible", show);
+          }
+        };
+
+        // Handle preset selection change
+        presetSelect.addEventListener("change", () => {
+          const selectedValue = presetSelect.value;
+          if (selectedValue === "__custom__") {
+            // Show custom inputs
+            showCustomInputs(true);
+            // Set a default value if empty
+            if (!customValueInput.value) {
+              customValueInput.value = formatType === "bitrate" ? "1" : "10";
+              if (customUnitSelect) {
+                customUnitSelect.value = formatType === "bitrate" ? "Mbps" : "MB";
+              }
+            }
+            // Update config with custom value
+            const unit = customUnitSelect ? customUnitSelect.value : "";
+            this.config[optionKey] = convertToBaseUnit(customValueInput.value, unit);
+          } else {
+            // Hide custom inputs and use preset value
+            showCustomInputs(false);
+            // Handle null value
+            this.config[optionKey] = selectedValue === "null" ? null : parseFloat(selectedValue);
+          }
+          this.onConfigChange();
+        });
+
+        // Handle custom value input change
+        if (customValueInput) {
+          customValueInput.addEventListener("input", () => {
+            const unit = customUnitSelect ? customUnitSelect.value : "";
+            this.config[optionKey] = convertToBaseUnit(customValueInput.value, unit);
+            this.onConfigChange();
+          });
+        }
+
+        // Handle custom unit change
+        if (customUnitSelect) {
+          customUnitSelect.addEventListener("change", () => {
+            this.config[optionKey] = convertToBaseUnit(customValueInput.value, customUnitSelect.value);
+            this.onConfigChange();
+          });
+        }
       });
 
     // Multi-select tags
@@ -7176,7 +7370,8 @@ export default class ConfigBuilder {
       "totalMaxSize",
       "perTypeMaxTotalSize",
       "perFileMaxSizePerType",
-      "maxRecordingFileSize",
+      "maxVideoRecordingFileSize",
+      "maxAudioRecordingFileSize",
     ];
     return sizeKeys.includes(key);
   }
@@ -7261,7 +7456,7 @@ export default class ConfigBuilder {
       return result;
     }
 
-    // Handle single size value (perFileMaxSize, totalMaxSize, maxRecordingFileSize)
+    // Handle single size value (perFileMaxSize, totalMaxSize, maxVideoRecordingFileSize, maxAudioRecordingFileSize)
     if (this.isSizeKey(key) && typeof value === "number") {
       const formatted = this.formatSizeExpression(value);
       // Place comma before the comment

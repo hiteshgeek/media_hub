@@ -106,7 +106,8 @@ export default class FileUploader {
       showRecordingSize: true, // Show approximate file size during recording
       videoBitsPerSecond: 2500000, // Video bitrate in bits per second (default 2.5 Mbps)
       audioBitsPerSecond: 128000, // Audio bitrate in bits per second (default 128 Kbps)
-      maxRecordingFileSize: null, // Max recording file size in bytes (null = no limit, uses maxFileSize if set)
+      maxVideoRecordingFileSize: null, // Max video/screen recording file size in bytes (null = no limit, uses perFileMaxSize if set)
+      maxAudioRecordingFileSize: null, // Max audio recording file size in bytes (null = no limit, uses perFileMaxSize if set)
       externalRecordingToolbarContainer: null, // External element/selector for recording toolbar (for modal/external button modes)
       // Carousel preview options
       enableCarouselPreview: true, // Enable carousel preview modal on file click
@@ -885,9 +886,11 @@ export default class FileUploader {
   calculateEffectiveMaxRecordingSize(recordingType) {
     const limits = [];
 
-    // 1. Explicit maxRecordingFileSize
-    if (this.options.maxRecordingFileSize) {
-      limits.push(this.options.maxRecordingFileSize);
+    // 1. Explicit recording file size limit based on type
+    if (recordingType === 'video' && this.options.maxVideoRecordingFileSize) {
+      limits.push(this.options.maxVideoRecordingFileSize);
+    } else if (recordingType === 'audio' && this.options.maxAudioRecordingFileSize) {
+      limits.push(this.options.maxAudioRecordingFileSize);
     }
 
     // 2. Per-file max size (general)
