@@ -7000,9 +7000,19 @@ export default class ConfigBuilder {
 
     // Extract strings first (to protect them from other replacements)
     // Note: quotes are now escaped as &quot; and &#039;
+    // Handle double-quoted strings
     result = result.replace(/&quot;([^&]|&(?!quot;))*?&quot;/g, (match) => {
       const index = stringPlaceholders.length;
       stringPlaceholders.push(`<span class="code-string">${match}</span>`);
+      return `__STRING_${index}__`;
+    });
+
+    // Handle single-quoted strings (&#039; is escaped single quote)
+    result = result.replace(/&#039;([^&]|&(?!#039;))*?&#039;/g, (match) => {
+      const index = stringPlaceholders.length;
+      // Convert &#039; back to ' for display
+      const displayMatch = match.replace(/&#039;/g, "'");
+      stringPlaceholders.push(`<span class="code-string">${displayMatch}</span>`);
       return `__STRING_${index}__`;
     });
 
