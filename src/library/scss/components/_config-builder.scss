@@ -2904,6 +2904,7 @@ $builder-prefix: "fu-config-builder";
 .#{$builder-prefix}.theme-dark {
   background: #1a202c;
   color: #e2e8f0;
+  color-scheme: dark;
 
   // Header
   .#{$builder-prefix}-header {
@@ -3160,7 +3161,32 @@ $builder-prefix: "fu-config-builder";
   }
 
   .#{$builder-prefix}-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    color-scheme: dark;
+    background-color: #1a202c !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e2e8f0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+
+    option {
+      background: #1a202c !important;
+      color: #e2e8f0 !important;
+    }
+  }
+
+  // Global select fix for all selects in dark mode
+  select {
+    color-scheme: dark;
+    background-color: #1a202c !important;
+    color: #e2e8f0 !important;
+    border-color: #4a5568 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e2e8f0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+
+    option {
+      background: #1a202c !important;
+      color: #e2e8f0 !important;
+    }
   }
 
   // Toggle Styles
@@ -3200,8 +3226,17 @@ $builder-prefix: "fu-config-builder";
   .#{$builder-prefix}-size-slider,
   .#{$builder-prefix}-count-slider,
   .#{$builder-prefix}-type-slider-block {
-    background: #1a202c;
-    border-color: #4a5568;
+    background: #1a202c !important;
+    border-color: #374151 !important;
+  }
+
+  .#{$builder-prefix}-type-slider-header {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+    border-bottom-color: #374151 !important;
+
+    svg {
+      stroke: #818cf8;
+    }
   }
 
   .#{$builder-prefix}-slider-btn {
@@ -3272,7 +3307,7 @@ $builder-prefix: "fu-config-builder";
   }
 
   .#{$builder-prefix}-type-slider-title {
-    color: #e2e8f0;
+    color: #e2e8f0 !important;
   }
 
   // Extensions & Tags
@@ -3996,7 +4031,7 @@ $builder-prefix: "fu-config-builder";
 }
 
 // Dark mode adjustments for pertype components
-.#{$builder-prefix}.dark-mode {
+.#{$builder-prefix}.theme-dark {
   .#{$builder-prefix}-pertype-view-label {
     color: #9ca3af;
   }
@@ -4114,15 +4149,15 @@ $builder-prefix: "fu-config-builder";
     color: #9ca3af;
   }
 
-  // Type slider block dark mode
+  // Type slider block dark mode - using !important to ensure override
   .#{$builder-prefix}-type-slider-block {
-    background: #1f2937;
-    border-color: #374151;
+    background: #1a202c !important;
+    border-color: #374151 !important;
   }
 
   .#{$builder-prefix}-type-slider-header {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
-    border-bottom-color: #374151;
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+    border-bottom-color: #374151 !important;
 
     svg {
       stroke: #818cf8;
@@ -4130,7 +4165,180 @@ $builder-prefix: "fu-config-builder";
   }
 
   .#{$builder-prefix}-type-slider-title {
-    color: #e5e7eb;
+    color: #e5e7eb !important;
+  }
+
+  // Modal subtabs dark mode
+  .#{$builder-prefix}-modal-subtab-btns {
+    border-bottom-color: #374151;
+  }
+
+  .#{$builder-prefix}-modal-subtab-btn {
+    background: transparent;
+    border-color: #374151;
+    color: #a0aec0;
+
+    &:hover {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+
+    &.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: white;
+    }
+  }
+
+  // Fix select option colors in dark mode
+  .#{$builder-prefix}-select option {
+    background: #1a202c !important;
+    color: #e2e8f0 !important;
+  }
+
+  // Global select dark mode fix - ensure all selects have dark options
+  select {
+    background-color: #1a202c !important;
+    color: #e2e8f0 !important;
+    border-color: #4a5568 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+
+    option {
+      background: #1a202c !important;
+      color: #e2e8f0 !important;
+    }
+  }
+
+  // Unit select dark mode fixes
+  .#{$builder-prefix}-unit-select {
+    background: #1a202c !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+
+    option {
+      background: #1a202c;
+      color: #e2e8f0;
+    }
+  }
+
+  // Per-type sliders dark mode - ensure proper styling for all nested elements
+  .#{$builder-prefix}-type-sliders {
+    .#{$builder-prefix}-slider-btn,
+    .#{$builder-prefix}-slider-btn-sm {
+      background: #2d3748;
+      border-color: #4a5568;
+
+      svg {
+        fill: #a0aec0;
+      }
+
+      &:hover {
+        border-color: #6366f1;
+        background: #312e81;
+
+        svg {
+          fill: #818cf8;
+        }
+      }
+    }
+
+    .#{$builder-prefix}-slider-value-input,
+    .#{$builder-prefix}-slider-value-input-sm {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+
+      &:focus {
+        border-color: #6366f1;
+      }
+    }
+
+    .#{$builder-prefix}-slider-labels-sm {
+      color: #718096;
+    }
+
+    // Unit dropdown within type sliders
+    select {
+      background: #1a202c;
+      border-color: #4a5568;
+      color: #e2e8f0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23a0aec0'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+
+      option {
+        background: #1a202c;
+        color: #e2e8f0;
+      }
+    }
+  }
+
+  // "files" label in count sliders
+  .#{$builder-prefix}-slider-unit-label {
+    color: #a0aec0;
+  }
+}
+
+// ============================================================================
+// Modal Subtabs (HTML, CSS, JS tabs within Modal code tab)
+// ============================================================================
+
+.#{$builder-prefix}-modal-subtabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.#{$builder-prefix}-modal-subtab-btns {
+  display: flex;
+  gap: 4px;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.#{$builder-prefix}-modal-subtab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+  }
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #374151;
+  }
+
+  &.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: white;
+
+    svg {
+      stroke: white;
+    }
+  }
+}
+
+.#{$builder-prefix}-modal-subtab-content {
+  display: none;
+
+  &.active {
+    display: block;
   }
 }
 
@@ -4191,115 +4399,6 @@ $builder-prefix: "fu-config-builder";
 
   svg {
     flex-shrink: 0;
-  }
-}
-
-.#{$builder-prefix}-file-badge {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: #e0f2fe;
-  border-radius: 20px;
-  font-size: 13px;
-  color: #0369a1;
-  font-weight: 500;
-
-  &.has-files {
-    display: inline-flex;
-  }
-
-  .badge-separator {
-    color: #94a3b8;
-    font-weight: 400;
-  }
-
-  .badge-count {
-    font-weight: 600;
-  }
-
-  .badge-size {
-    font-weight: 500;
-  }
-}
-
-.#{$builder-prefix}-file-summary {
-  display: none;
-  margin-top: 16px;
-  padding: 16px 20px;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 10px;
-
-  &.has-files {
-    display: block;
-  }
-
-  .summary-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-
-    svg {
-      color: #0284c7;
-    }
-
-    > span {
-      font-weight: 600;
-      color: #0369a1;
-      font-size: 15px;
-    }
-  }
-
-  .summary-stats {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 12px;
-  }
-
-  .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .stat-value {
-    font-weight: 600;
-    color: #1e40af;
-    font-size: 18px;
-  }
-
-  .stat-label {
-    color: #64748b;
-    font-size: 13px;
-  }
-
-  .file-types {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .file-type-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    background: white;
-    border-radius: 20px;
-    font-size: 12px;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-
-    .count {
-      background: #3b82f6;
-      color: white;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-    }
   }
 }
 
@@ -4396,6 +4495,89 @@ $builder-prefix: "fu-config-builder";
 
   &:hover {
     background: #2563eb;
+  }
+}
+
+// Modal size variants
+.#{$builder-prefix}-modal-sm {
+  max-width: 400px;
+}
+
+.#{$builder-prefix}-modal-md {
+  max-width: 600px;
+}
+
+.#{$builder-prefix}-modal-lg {
+  max-width: 800px;
+}
+
+.#{$builder-prefix}-modal-xl {
+  max-width: 1000px;
+}
+
+// Modal info display (shows Size and Bootstrap version)
+.#{$builder-prefix}-modal-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.#{$builder-prefix}-modal-info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  strong {
+    color: #1e40af;
+    font-weight: 600;
+  }
+}
+
+// Empty state for file badge and summary
+.#{$builder-prefix}-file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+
+  .badge-text {
+    font-style: italic;
+  }
+}
+
+.#{$builder-prefix}-file-summary {
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+
+  .summary-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    text-align: center;
+
+    svg {
+      opacity: 0.5;
+    }
+
+    span {
+      font-size: 13px;
+      font-style: italic;
+    }
   }
 }
 

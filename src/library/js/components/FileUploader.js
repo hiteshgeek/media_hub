@@ -94,6 +94,7 @@ export default class FileUploader {
       clearAllButtonClasses: [], // Custom classes for clear-all button (Bootstrap, etc.)
       clearAllButtonElement: null, // External element selector for clear-all (cannot be used with showClearAllButton)
       cleanupOnUnload: true, // Automatically delete uploaded files from server when leaving the page
+      cleanupOnDestroy: false, // Automatically delete uploaded files from server when instance is destroyed
       enableScreenCapture: true, // Enable screenshot capture button
       enableVideoRecording: true, // Enable video recording button
       enableAudioRecording: true, // Enable audio recording button
@@ -3384,11 +3385,56 @@ export default class FileUploader {
       window.removeEventListener("beforeunload", this.beforeUnloadHandler);
     }
 
+    // Cleanup uploaded files from server if cleanupOnDestroy is enabled
+    if (this.options.cleanupOnDestroy) {
+      this.cleanupUploadedFiles();
+    }
+
     // Cleanup carousel
     this.destroyCarousel();
 
     this.wrapper.remove();
     this.files = [];
+  }
+
+  /**
+   * Delete all uploaded files from server
+   * Used by destroy() when cleanupOnDestroy is enabled
+   */
+  cleanupUploadedFiles() {
+    const uploadedFiles = this.files.filter((f) => f.uploaded);
+
+    if (uploadedFiles.length === 0) return;
+
+    // Prepare file data for deletion
+    const fileData = uploadedFiles.map((f) => ({
+      filename: f.serverFilename,
+    }));
+
+    // Build request payload with uploadDir if specified
+    const payload = { files: fileData };
+    if (this.options.uploadDir) {
+      payload.uploadDir = this.options.uploadDir;
+    }
+
+    // Use sendBeacon for reliable cleanup (fire-and-forget)
+    // This ensures cleanup happens even if the page is transitioning
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      });
+      navigator.sendBeacon(this.options.deleteUrl, blob);
+    } else {
+      // Fallback to fetch for browsers without sendBeacon
+      fetch(this.options.deleteUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true, // Allows request to outlive the page
+      }).catch(() => {
+        // Silently fail - cleanup is best-effort
+      });
+    }
   }
 
   // Update selection UI (show/hide selected action buttons and update count)

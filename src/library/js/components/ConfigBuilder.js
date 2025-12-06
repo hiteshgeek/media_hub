@@ -265,6 +265,12 @@ export default class ConfigBuilder {
             label: "Cleanup On Unload",
             hint: "Delete uploaded files from server when leaving the page",
           },
+          cleanupOnDestroy: {
+            type: "boolean",
+            default: false,
+            label: "Cleanup On Destroy",
+            hint: "Delete uploaded files from server when the uploader instance is destroyed",
+          },
         },
       },
 
@@ -1827,7 +1833,38 @@ export default class ConfigBuilder {
 
               <!-- Modal Code Tab (HTML + CSS + JS for modal implementation) -->
               <div class="fu-config-builder-tab-content" id="tab-code-modal">
-                <div class="fu-config-builder-code-cards" id="modal-code-cards"></div>
+                <div class="fu-config-builder-modal-subtabs">
+                  <div class="fu-config-builder-modal-subtab-btns">
+                    <button class="fu-config-builder-modal-subtab-btn active" data-modal-subtab="html">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M4 7h16M4 12h16M4 17h8"/>
+                      </svg>
+                      HTML
+                    </button>
+                    <button class="fu-config-builder-modal-subtab-btn" data-modal-subtab="css">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                      CSS
+                    </button>
+                    <button class="fu-config-builder-modal-subtab-btn" data-modal-subtab="js">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                      </svg>
+                      JavaScript
+                    </button>
+                  </div>
+                  <div class="fu-config-builder-modal-subtab-content active" id="modal-subtab-html">
+                    <div class="fu-config-builder-code-cards" id="modal-html-cards"></div>
+                  </div>
+                  <div class="fu-config-builder-modal-subtab-content" id="modal-subtab-css">
+                    <div class="fu-config-builder-code-cards" id="modal-css-cards"></div>
+                  </div>
+                  <div class="fu-config-builder-modal-subtab-content" id="modal-subtab-js">
+                    <div class="fu-config-builder-code-cards" id="modal-js-cards"></div>
+                  </div>
+                </div>
               </div>
 
               <!-- CSS Variables Tab -->
@@ -3961,6 +3998,32 @@ export default class ConfigBuilder {
         });
       });
 
+    // Modal subtab switching (HTML, CSS, JS within Modal tab)
+    this.element
+      .querySelectorAll(".fu-config-builder-modal-subtab-btn")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const subtab = btn.dataset.modalSubtab;
+
+          // Update button active states
+          this.element
+            .querySelectorAll(".fu-config-builder-modal-subtab-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          // Update subtab content visibility
+          this.element
+            .querySelectorAll(".fu-config-builder-modal-subtab-content")
+            .forEach((content) => content.classList.remove("active"));
+          const targetContent = this.element.querySelector(
+            `#modal-subtab-${subtab}`
+          );
+          if (targetContent) {
+            targetContent.classList.add("active");
+          }
+        });
+      });
+
     // Style color picker inputs
     this.element
       .querySelectorAll(".fu-config-builder-color-picker")
@@ -5356,7 +5419,9 @@ export default class ConfigBuilder {
 
     const jsCardsEl = this.element.querySelector("#js-code-cards");
     const phpCardsEl = this.element.querySelector("#php-code-cards");
-    const modalCardsEl = this.element.querySelector("#modal-code-cards");
+    const modalHtmlCardsEl = this.element.querySelector("#modal-html-cards");
+    const modalCssCardsEl = this.element.querySelector("#modal-css-cards");
+    const modalJsCardsEl = this.element.querySelector("#modal-js-cards");
     const modalTabBtn = this.element.querySelector(".fu-config-builder-modal-tab");
 
     if (jsCardsEl) {
@@ -5379,14 +5444,24 @@ export default class ConfigBuilder {
       modalTabBtn.style.display = hasModalMode ? "" : "none";
     }
 
-    // Update modal code cards
-    if (modalCardsEl) {
-      if (hasModalMode) {
-        modalCardsEl.innerHTML = this.renderCodeCards("modal");
-        this.attachCodeCardEvents(modalCardsEl, "modal");
-      } else {
-        modalCardsEl.innerHTML = "";
+    // Update modal code cards (separate subtabs for HTML, CSS, JS)
+    if (hasModalMode) {
+      if (modalHtmlCardsEl) {
+        modalHtmlCardsEl.innerHTML = this.renderCodeCards("modal-html");
+        this.attachCodeCardEvents(modalHtmlCardsEl, "modal");
       }
+      if (modalCssCardsEl) {
+        modalCssCardsEl.innerHTML = this.renderCodeCards("modal-css");
+        this.attachCodeCardEvents(modalCssCardsEl, "modal");
+      }
+      if (modalJsCardsEl) {
+        modalJsCardsEl.innerHTML = this.renderCodeCards("modal-js");
+        this.attachCodeCardEvents(modalJsCardsEl, "modal");
+      }
+    } else {
+      if (modalHtmlCardsEl) modalHtmlCardsEl.innerHTML = "";
+      if (modalCssCardsEl) modalCssCardsEl.innerHTML = "";
+      if (modalJsCardsEl) modalJsCardsEl.innerHTML = "";
     }
   }
 
@@ -5398,14 +5473,15 @@ export default class ConfigBuilder {
     let html = "";
 
     uploaders.forEach(([id, data]) => {
-      // Skip uploaders without modal mode for modal tab
-      if (type === "modal") {
+      // Skip uploaders without modal mode for modal subtabs
+      if (type.startsWith("modal-")) {
         const displayMode = data.config.displayMode || "inline";
         if (displayMode !== "modal-minimal" && displayMode !== "modal-detailed") {
           return;
         }
-        // For modal type, render special 3-section layout
-        html += this.renderModalCodeSections(id, data);
+        // Render specific modal section (html, css, or js)
+        const section = type.replace("modal-", "");
+        html += this.renderModalCodeSection(id, data, section);
         return;
       }
 
@@ -5471,9 +5547,12 @@ export default class ConfigBuilder {
   }
 
   /**
-   * Render modal code sections (HTML, CSS, JS) with individual copy/download buttons
+   * Render a single modal code section (html, css, or js) as a card
+   * @param {string} id - Uploader ID
+   * @param {Object} data - Uploader data
+   * @param {string} section - Section type: 'html', 'css', or 'js'
    */
-  renderModalCodeSections(id, data) {
+  renderModalCodeSection(id, data, section) {
     const isActive = id === this.activeUploaderId;
     const displayMode = data.config.displayMode || "inline";
     const isMinimal = displayMode === "modal-minimal";
@@ -5491,46 +5570,40 @@ export default class ConfigBuilder {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "") || `uploader`;
 
-    // Get the changed config for the JS section
-    const changedConfig = this.getChangedConfig(data.config);
+    const modeBadge = `<span class="fu-config-builder-mode-badge">${isMinimal ? "Minimal" : "Detailed"} Mode</span>`;
+    const editingBadge = isActive ? ' <span class="fu-config-builder-code-badge">Editing</span>' : "";
 
-    // Generate HTML code
-    const htmlCode = this.generateModalHtmlOnly(varName, data.config);
+    let code, highlightedCode, ext;
 
-    // Generate CSS code
-    const cssCode = this.generateModalCss(isMinimal);
-
-    // Generate JS code
-    const jsCode = this.generateModalJsOnly(varName, data.config, changedConfig);
+    if (section === "html") {
+      code = this.generateModalHtmlOnly(varName, data.config);
+      highlightedCode = this.highlightHtmlCode(code);
+      ext = "html";
+    } else if (section === "css") {
+      code = this.generateModalCss(isMinimal);
+      highlightedCode = this.highlightCssCode(code);
+      ext = "css";
+    } else {
+      const changedConfig = this.getChangedConfig(data.config);
+      code = this.generateModalJsOnly(varName, data.config, changedConfig);
+      highlightedCode = this.highlightJsCode(code);
+      ext = "js";
+    }
 
     return `
-      <div class="fu-config-builder-code-card ${isActive ? "active" : ""}" data-uploader-id="${id}">
-        <div class="fu-config-builder-code-card-header">
-          <span class="fu-config-builder-code-title">${data.name}${
-            isActive
-              ? ' <span class="fu-config-builder-code-badge">Editing</span>'
-              : ""
-          } <span class="fu-config-builder-mode-badge">${isMinimal ? "Minimal" : "Detailed"} Mode</span></span>
-        </div>
-
-        <!-- HTML Section -->
-        <div class="fu-config-builder-code fu-config-builder-modal-section">
+      <div class="fu-config-builder-code-card ${isActive ? "active" : ""}" data-uploader-id="${id}" data-modal-section="${section}">
+        <div class="fu-config-builder-code">
           <div class="fu-config-builder-code-header">
-            <span class="fu-config-builder-code-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <path d="M4 7h16M4 12h16M4 17h8"/>
-              </svg>
-              HTML
-            </span>
+            <span class="fu-config-builder-code-title">${data.name}${editingBadge} ${modeBadge}</span>
             <div class="fu-config-builder-code-actions">
-              <button class="fu-config-builder-code-btn" data-action="copy-section" data-section="html" data-uploader-id="${id}">
+              <button class="fu-config-builder-code-btn" data-action="copy-section" data-section="${section}" data-uploader-id="${id}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                   <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                 </svg>
                 Copy
               </button>
-              <button class="fu-config-builder-code-btn" data-action="download-section" data-section="html" data-uploader-id="${id}" data-filename="${filename}-modal" data-ext="html">
+              <button class="fu-config-builder-code-btn" data-action="download-section" data-section="${section}" data-uploader-id="${id}" data-filename="${filename}-modal" data-ext="${ext}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
@@ -5541,72 +5614,7 @@ export default class ConfigBuilder {
             </div>
           </div>
           <div class="fu-config-builder-code-content">
-            <pre>${this.highlightHtmlCode(htmlCode)}</pre>
-          </div>
-        </div>
-
-        <!-- CSS Section -->
-        <div class="fu-config-builder-code fu-config-builder-modal-section">
-          <div class="fu-config-builder-code-header">
-            <span class="fu-config-builder-code-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-              CSS
-            </span>
-            <div class="fu-config-builder-code-actions">
-              <button class="fu-config-builder-code-btn" data-action="copy-section" data-section="css" data-uploader-id="${id}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                </svg>
-                Copy
-              </button>
-              <button class="fu-config-builder-code-btn" data-action="download-section" data-section="css" data-uploader-id="${id}" data-filename="${filename}-modal" data-ext="css">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Download
-              </button>
-            </div>
-          </div>
-          <div class="fu-config-builder-code-content">
-            <pre>${this.highlightCssCode(cssCode)}</pre>
-          </div>
-        </div>
-
-        <!-- JavaScript Section -->
-        <div class="fu-config-builder-code fu-config-builder-modal-section">
-          <div class="fu-config-builder-code-header">
-            <span class="fu-config-builder-code-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-              </svg>
-              JavaScript
-            </span>
-            <div class="fu-config-builder-code-actions">
-              <button class="fu-config-builder-code-btn" data-action="copy-section" data-section="js" data-uploader-id="${id}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                </svg>
-                Copy
-              </button>
-              <button class="fu-config-builder-code-btn" data-action="download-section" data-section="js" data-uploader-id="${id}" data-filename="${filename}-modal" data-ext="js">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Download
-              </button>
-            </div>
-          </div>
-          <div class="fu-config-builder-code-content">
-            <pre>${this.highlightJsCode(jsCode)}</pre>
+            <pre>${highlightedCode}</pre>
           </div>
         </div>
       </div>
@@ -6258,6 +6266,95 @@ export default class ConfigBuilder {
   }
 
   /**
+   * Get modal button icon SVG based on icon type
+   */
+  getModalButtonIcon(iconType) {
+    if (iconType === 'none') return '';
+    const icons = {
+      upload: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+      plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+      folder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>'
+    };
+    return icons[iconType] || icons.upload;
+  }
+
+  /**
+   * Update modal file info display after files are selected
+   */
+  updateModalFileInfo(wrapper, uploaderId, data, isMinimal) {
+    if (!data.instance) return;
+
+    const files = data.instance.getFiles ? data.instance.getFiles() : [];
+    const fileCount = files.length;
+
+    if (fileCount === 0) return; // Keep the empty state
+
+    // Calculate total size
+    let totalSize = 0;
+    files.forEach(file => {
+      totalSize += file.size || 0;
+    });
+
+    // Format size
+    const formatSize = (bytes) => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    if (isMinimal) {
+      // Update minimal badge
+      const badge = wrapper.querySelector(`[data-file-badge="${uploaderId}"]`);
+      if (badge) {
+        badge.classList.add('has-files');
+        badge.innerHTML = `
+          <span class="badge-count">${fileCount}</span> file${fileCount !== 1 ? 's' : ''}
+          <span class="badge-separator">|</span>
+          <span class="badge-size">${formatSize(totalSize)}</span>
+        `;
+      }
+    } else {
+      // Update detailed summary
+      const summary = wrapper.querySelector(`[data-file-summary="${uploaderId}"]`);
+      if (summary) {
+        // Group files by type
+        const typeGroups = {};
+        files.forEach(file => {
+          const ext = (file.name || '').split('.').pop().toLowerCase();
+          let type = 'Other';
+          if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) type = 'Images';
+          else if (['pdf'].includes(ext)) type = 'PDF';
+          else if (['doc', 'docx', 'txt', 'rtf'].includes(ext)) type = 'Documents';
+          else if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) type = 'Videos';
+          else if (['mp3', 'wav', 'ogg'].includes(ext)) type = 'Audio';
+
+          if (!typeGroups[type]) typeGroups[type] = 0;
+          typeGroups[type]++;
+        });
+
+        const typeBadges = Object.entries(typeGroups)
+          .map(([type, count]) => `<span class="file-type-badge">${type} <span class="count">${count}</span></span>`)
+          .join('');
+
+        summary.classList.add('has-files');
+        summary.innerHTML = `
+          <div class="summary-header">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Files Ready</span>
+          </div>
+          <div class="summary-stats">
+            <div class="stat-item"><span class="stat-value">${fileCount}</span><span class="stat-label">file${fileCount !== 1 ? 's' : ''}</span></div>
+            <div class="stat-item"><span class="stat-value">${formatSize(totalSize)}</span><span class="stat-label">total</span></div>
+          </div>
+          <div class="file-types">${typeBadges}</div>
+        `;
+      }
+    }
+  }
+
+  /**
    * Highlight JS code
    */
   highlightJsCode(code) {
@@ -6834,59 +6931,37 @@ export default class ConfigBuilder {
           const wrapperHasMinimalPreview = existingWrapper.querySelector(".fu-config-builder-modal-minimal-preview") !== null;
 
           // If display mode type changed (inline <-> modal, or minimal <-> detailed), rebuild the entire wrapper
+          // Also rebuild for modal mode when any modal option changes (button text, title, etc.)
           const needsRebuild = (isModalMode !== wrapperHasModalPreview) ||
-                               (isModalMode && wrapperHasModalPreview && (isMinimalMode !== wrapperHasMinimalPreview));
+                               (isModalMode && wrapperHasModalPreview && (isMinimalMode !== wrapperHasMinimalPreview)) ||
+                               isModalMode; // Always rebuild for modal mode to reflect option changes
 
           if (needsRebuild) {
             // Remove the old wrapper and recreate it
             existingWrapper.remove();
             this.createUploaderPreview(previewEl, this.activeUploaderId, activeData);
           } else {
-            // Same mode type, just update the container content
+            // Inline mode - just update the container content
             const uploaderContainer = existingWrapper.querySelector(
               ".fu-config-builder-uploader-container"
             );
             if (uploaderContainer) {
-              // For modal mode, find the container inside the modal
-              const modalContainer = uploaderContainer.querySelector("[data-uploader-container]");
-              const targetContainer = modalContainer || uploaderContainer;
+              uploaderContainer.innerHTML = "";
+              const containerId = `preview-${this.activeUploaderId}-${Date.now()}`;
+              const container = document.createElement("div");
+              container.id = containerId;
+              uploaderContainer.appendChild(container);
 
-              if (modalContainer) {
-                // Modal mode - just recreate the uploader inside modal
-                const containerId = `preview-${this.activeUploaderId}-${Date.now()}`;
-                modalContainer.id = containerId;
-                modalContainer.innerHTML = "";
-
-                if (window.FileUploader) {
-                  const previewConfig = {
-                    ...activeData.config,
-                    autoFetchConfig: false,
-                  };
-                  activeData.instance = new window.FileUploader(
-                    `#${containerId}`,
-                    previewConfig
-                  );
-                  activeData.containerId = containerId;
-                }
-              } else {
-                // Inline mode - clear and recreate
-                uploaderContainer.innerHTML = "";
-                const containerId = `preview-${this.activeUploaderId}-${Date.now()}`;
-                const container = document.createElement("div");
-                container.id = containerId;
-                uploaderContainer.appendChild(container);
-
-                if (window.FileUploader) {
-                  const previewConfig = {
-                    ...activeData.config,
-                    autoFetchConfig: false,
-                  };
-                  activeData.instance = new window.FileUploader(
-                    `#${containerId}`,
-                    previewConfig
-                  );
-                  activeData.containerId = containerId;
-                }
+              if (window.FileUploader) {
+                const previewConfig = {
+                  ...activeData.config,
+                  autoFetchConfig: false,
+                };
+                activeData.instance = new window.FileUploader(
+                  `#${containerId}`,
+                  previewConfig
+                );
+                activeData.containerId = containerId;
               }
             }
           }
@@ -6918,7 +6993,14 @@ export default class ConfigBuilder {
     if (isModalMode) {
       const modalId = `preview-modal-${id}-${Date.now()}`;
       const buttonText = data.config.modalButtonText || "Upload Files";
+      const buttonIcon = data.config.modalButtonIcon || "upload";
+      const modalTitle = data.config.modalTitle || "Upload Files";
+      const modalSize = data.config.modalSize || "lg";
+      const bootstrapVersion = data.config.bootstrapVersion || "5";
       const isMinimal = displayMode === "modal-minimal";
+
+      // Get the button icon SVG
+      const buttonIconSvg = this.getModalButtonIcon(buttonIcon);
 
       wrapper.innerHTML = `
         <div class="fu-config-builder-uploader-header">
@@ -6932,37 +7014,31 @@ export default class ConfigBuilder {
           }
         </div>
         <div class="fu-config-builder-uploader-container fu-config-builder-modal-preview">
+          <div class="fu-config-builder-modal-info">
+            <span class="fu-config-builder-modal-info-item">Size: <strong>${modalSize.toUpperCase()}</strong></span>
+            <span class="fu-config-builder-modal-info-item">Bootstrap: <strong>v${bootstrapVersion}</strong></span>
+          </div>
           ${isMinimal ? `
             <div class="fu-config-builder-modal-minimal-preview">
               <button type="button" class="fu-config-builder-modal-btn" data-modal-id="${modalId}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                ${buttonIconSvg}
                 ${buttonText}
               </button>
-              <span class="fu-config-builder-file-badge has-files">
-                <span class="badge-count">3</span> files
-                <span class="badge-separator">|</span>
-                <span class="badge-size">1.2 MB</span>
+              <span class="fu-config-builder-file-badge" data-file-badge="${id}">
+                <span class="badge-text">No files selected</span>
               </span>
             </div>
             <p class="fu-config-builder-preview-hint">Click button to open modal with FileUploader</p>
           ` : `
             <div class="fu-config-builder-modal-detailed-preview">
               <button type="button" class="fu-config-builder-modal-btn" data-modal-id="${modalId}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                ${buttonIconSvg}
                 ${buttonText}
               </button>
-              <div class="fu-config-builder-file-summary has-files">
-                <div class="summary-header">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                  <span>Files Ready</span>
-                </div>
-                <div class="summary-stats">
-                  <div class="stat-item"><span class="stat-value">3</span><span class="stat-label">files</span></div>
-                  <div class="stat-item"><span class="stat-value">1.2 MB</span><span class="stat-label">total</span></div>
-                </div>
-                <div class="file-types">
-                  <span class="file-type-badge">Images <span class="count">2</span></span>
-                  <span class="file-type-badge">PDF <span class="count">1</span></span>
+              <div class="fu-config-builder-file-summary" data-file-summary="${id}">
+                <div class="summary-empty">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                  <span>No files selected yet</span>
                 </div>
               </div>
             </div>
@@ -6970,9 +7046,9 @@ export default class ConfigBuilder {
           `}
           <!-- Hidden modal container for actual FileUploader -->
           <div class="fu-config-builder-modal-hidden" id="${modalId}" style="display: none;">
-            <div class="fu-config-builder-modal-dialog">
+            <div class="fu-config-builder-modal-dialog fu-config-builder-modal-${modalSize}">
               <div class="fu-config-builder-modal-header">
-                <h5>${data.config.modalTitle || "Upload Files"}</h5>
+                <h5>${modalTitle}</h5>
                 <button type="button" class="fu-config-builder-modal-close" data-close-modal="${modalId}">&times;</button>
               </div>
               <div class="fu-config-builder-modal-body">
@@ -7003,6 +7079,7 @@ export default class ConfigBuilder {
         const previewConfig = {
           ...data.config,
           autoFetchConfig: false,
+          cleanupOnDestroy: true, // Clean up files when preview is refreshed
         };
         data.instance = new window.FileUploader(`#${containerId}`, previewConfig);
         data.containerId = containerId;
@@ -7022,6 +7099,8 @@ export default class ConfigBuilder {
       modalCloseBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
           modal.style.display = "none";
+          // Update file info when modal closes
+          this.updateModalFileInfo(wrapper, id, data, isMinimal);
         });
       });
 
@@ -7030,6 +7109,8 @@ export default class ConfigBuilder {
         modal.addEventListener("click", (e) => {
           if (e.target === modal) {
             modal.style.display = "none";
+            // Update file info when modal closes
+            this.updateModalFileInfo(wrapper, id, data, isMinimal);
           }
         });
       }
@@ -7068,6 +7149,7 @@ export default class ConfigBuilder {
         const previewConfig = {
           ...data.config,
           autoFetchConfig: false,
+          cleanupOnDestroy: true, // Clean up files when preview is refreshed
         };
         data.instance = new window.FileUploader(`#${containerId}`, previewConfig);
         data.containerId = containerId;
