@@ -7472,6 +7472,11 @@ export default class ConfigBuilder {
           if (mediaButtons.includes('audio')) {
             previewConfig.enableAudioRecording = true;
           }
+
+          // Set external recording toolbar container for video/audio recording
+          // This shows recording controls (pause, stop, etc.) next to the media capture buttons
+          // Use a selector string so it works even after DOM updates
+          previewConfig.externalRecordingToolbarContainer = `.file-uploader-capture-container[data-uploader-id="${id}"]`;
         }
 
         data.instance = new window.FileUploader(`#${containerId}`, previewConfig);

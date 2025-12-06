@@ -1,0 +1,2 @@
+- When screen or audio recording goes beyond the allowed limit (file size), stop automatically.
+- When the file count limit for such files is reached, stop recording immediately or disable the buttons.

@@ -103,6 +103,7 @@ export default class FileUploader {
       recordingCountdownDuration: 3, // Countdown duration before recording starts in seconds (default 3)
       enableMicrophoneAudio: true, // Enable microphone audio recording
       enableSystemAudio: true, // Enable system audio recording
+      externalRecordingToolbarContainer: null, // External element/selector for recording toolbar (for modal/external button modes)
       // Carousel preview options
       enableCarouselPreview: true, // Enable carousel preview modal on file click
       carouselAutoPreload: true, // Auto-preload files in carousel (true, false, or array of types like ['image', 'video'])

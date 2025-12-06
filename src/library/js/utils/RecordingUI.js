@@ -13,6 +13,73 @@ export default class RecordingUI {
     this.recordingToolbarButtons = null;
     this.recordingTimerInterval = null;
     this.recordingType = null; // 'video' or 'audio'
+    this.externalContainerButtons = null; // Original buttons in external container to hide during recording
+    this.externalRecordingIndicator = null; // Recording indicator for external container
+  }
+
+  /**
+   * Get the container for recording toolbar
+   * Uses external container if specified, otherwise internal captureButtonContainer
+   * @returns {HTMLElement|null}
+   */
+  getToolbarContainer() {
+    const externalContainer = this.uploader.options.externalRecordingToolbarContainer;
+    if (externalContainer) {
+      // Support both string selector and element reference
+      if (typeof externalContainer === 'string') {
+        const el = document.querySelector(externalContainer);
+        if (el) return el;
+      } else if (externalContainer instanceof HTMLElement && document.body.contains(externalContainer)) {
+        // Verify element is still in DOM
+        return externalContainer;
+      }
+    }
+    return this.uploader.captureButtonContainer;
+  }
+
+  /**
+   * Check if using external container
+   * @returns {boolean}
+   */
+  isUsingExternalContainer() {
+    return !!this.uploader.options.externalRecordingToolbarContainer;
+  }
+
+  /**
+   * Hide original buttons in the container before showing recording toolbar
+   * @param {HTMLElement} container - The toolbar container
+   */
+  hideOriginalButtons(container) {
+    if (this.isUsingExternalContainer() && container) {
+      // Find all capture buttons in the external container and hide them
+      const captureButtons = container.querySelectorAll('.file-uploader-capture-btn');
+      this.externalContainerButtons = Array.from(captureButtons);
+
+      // Also find and hide the modal trigger button (sibling of the container)
+      const parent = container.parentElement;
+      if (parent) {
+        const modalBtn = parent.querySelector('.fu-config-builder-modal-btn');
+        if (modalBtn) {
+          this.externalContainerButtons.push(modalBtn);
+        }
+      }
+
+      this.externalContainerButtons.forEach(btn => {
+        btn.style.display = 'none';
+      });
+    }
+  }
+
+  /**
+   * Show original buttons in the container after recording stops
+   */
+  showOriginalButtons() {
+    if (this.externalContainerButtons) {
+      this.externalContainerButtons.forEach(btn => {
+        btn.style.display = '';
+      });
+      this.externalContainerButtons = null;
+    }
   }
 
   /**
@@ -59,8 +126,11 @@ export default class RecordingUI {
       this.recordingToolbar.remove();
     }
 
-    const captureContainer = this.uploader.captureButtonContainer;
+    const captureContainer = this.getToolbarContainer();
     if (!captureContainer) return;
+
+    // Hide original buttons in external container
+    this.hideOriginalButtons(captureContainer);
 
     this.recordingType = 'video';
 
@@ -167,8 +237,11 @@ export default class RecordingUI {
       this.recordingToolbar.remove();
     }
 
-    const captureContainer = this.uploader.captureButtonContainer;
+    const captureContainer = this.getToolbarContainer();
     if (!captureContainer) return;
+
+    // Hide original buttons in external container
+    this.hideOriginalButtons(captureContainer);
 
     this.recordingType = 'audio';
 
@@ -248,6 +321,8 @@ export default class RecordingUI {
       });
       this.recordingToolbarButtons = null;
     }
+    // Restore original buttons in external container
+    this.showOriginalButtons();
     this.recordingType = null;
   }
 
@@ -258,7 +333,7 @@ export default class RecordingUI {
     if (!this.uploader.videoRecorder) return;
 
     const status = this.uploader.videoRecorder.getRecordingStatus();
-    const pauseBtn = this.uploader.captureButtonContainer?.querySelector('[data-action="pause"]');
+    const pauseBtn = this.getToolbarContainer()?.querySelector('[data-action="pause"]');
 
     if (status.isPaused) {
       this.uploader.videoRecorder.resumeRecording();
@@ -284,7 +359,7 @@ export default class RecordingUI {
     if (!this.uploader.audioRecorder) return;
 
     const status = this.uploader.audioRecorder.getRecordingStatus();
-    const pauseBtn = this.uploader.captureButtonContainer?.querySelector('[data-action="pause"]');
+    const pauseBtn = this.getToolbarContainer()?.querySelector('[data-action="pause"]');
 
     if (status.isPaused) {
       this.uploader.audioRecorder.resumeRecording();
@@ -310,7 +385,7 @@ export default class RecordingUI {
     if (!this.uploader.videoRecorder) return;
 
     const enabled = this.uploader.videoRecorder.toggleSystemAudio();
-    const btn = this.uploader.captureButtonContainer?.querySelector('[data-action="system-audio"]');
+    const btn = this.getToolbarContainer()?.querySelector('[data-action="system-audio"]');
 
     if (btn) {
       const iconName = enabled ? "system_sound" : "system_sound_mute";
@@ -327,7 +402,7 @@ export default class RecordingUI {
     if (!this.uploader.audioRecorder) return;
 
     const enabled = this.uploader.audioRecorder.toggleSystemAudio();
-    const btn = this.uploader.captureButtonContainer?.querySelector('[data-action="system-audio"]');
+    const btn = this.getToolbarContainer()?.querySelector('[data-action="system-audio"]');
 
     if (btn) {
       const iconName = enabled ? "system_sound" : "system_sound_mute";
@@ -344,7 +419,7 @@ export default class RecordingUI {
     if (!this.uploader.videoRecorder) return;
 
     const enabled = this.uploader.videoRecorder.toggleMicrophoneAudio();
-    const btn = this.uploader.captureButtonContainer?.querySelector('[data-action="microphone"]');
+    const btn = this.getToolbarContainer()?.querySelector('[data-action="microphone"]');
 
     if (btn) {
       const iconName = enabled ? "mic" : "mic_mute";
@@ -362,15 +437,23 @@ export default class RecordingUI {
       const recorder = this.recordingType === 'audio' ? this.uploader.audioRecorder : this.uploader.videoRecorder;
 
       if (recorder) {
-        const timeElement = this.uploader.recordingIndicator?.querySelector(
-          ".file-uploader-recording-time"
-        );
-        if (timeElement) {
-          const elapsed = recorder.getRecordingDuration();
-          const maxSeconds = this.recordingType === 'audio'
-            ? Math.floor(this.uploader.options.maxAudioRecordingDuration)
-            : Math.floor(this.uploader.options.maxVideoRecordingDuration);
+        const elapsed = recorder.getRecordingDuration();
+        const maxSeconds = this.recordingType === 'audio'
+          ? Math.floor(this.uploader.options.maxAudioRecordingDuration)
+          : Math.floor(this.uploader.options.maxVideoRecordingDuration);
 
+        // Update time on all recording indicators (internal and external)
+        const timeElements = [];
+
+        // Internal recording indicator
+        const internalTimeEl = this.uploader.recordingIndicator?.querySelector(".file-uploader-recording-time");
+        if (internalTimeEl) timeElements.push(internalTimeEl);
+
+        // External recording indicator
+        const externalTimeEl = this.externalRecordingIndicator?.querySelector(".file-uploader-recording-time");
+        if (externalTimeEl) timeElements.push(externalTimeEl);
+
+        timeElements.forEach(timeElement => {
           // Check if we should show remaining time or elapsed/total
           const showRemaining = timeElement.dataset.showRemaining === "true";
 
@@ -393,7 +476,7 @@ export default class RecordingUI {
           }
 
           timeElement.textContent = timeText;
-        }
+        });
       }
     }, 1000);
   }
@@ -467,13 +550,63 @@ export default class RecordingUI {
   }
 
   /**
+   * Create an external recording indicator for the external toolbar container
+   * @param {HTMLElement} container - The external container
+   */
+  createExternalRecordingIndicator(container) {
+    if (this.externalRecordingIndicator) {
+      this.externalRecordingIndicator.remove();
+    }
+
+    const maxSeconds = this.recordingType === 'audio'
+      ? Math.floor(this.uploader.options.maxAudioRecordingDuration)
+      : Math.floor(this.uploader.options.maxVideoRecordingDuration);
+    const totalMinutes = Math.floor(maxSeconds / 60);
+    const totalSeconds = maxSeconds % 60;
+    const maxTimeStr = `${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
+
+    this.externalRecordingIndicator = document.createElement("div");
+    this.externalRecordingIndicator.className = "file-uploader-recording-indicator";
+    this.externalRecordingIndicator.innerHTML = `
+      <span class="file-uploader-recording-dot"></span>
+      <span class="file-uploader-recording-time">00:00 / ${maxTimeStr}</span>
+    `;
+
+    // Prevent click propagation
+    this.externalRecordingIndicator.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    // Make time element clickable to toggle time display format
+    const timeElement = this.externalRecordingIndicator.querySelector(".file-uploader-recording-time");
+    if (timeElement) {
+      timeElement.style.cursor = "pointer";
+      timeElement.setAttribute("data-tooltip-text", "Click to toggle time display");
+      timeElement.setAttribute("data-tooltip-position", "top");
+      timeElement.dataset.showRemaining = "false";
+      timeElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        timeElement.dataset.showRemaining = timeElement.dataset.showRemaining === "false" ? "true" : "false";
+      });
+    }
+
+    // Insert at the beginning of the container (before toolbar buttons)
+    container.insertBefore(this.externalRecordingIndicator, container.firstChild);
+  }
+
+  /**
    * Show recording indicator
    */
   showRecordingIndicator() {
-    if (this.uploader.recordingIndicator) {
+    if (this.isUsingExternalContainer()) {
+      const container = this.getToolbarContainer();
+      if (container) {
+        this.createExternalRecordingIndicator(container);
+      }
+    } else if (this.uploader.recordingIndicator) {
       this.uploader.recordingIndicator.style.display = "flex";
-      this.startRecordingTimer();
     }
+    this.startRecordingTimer();
   }
 
   /**
@@ -481,6 +614,14 @@ export default class RecordingUI {
    */
   hideRecordingIndicator() {
     this.stopRecordingTimer();
+
+    // Remove external recording indicator
+    if (this.externalRecordingIndicator) {
+      this.externalRecordingIndicator.remove();
+      this.externalRecordingIndicator = null;
+    }
+
+    // Hide internal recording indicator
     if (this.uploader.recordingIndicator) {
       this.uploader.recordingIndicator.style.display = "none";
 
