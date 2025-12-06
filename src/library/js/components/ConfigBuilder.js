@@ -7440,7 +7440,22 @@ export default class ConfigBuilder {
     const stringPlaceholders = [];
     const commentPlaceholders = [];
 
-    // Extract strings first (to protect them from other replacements)
+    // Extract comments FIRST (before strings) so string placeholders don't end up inside comments
+    // Extract block comments (/** ... */ or /* ... */)
+    result = result.replace(/(\/\*[\s\S]*?\*\/)/g, (match) => {
+      const index = commentPlaceholders.length;
+      commentPlaceholders.push(`<span class="code-comment">${match}</span>`);
+      return `__COMMENT_${index}__`;
+    });
+
+    // Extract single line comments
+    result = result.replace(/(\/\/.*$)/gm, (match) => {
+      const index = commentPlaceholders.length;
+      commentPlaceholders.push(`<span class="code-comment">${match}</span>`);
+      return `__COMMENT_${index}__`;
+    });
+
+    // Extract strings (after comments are extracted)
     // Note: quotes are now escaped as &quot; and &#039;
     // Handle double-quoted strings
     result = result.replace(/&quot;([^&]|&(?!quot;))*?&quot;/g, (match) => {
@@ -7456,13 +7471,6 @@ export default class ConfigBuilder {
       const displayMatch = match.replace(/&#039;/g, "'");
       stringPlaceholders.push(`<span class="code-string">${displayMatch}</span>`);
       return `__STRING_${index}__`;
-    });
-
-    // Extract comments
-    result = result.replace(/(\/\/.*$)/gm, (match) => {
-      const index = commentPlaceholders.length;
-      commentPlaceholders.push(`<span class="code-comment">${match}</span>`);
-      return `__COMMENT_${index}__`;
     });
 
     // Now apply other highlighting
@@ -7499,14 +7507,7 @@ export default class ConfigBuilder {
     const stringPlaceholders = [];
     const commentPlaceholders = [];
 
-    // Extract strings first (single quotes for PHP)
-    // Note: quotes are now escaped as &#039;
-    result = result.replace(/&#039;([^&]|&(?!#039;))*?&#039;/g, (match) => {
-      const index = stringPlaceholders.length;
-      stringPlaceholders.push(`<span class="code-string">${match}</span>`);
-      return `__STRING_${index}__`;
-    });
-
+    // Extract comments FIRST (before strings) so string placeholders don't end up inside comments
     // Extract block comments
     result = result.replace(/(\/\*\*[\s\S]*?\*\/)/g, (match) => {
       const index = commentPlaceholders.length;
@@ -7519,6 +7520,14 @@ export default class ConfigBuilder {
       const index = commentPlaceholders.length;
       commentPlaceholders.push(`<span class="code-comment">${match}</span>`);
       return `__COMMENT_${index}__`;
+    });
+
+    // Extract strings (single quotes for PHP) - after comments are extracted
+    // Note: quotes are now escaped as &#039;
+    result = result.replace(/&#039;([^&]|&(?!#039;))*?&#039;/g, (match) => {
+      const index = stringPlaceholders.length;
+      stringPlaceholders.push(`<span class="code-string">${match}</span>`);
+      return `__STRING_${index}__`;
     });
 
     // Now apply other highlighting

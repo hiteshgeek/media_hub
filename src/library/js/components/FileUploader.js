@@ -3075,15 +3075,23 @@ export default class FileUploader {
     // Add capture indicator if this is a captured/recorded file
     const captureIndicator =
       fileObj.captureType === "screenshot"
-        ? `<div class="file-uploader-capture-indicator" title="Captured Screenshot">
+        ? `<div class="file-uploader-capture-indicator" data-tooltip-text="Captured Screenshot" data-tooltip-position="left">
               ${getIcon("camera")}
            </div>`
+        : fileObj.captureType === "fullpage-screenshot"
+        ? `<div class="file-uploader-capture-indicator" data-tooltip-text="Full Page Capture" data-tooltip-position="left">
+              ${getIcon("fullpage_capture")}
+           </div>`
+        : fileObj.captureType === "region-screenshot"
+        ? `<div class="file-uploader-capture-indicator" data-tooltip-text="Region Capture" data-tooltip-position="left">
+              ${getIcon("region_capture")}
+           </div>`
         : fileObj.captureType === "recording"
-        ? `<div class="file-uploader-capture-indicator" title="Recorded Video">
+        ? `<div class="file-uploader-capture-indicator" data-tooltip-text="Recorded Video" data-tooltip-position="left">
               ${getIcon("video")}
            </div>`
         : fileObj.captureType === "audio_recording"
-        ? `<div class="file-uploader-capture-indicator" title="Recorded Audio">
+        ? `<div class="file-uploader-capture-indicator" data-tooltip-text="Recorded Audio" data-tooltip-position="left">
               ${getIcon("audio")}
            </div>`
         : "";
@@ -3144,6 +3152,9 @@ export default class FileUploader {
     preview.appendChild(previewInner);
     preview.appendChild(info);
     this.previewContainer.appendChild(preview);
+
+    // Initialize tooltips for capture indicator
+    Tooltip.initAll(preview);
 
     // Attach delete event
     const deleteBtn = preview.querySelector(".file-uploader-delete");

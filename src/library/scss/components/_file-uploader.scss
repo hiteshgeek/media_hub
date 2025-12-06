@@ -1840,7 +1840,8 @@ $component-prefix: $file-uploader-prefix !default;
 // ============================================================================
 
 .#{$component-prefix}-capture-indicator {
-  position: absolute;
+  // Override .has-tooltip position:relative with !important
+  position: absolute !important;
   top: var(--fu-spacing-sm);
   right: var(--fu-spacing-sm);
   width: 25px;
@@ -1859,6 +1860,7 @@ $component-prefix: $file-uploader-prefix !default;
   svg {
     width: 15px;
     aspect-ratio: 1;
+    fill: currentColor;
   }
 }
 
