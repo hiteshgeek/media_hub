@@ -6149,42 +6149,44 @@ export default class ConfigBuilder {
   }
 
   /**
-   * Generate a comment block showing default values for changed options
-   * @param {Object} changedConfig - The changed configuration values
+   * Generate a comment block showing ALL default configuration values
+   * @param {Object} changedConfig - The changed configuration values (used to mark which are changed)
    * @param {string} language - 'js' or 'php'
-   * @returns {string} - Comment block with default values
+   * @returns {string} - Comment block with all default values
    */
   generateDefaultsComment(changedConfig, language = "js") {
-    const entries = Object.entries(changedConfig);
-    if (entries.length === 0) return "";
-
     const defaults = this.getDefaultConfig();
+    const changedKeys = Object.keys(changedConfig);
     const commentLines = [];
 
-    entries.forEach(([key]) => {
-      if (defaults.hasOwnProperty(key)) {
-        const defaultValue = defaults[key];
-        const formattedDefault = this.formatDefaultValueForComment(key, defaultValue, language);
-        commentLines.push(`${key}: ${formattedDefault}`);
-      }
+    // Show ALL default values
+    Object.entries(defaults).forEach(([key, defaultValue]) => {
+      const formattedDefault = this.formatDefaultValueForComment(key, defaultValue, language);
+      // Mark changed values with an indicator
+      const marker = changedKeys.includes(key) ? " // <- changed" : "";
+      commentLines.push(`${key}: ${formattedDefault}${marker}`);
     });
 
     if (commentLines.length === 0) return "";
 
     if (language === "php") {
       let comment = "/**\n";
-      comment += " * Default values for reference:\n";
+      comment += " * Default configuration values for reference:\n";
+      comment += " * [\n";
       commentLines.forEach(line => {
         comment += ` *   ${line}\n`;
       });
+      comment += " * ]\n";
       comment += " */\n\n";
       return comment;
     } else {
       let comment = "/**\n";
-      comment += " * Default values for reference:\n";
+      comment += " * Default configuration values for reference:\n";
+      comment += " * {\n";
       commentLines.forEach(line => {
-        comment += ` *   ${line}\n`;
+        comment += ` *   ${line},\n`;
       });
+      comment += " * }\n";
       comment += " */\n";
       return comment;
     }
