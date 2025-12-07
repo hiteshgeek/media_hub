@@ -179,30 +179,73 @@ export class CaptureButtonBuilder {
    * Create recording indicator element
    */
   createRecordingIndicator() {
+    const options = this.uploader.options;
+    console.log('[CaptureButtonBuilder] createRecordingIndicator - options.recordingTimeDefaultView:', options.recordingTimeDefaultView);
+    const showTime = options.showRecordingTime !== false;
+    const showLimit = options.showRecordingLimit !== false;
+    const showSize = options.showRecordingSize !== false;
+    const enableToggle = options.recordingTimeClickToggle !== false;
+    const defaultView = options.recordingTimeDefaultView || "elapsed";
+    console.log('[CaptureButtonBuilder] defaultView resolved to:', defaultView);
+
+    // Calculate max duration for display
+    const maxVideoSec = Math.floor(options.maxVideoRecordingDuration || 300);
+    const maxMins = Math.floor(maxVideoSec / 60);
+    const maxSecs = maxVideoSec % 60;
+    const maxTimeStr = `${String(maxMins).padStart(2, "0")}:${String(maxSecs).padStart(2, "0")}`;
+
+    // Determine timer format for CSS width
+    let timerFormat = "elapsed"; // default: just elapsed time
+    if (showTime && showLimit && maxVideoSec > 0) {
+      timerFormat = defaultView === "remaining" ? "remaining-limit" : "elapsed-limit";
+    }
+
+    // Build initial time display
+    let timeDisplay = "";
+    if (showTime) {
+      if (defaultView === "remaining" && showLimit && maxVideoSec > 0) {
+        timeDisplay = `-${maxTimeStr} / ${maxTimeStr}`;
+      } else if (showLimit && maxVideoSec > 0) {
+        timeDisplay = `00:00 / ${maxTimeStr}`;
+      } else {
+        timeDisplay = "00:00";
+      }
+    }
+
     this.uploader.recordingIndicator = document.createElement("div");
     this.uploader.recordingIndicator.className = "file-uploader-recording-indicator";
     this.uploader.recordingIndicator.style.display = "none";
-    const showSize = this.uploader.options.showRecordingSize;
-    this.uploader.recordingIndicator.innerHTML = `
-      <span class="file-uploader-recording-dot"></span>
-      <span class="file-uploader-recording-time">00:00 / 05:00</span>
-      ${showSize ? '<span class="file-uploader-recording-size">~0 B</span>' : ""}
-    `;
+
+    let innerHTML = '<span class="file-uploader-recording-dot"></span>';
+    if (showTime) {
+      innerHTML += `<span class="file-uploader-recording-time" data-timer-format="${timerFormat}">${timeDisplay}</span>`;
+    }
+    if (showSize) {
+      innerHTML += '<span class="file-uploader-recording-size">~0 B</span>';
+    }
+    this.uploader.recordingIndicator.innerHTML = innerHTML;
+
     this.uploader.recordingIndicator.addEventListener("click", (e) => {
       e.stopPropagation();
     });
 
+    // Make time element clickable to toggle time display format (if enabled and limit is shown)
     const timeElement = this.uploader.recordingIndicator.querySelector(".file-uploader-recording-time");
-    if (timeElement) {
+    if (timeElement && enableToggle && showLimit && maxVideoSec > 0) {
       timeElement.style.cursor = "pointer";
       timeElement.classList.add("has-tooltip");
       timeElement.setAttribute("data-tooltip", "Click to toggle time display");
       timeElement.setAttribute("data-tooltip-position", "top");
-      timeElement.dataset.showRemaining = "false";
+      timeElement.dataset.showRemaining = defaultView === "remaining" ? "true" : "false";
       timeElement.addEventListener("click", (e) => {
         e.stopPropagation();
-        timeElement.dataset.showRemaining = timeElement.dataset.showRemaining === "false" ? "true" : "false";
+        const isRemaining = timeElement.dataset.showRemaining === "false";
+        timeElement.dataset.showRemaining = isRemaining ? "true" : "false";
+        // Update timer format for CSS width
+        timeElement.dataset.timerFormat = isRemaining ? "remaining-limit" : "elapsed-limit";
       });
+    } else if (timeElement) {
+      timeElement.dataset.showRemaining = defaultView === "remaining" ? "true" : "false";
     }
 
     this.uploader.captureButtonContainer.appendChild(this.uploader.recordingIndicator);

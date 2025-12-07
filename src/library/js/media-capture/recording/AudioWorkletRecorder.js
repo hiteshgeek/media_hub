@@ -681,6 +681,15 @@ export default class AudioWorkletRecorder {
   }
 
   /**
+   * Cancel recording without returning a file (cleanup only)
+   * Used when recording needs to be stopped due to config changes
+   */
+  cancelRecording() {
+    this.isRecording = false;
+    this.cleanup();
+  }
+
+  /**
    * Check if audio recording is supported
    * @returns {boolean}
    */

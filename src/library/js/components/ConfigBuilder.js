@@ -6307,6 +6307,8 @@ export default class ConfigBuilder {
           data.fileChangeObserver = null;
         }
         if (data.instance && typeof data.instance.destroy === "function") {
+          // Stop any active recordings before destroying
+          this.cancelActiveRecordings(data.instance);
           data.instance.destroy();
         }
         data.instance = null;
@@ -6333,6 +6335,8 @@ export default class ConfigBuilder {
           activeData.instance &&
           typeof activeData.instance.destroy === "function"
         ) {
+          // Stop any active recordings before destroying
+          this.cancelActiveRecordings(activeData.instance);
           activeData.instance.destroy();
         }
         activeData.instance = null;
@@ -6392,6 +6396,31 @@ export default class ConfigBuilder {
     // Apply theme to newly created uploaders
     const effectiveTheme = this.getEffectiveThemeMode();
     this.applyThemeToUploaders(effectiveTheme);
+  }
+
+  /**
+   * Cancel any active recordings on an uploader instance (without saving files)
+   * @param {Object} instance - The FileUploader instance
+   */
+  cancelActiveRecordings(instance) {
+    if (!instance) return;
+
+    try {
+      // Cancel video recording if active (without saving file)
+      if (instance.captureManager?.videoRecorder?.isRecording) {
+        instance.captureManager.videoRecorder.cancelRecording();
+        instance.recordingUI?.cleanup();
+      }
+
+      // Cancel audio recording if active (without saving file)
+      if (instance.captureManager?.audioRecorder?.isRecording) {
+        instance.captureManager.audioRecorder.cancelRecording();
+        instance.recordingUI?.cleanup();
+      }
+    } catch (error) {
+      // Silently handle errors during cleanup
+      console.warn('Error cancelling active recordings:', error);
+    }
   }
 
   /**

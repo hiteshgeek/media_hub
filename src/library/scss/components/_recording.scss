@@ -78,11 +78,39 @@
 }
 
 .file-uploader-recording-time {
+  // Base styles for all timer formats
+  text-align: center;
   font-variant-numeric: tabular-nums;
+  font-family: var(--fu-font-family-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  letter-spacing: -0.5px;
+
+  // Timer format: elapsed only (00:00) - smallest width
+  &[data-timer-format="elapsed"] {
+    min-width: 45px;
+  }
+
+  // Timer format: elapsed with limit (00:00 / 05:00) - medium width
+  &[data-timer-format="elapsed-limit"] {
+    min-width: 95px;
+  }
+
+  // Timer format: remaining with limit (-05:00 / 05:00) - largest width
+  &[data-timer-format="remaining-limit"] {
+    min-width: 105px;
+  }
+
+  // Fallback for old markup without data-timer-format
+  &:not([data-timer-format]) {
+    min-width: 95px;
+  }
 }
 
 .file-uploader-recording-size {
+  // Fixed width to prevent layout shift
+  min-width: 60px;
+  text-align: right;
   font-variant-numeric: tabular-nums;
+  font-family: var(--fu-font-family-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
   padding-left: var(--fu-spacing-sm);
   border-left: 1px solid rgba(255, 255, 255, 0.3);
   opacity: 0.9;

@@ -748,20 +748,58 @@ $builder-prefix: "fu-config-builder" !default;
   .file-uploader-recording-dot {
     width: 8px;
     height: 8px;
+    flex-shrink: 0;
     background-color: white;
     border-radius: 50%;
     animation: recording-dot-blink 1s ease-in-out infinite;
   }
 
-  .file-uploader-recording-time,
-  .file-uploader-recording-size {
+  .file-uploader-recording-time {
+    // Base styles for all timer formats
+    text-align: center;
     font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    letter-spacing: -0.5px;
+
+    // Timer format: elapsed only (00:00) - smallest width
+    &[data-timer-format="elapsed"] {
+      min-width: 45px;
+    }
+
+    // Timer format: elapsed with limit (00:00 / 05:00) - medium width
+    &[data-timer-format="elapsed-limit"] {
+      min-width: 95px;
+    }
+
+    // Timer format: remaining with limit (-05:00 / 05:00) - largest width
+    &[data-timer-format="remaining-limit"] {
+      min-width: 105px;
+    }
+
+    // Fallback for old markup without data-timer-format
+    &:not([data-timer-format]) {
+      min-width: 95px;
+    }
   }
 
   .file-uploader-recording-size {
+    // Fixed width to prevent layout shift
+    min-width: 60px;
+    text-align: right;
     padding-left: 8px;
     border-left: 1px solid rgba(255, 255, 255, 0.3);
     opacity: 0.9;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+    &.warning {
+      color: #fef08a;
+    }
+
+    &.danger {
+      color: #fef08a;
+      animation: recording-dot-blink 0.5s ease-in-out infinite;
+    }
   }
 }
 

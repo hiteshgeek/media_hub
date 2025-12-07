@@ -151,7 +151,12 @@ export const DEFAULT_OPTIONS = {
     recordingCountdownDuration: 3,
     enableMicrophoneAudio: true,
     enableSystemAudio: true,
-    showRecordingSize: true,
+    // Recording timer display options
+    showRecordingTime: true, // Show the recording time in timer
+    showRecordingLimit: true, // Show the time limit (if set)
+    showRecordingSize: true, // Show approximate file size
+    recordingTimeClickToggle: true, // Allow clicking to toggle between elapsed/remaining time
+    recordingTimeDefaultView: "elapsed", // "elapsed" or "remaining" - starting view for time display
     videoBitsPerSecond: 2500000,
     audioBitsPerSecond: 128000,
     maxVideoRecordingFileSize: null,

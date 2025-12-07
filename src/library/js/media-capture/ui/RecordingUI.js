@@ -434,6 +434,44 @@ export default class RecordingUI {
   }
 
   /**
+   * Format time as MM:SS
+   * @param {number} seconds - Time in seconds
+   * @returns {string} Formatted time string
+   */
+  formatTime(seconds) {
+    const mins = Math.floor(Math.abs(seconds) / 60);
+    const secs = Math.abs(seconds) % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+
+  /**
+   * Build time display text based on options
+   * @param {number} elapsed - Elapsed time in seconds
+   * @param {number} maxSeconds - Maximum recording time in seconds
+   * @param {boolean} showRemaining - Whether to show remaining time
+   * @returns {string} Formatted time display text
+   */
+  buildTimeDisplayText(elapsed, maxSeconds, showRemaining) {
+    const options = this.uploader.options;
+    const showTime = options.showRecordingTime !== false;
+    const showLimit = options.showRecordingLimit !== false;
+
+    if (!showTime) return "";
+
+    if (showRemaining && showLimit && maxSeconds > 0) {
+      // Show remaining time
+      const remaining = Math.max(0, maxSeconds - elapsed);
+      return `-${this.formatTime(remaining)} / ${this.formatTime(maxSeconds)}`;
+    } else if (showLimit && maxSeconds > 0) {
+      // Show elapsed / total format
+      return `${this.formatTime(elapsed)} / ${this.formatTime(maxSeconds)}`;
+    } else {
+      // Just show elapsed time
+      return this.formatTime(elapsed);
+    }
+  }
+
+  /**
    * Start recording timer display
    */
   startRecordingTimer() {
@@ -466,30 +504,12 @@ export default class RecordingUI {
         timeElements.forEach(timeElement => {
           // Check if we should show remaining time or elapsed/total
           const showRemaining = timeElement.dataset.showRemaining === "true";
-
-          let timeText;
-          if (showRemaining) {
-            // Show remaining time with negative sign and total (e.g., -02:30/05:00)
-            const remaining = maxSeconds - elapsed;
-            const remainingMinutes = Math.floor(remaining / 60);
-            const remainingSeconds = remaining % 60;
-            const totalMinutes = Math.floor(maxSeconds / 60);
-            const totalSeconds = maxSeconds % 60;
-            timeText = `-${String(remainingMinutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")} / ${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
-          } else {
-            // Show elapsed / total format
-            const elapsedMinutes = Math.floor(elapsed / 60);
-            const elapsedSeconds = elapsed % 60;
-            const totalMinutes = Math.floor(maxSeconds / 60);
-            const totalSeconds = maxSeconds % 60;
-            timeText = `${String(elapsedMinutes).padStart(2, "0")}:${String(elapsedSeconds).padStart(2, "0")} / ${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
-          }
-
+          const timeText = this.buildTimeDisplayText(elapsed, maxSeconds, showRemaining);
           timeElement.textContent = timeText;
         });
 
         // Update size display on all recording indicators
-        if (sizeStatus) {
+        if (sizeStatus && this.uploader.options.showRecordingSize !== false) {
           const sizeElements = [];
 
           // Internal size element
@@ -593,38 +613,61 @@ export default class RecordingUI {
       this.externalRecordingIndicator.remove();
     }
 
+    const options = this.uploader.options;
+    console.log('[RecordingUI] createExternalRecordingIndicator - options.recordingTimeDefaultView:', options.recordingTimeDefaultView);
+    const showTime = options.showRecordingTime !== false;
+    const showLimit = options.showRecordingLimit !== false;
+    const showSize = options.showRecordingSize !== false;
+    const enableToggle = options.recordingTimeClickToggle !== false;
+    const defaultView = options.recordingTimeDefaultView || "elapsed";
+    console.log('[RecordingUI] defaultView resolved to:', defaultView);
+
     const maxSeconds = this.recordingType === 'audio'
-      ? Math.floor(this.uploader.options.maxAudioRecordingDuration)
-      : Math.floor(this.uploader.options.maxVideoRecordingDuration);
-    const totalMinutes = Math.floor(maxSeconds / 60);
-    const totalSeconds = maxSeconds % 60;
-    const maxTimeStr = `${String(totalMinutes).padStart(2, "0")}:${String(totalSeconds).padStart(2, "0")}`;
+      ? Math.floor(options.maxAudioRecordingDuration)
+      : Math.floor(options.maxVideoRecordingDuration);
+
+    // Determine timer format for CSS width
+    let timerFormat = "elapsed"; // default: just elapsed time
+    if (showTime && showLimit && maxSeconds > 0) {
+      timerFormat = defaultView === "remaining" ? "remaining-limit" : "elapsed-limit";
+    }
+
+    // Build initial time display
+    const initialTimeText = this.buildTimeDisplayText(0, maxSeconds, defaultView === "remaining");
 
     this.externalRecordingIndicator = document.createElement("div");
     this.externalRecordingIndicator.className = "file-uploader-recording-indicator";
-    const showSize = this.uploader.options.showRecordingSize;
-    this.externalRecordingIndicator.innerHTML = `
-      <span class="file-uploader-recording-dot"></span>
-      <span class="file-uploader-recording-time">00:00 / ${maxTimeStr}</span>
-      ${showSize ? '<span class="file-uploader-recording-size">~0 B</span>' : ''}
-    `;
+
+    let innerHTML = '<span class="file-uploader-recording-dot"></span>';
+    if (showTime) {
+      innerHTML += `<span class="file-uploader-recording-time" data-timer-format="${timerFormat}">${initialTimeText}</span>`;
+    }
+    if (showSize) {
+      innerHTML += '<span class="file-uploader-recording-size">~0 B</span>';
+    }
+    this.externalRecordingIndicator.innerHTML = innerHTML;
 
     // Prevent click propagation
     this.externalRecordingIndicator.addEventListener("click", (e) => {
       e.stopPropagation();
     });
 
-    // Make time element clickable to toggle time display format
+    // Make time element clickable to toggle time display format (if enabled and limit is shown)
     const timeElement = this.externalRecordingIndicator.querySelector(".file-uploader-recording-time");
-    if (timeElement) {
+    if (timeElement && enableToggle && showLimit && maxSeconds > 0) {
       timeElement.style.cursor = "pointer";
       timeElement.setAttribute("data-tooltip", "Click to toggle time display");
       timeElement.setAttribute("data-tooltip-position", "top");
-      timeElement.dataset.showRemaining = "false";
+      timeElement.dataset.showRemaining = defaultView === "remaining" ? "true" : "false";
       timeElement.addEventListener("click", (e) => {
         e.stopPropagation();
-        timeElement.dataset.showRemaining = timeElement.dataset.showRemaining === "false" ? "true" : "false";
+        const isRemaining = timeElement.dataset.showRemaining === "false";
+        timeElement.dataset.showRemaining = isRemaining ? "true" : "false";
+        // Update timer format for CSS width
+        timeElement.dataset.timerFormat = isRemaining ? "remaining-limit" : "elapsed-limit";
       });
+    } else if (timeElement) {
+      timeElement.dataset.showRemaining = defaultView === "remaining" ? "true" : "false";
     }
 
     // Insert at the beginning of the container (before toolbar buttons)

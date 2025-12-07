@@ -542,6 +542,20 @@ export default class VideoRecorder {
   }
 
   /**
+   * Cancel recording without returning a file (cleanup only)
+   * Used when recording needs to be stopped due to config changes
+   */
+  cancelRecording() {
+    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+      // Remove handlers to prevent file creation
+      this.mediaRecorder.onstop = null;
+      this.mediaRecorder.onerror = null;
+      this.mediaRecorder.stop();
+    }
+    this.cleanup();
+  }
+
+  /**
    * Get supported MIME type for recording
    * @returns {string}
    */
