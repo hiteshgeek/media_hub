@@ -227,12 +227,26 @@ export function navigateToOption(builder, optionKey, categoryKey, type) {
       setTimeout(() => {
         const optionEl = builder.element.querySelector(`[data-option="${optionKey}"]`);
         if (optionEl) {
-          const row = optionEl.closest(".fu-config-builder-option-row");
-          if (row) {
-            row.scrollIntoView({ behavior: "smooth", block: "center" });
-            row.classList.add("fu-config-builder-highlight");
-            setTimeout(() => row.classList.remove("fu-config-builder-highlight"), 2000);
+          // Find the containing group (wrapper for the option)
+          const group = optionEl.closest(".fu-config-builder-group");
+          const targetEl = group || optionEl;
+
+          // Scroll within the options panel
+          const optionsPanel = builder.element.querySelector(".fu-config-builder-options-panel");
+          if (optionsPanel) {
+            // Calculate scroll position to center the element
+            const panelRect = optionsPanel.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+            const scrollTop = optionsPanel.scrollTop + (targetRect.top - panelRect.top) - (panelRect.height / 2) + (targetRect.height / 2);
+            optionsPanel.scrollTo({ top: scrollTop, behavior: "smooth" });
+          } else {
+            // Fallback to scrollIntoView
+            targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
           }
+
+          // Highlight the option
+          targetEl.classList.add("fu-config-builder-highlight");
+          setTimeout(() => targetEl.classList.remove("fu-config-builder-highlight"), 2000);
         }
       }, 100);
     } else {

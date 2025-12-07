@@ -6,8 +6,28 @@
 $builder-prefix: "fu-config-builder" !default;
 
 .#{$builder-prefix}-search {
-  position: relative;
-  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #ffffff;
+  margin: -16px -16px 30px -16px;
+  padding: 0 16px 0 16px;
+
+  // Gradient fade at bottom to blend with content
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 1),
+      rgba(255, 255, 255, 0)
+    );
+    pointer-events: none;
+  }
 }
 
 .#{$builder-prefix}-search-wrapper {

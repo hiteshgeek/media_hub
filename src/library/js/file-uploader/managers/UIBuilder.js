@@ -43,12 +43,12 @@ export class UIBuilder {
     this.uploader.dropZoneHeader = document.createElement("div");
     this.uploader.dropZoneHeader.className = "file-uploader-dropzone-content";
 
-    const hasAnyTypeLevelLimits =
+    this.hasAnyTypeLevelLimits =
       Object.keys(this.uploader.options.perFileMaxSizePerType || {}).length > 0 ||
       Object.keys(this.uploader.options.perTypeMaxTotalSize || {}).length > 0 ||
       Object.keys(this.uploader.options.perTypeMaxFileCount || {}).length > 0;
 
-    const showFallbackLimit = !hasAnyTypeLevelLimits;
+    const showFallbackLimit = !this.hasAnyTypeLevelLimits;
 
     this.uploader.dropZoneHeader.innerHTML = `
       ${getIcon("upload", { class: "file-uploader-icon" })}
@@ -92,8 +92,8 @@ export class UIBuilder {
     this.uploader.actionContainer = document.createElement("div");
     this.uploader.actionContainer.className = "file-uploader-action-container";
 
-    // Create limits toggle button
-    if (this.uploader.options.showLimits && this.uploader.options.showLimitsToggle) {
+    // Create limits toggle button (only if there are type-level limits to show)
+    if (this.uploader.options.showLimits && this.uploader.options.showLimitsToggle && this.hasAnyTypeLevelLimits) {
       this.createLimitsToggleButton();
     }
 

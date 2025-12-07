@@ -180,13 +180,11 @@ export class CaptureButtonBuilder {
    */
   createRecordingIndicator() {
     const options = this.uploader.options;
-    console.log('[CaptureButtonBuilder] createRecordingIndicator - options.recordingTimeDefaultView:', options.recordingTimeDefaultView);
     const showTime = options.showRecordingTime !== false;
     const showLimit = options.showRecordingLimit !== false;
     const showSize = options.showRecordingSize !== false;
     const enableToggle = options.recordingTimeClickToggle !== false;
     const defaultView = options.recordingTimeDefaultView || "elapsed";
-    console.log('[CaptureButtonBuilder] defaultView resolved to:', defaultView);
 
     // Calculate max duration for display
     const maxVideoSec = Math.floor(options.maxVideoRecordingDuration || 300);

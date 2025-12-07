@@ -614,13 +614,11 @@ export default class RecordingUI {
     }
 
     const options = this.uploader.options;
-    console.log('[RecordingUI] createExternalRecordingIndicator - options.recordingTimeDefaultView:', options.recordingTimeDefaultView);
     const showTime = options.showRecordingTime !== false;
     const showLimit = options.showRecordingLimit !== false;
     const showSize = options.showRecordingSize !== false;
     const enableToggle = options.recordingTimeClickToggle !== false;
     const defaultView = options.recordingTimeDefaultView || "elapsed";
-    console.log('[RecordingUI] defaultView resolved to:', defaultView);
 
     const maxSeconds = this.recordingType === 'audio'
       ? Math.floor(options.maxAudioRecordingDuration)
