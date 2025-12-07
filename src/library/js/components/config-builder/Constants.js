@@ -204,6 +204,14 @@ export const MODAL_BUTTON_ICONS = {
 };
 
 /**
+ * Group hints for option groups with conditional visibility
+ * These hints explain why a group might appear empty
+ */
+export const GROUP_HINTS = {
+  "Modal Buttons": "Requires Display Mode set to Modal (Minimal or Detailed)",
+};
+
+/**
  * PHP-relevant option keys (for server-side validation)
  */
 export const PHP_RELEVANT_KEYS = [

@@ -33,6 +33,7 @@ import {
   MEDIA_CAPTURE_TITLES,
   FILE_TYPE_ICONS,
   MODAL_BUTTON_ICONS,
+  GROUP_HINTS,
   PHP_RELEVANT_KEYS,
   PHP_RELEVANT_GROUPS,
   groupChangedConfig,
@@ -1326,8 +1327,13 @@ export default class ConfigBuilder {
 
       // Render grouped options
       for (const [groupName, groupOptions] of groups) {
+        const groupHint = GROUP_HINTS[groupName] || "";
+        const hintHtml = groupHint
+          ? `<span class="fu-config-builder-option-group-hint">${groupHint}</span>`
+          : "";
+
         html += `<div class="fu-config-builder-option-group">
-          <div class="fu-config-builder-option-group-title">${groupName}</div>
+          <div class="fu-config-builder-option-group-title">${groupName}${hintHtml}</div>
           <div class="fu-config-builder-option-group-content">`;
 
         for (const { key, def } of groupOptions) {
