@@ -373,6 +373,46 @@ export default class FileUploader {
     return this.captureManager.stopAudioRecording();
   }
 
+  /**
+   * Capture screenshot (delegates to CaptureManager)
+   * @returns {Promise<void>}
+   */
+  async captureScreenshot() {
+    return this.captureManager.captureScreenshot();
+  }
+
+  /**
+   * Capture full page screenshot (delegates to CaptureManager)
+   * @returns {Promise<void>}
+   */
+  async captureFullPage() {
+    return this.captureManager.captureFullPage();
+  }
+
+  /**
+   * Capture region screenshot (delegates to CaptureManager)
+   * @returns {Promise<void>}
+   */
+  async captureRegion() {
+    return this.captureManager.captureRegion();
+  }
+
+  /**
+   * Toggle video recording on/off (delegates to CaptureManager)
+   * @returns {Promise<void>}
+   */
+  async toggleVideoRecording() {
+    return this.captureManager.toggleVideoRecording();
+  }
+
+  /**
+   * Toggle audio recording on/off (delegates to CaptureManager)
+   * @returns {Promise<void>}
+   */
+  async toggleAudioRecording() {
+    return this.captureManager.toggleAudioRecording();
+  }
+
   // ============================================================
   // PUBLIC API
   // ============================================================
