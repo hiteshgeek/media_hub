@@ -1440,6 +1440,14 @@ export default class ConfigBuilder {
       case "mimeTypes":
         content = this.renderMimeTypes(key, def);
         break;
+      case "buttonSizeSelect":
+        content = this.renderButtonSizeSelect(
+          key,
+          def,
+          isDisabled,
+          dependencyIndicator
+        );
+        break;
       default:
         return "";
     }
@@ -1789,6 +1797,64 @@ export default class ConfigBuilder {
     }>
           ${options}
         </select>
+        <div class="fu-config-builder-hint">${def.hint}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render button size selector with visual button samples
+   * Shows actual button appearance for each size option
+   */
+  renderButtonSizeSelect(
+    key,
+    def,
+    isDisabled = false,
+    dependencyIndicator = ""
+  ) {
+    const currentValue = this.config[key] || def.default;
+
+    // Camera icon SVG for circular buttons
+    const cameraIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`;
+
+    // Download icon SVG for rectangular buttons
+    const downloadIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+
+    const buttons = def.options
+      .map((opt) => {
+        const isSelected = currentValue === opt.value;
+        const circularSizeClass = opt.value !== "md" ? `media-hub-capture-btn-${opt.value}` : "";
+        const rectSizeClass = opt.value !== "md" ? `btn-${opt.value}` : "";
+        return `
+          <div class="fu-config-builder-size-option ${isSelected ? "selected" : ""}" data-size="${opt.value}" data-option="${key}">
+            <span class="fu-config-builder-size-label">${opt.label}</span>
+            <button type="button"
+              class="fu-config-builder-size-sample fu-config-builder-size-circular media-hub-capture-btn ${circularSizeClass}"
+              ${isDisabled ? "disabled" : ""}
+              title="Circular button (${opt.label})">
+              ${cameraIcon}
+            </button>
+            <button type="button"
+              class="fu-config-builder-size-sample fu-config-builder-size-rect media-hub-download-all ${rectSizeClass}"
+              ${isDisabled ? "disabled" : ""}
+              title="Rectangular button (${opt.label})">
+              ${downloadIcon}
+            </button>
+          </div>
+        `;
+      })
+      .join("");
+
+    return `
+      <div class="fu-config-builder-group ${isDisabled ? "disabled" : ""}">
+        <label class="fu-config-builder-label">
+          ${def.label}
+          ${dependencyIndicator}
+          ${this.renderOptionKey(key)}
+        </label>
+        <div class="fu-config-builder-button-size-selector" data-option="${key}" data-type="buttonSizeSelect">
+          ${buttons}
+        </div>
         <div class="fu-config-builder-hint">${def.hint}</div>
       </div>
     `;
@@ -3154,6 +3220,34 @@ export default class ConfigBuilder {
         select.addEventListener("change", () => {
           this.config[select.dataset.option] = select.value;
           this.onConfigChange();
+        });
+      });
+
+    // Button size select (visual button samples)
+    this.element
+      .querySelectorAll('.fu-config-builder-button-size-selector')
+      .forEach((container) => {
+        container.querySelectorAll('.fu-config-builder-size-option').forEach((option) => {
+          option.addEventListener("click", () => {
+            const sampleBtn = option.querySelector('.fu-config-builder-size-sample');
+            if (sampleBtn && sampleBtn.disabled) return;
+
+            const optionKey = option.dataset.option;
+            const sizeValue = option.dataset.size;
+
+            // Update config
+            this.config[optionKey] = sizeValue;
+
+            // Update UI - remove selected from all options in this container
+            container.querySelectorAll('.fu-config-builder-size-option').forEach((opt) => {
+              opt.classList.remove("selected");
+            });
+
+            // Add selected to clicked option
+            option.classList.add("selected");
+
+            this.onConfigChange();
+          });
         });
       });
 
@@ -5659,10 +5753,15 @@ export default class ConfigBuilder {
    * Uses media-hub-capture-btn class for consistent styling with FileUploader
    * @param {string[]} buttonTypes - Array of button types: 'screenshot', 'video', 'audio'
    * @param {string} uploaderId - The uploader ID for data attribute
+   * @param {string} buttonSize - Button size: 'xs', 'sm', 'md', 'lg' (default: 'md')
    * @returns {string} HTML string for the expandable media capture buttons container
    */
-  getMediaCaptureButtonsHtml(buttonTypes, uploaderId) {
+  getMediaCaptureButtonsHtml(buttonTypes, uploaderId, buttonSize = "md") {
     if (!buttonTypes || buttonTypes.length === 0) return "";
+
+    // Get size class for buttons (empty for default 'md')
+    const sizeClass = buttonSize && buttonSize !== "md" ? ` media-hub-capture-btn-${buttonSize}` : "";
+    const toggleSizeClass = buttonSize && buttonSize !== "md" ? ` media-hub-capture-toggle-${buttonSize}` : "";
 
     const buttons = buttonTypes
       .map((btnType) => {
@@ -5670,7 +5769,7 @@ export default class ConfigBuilder {
         const title = MEDIA_CAPTURE_TITLES[btnType];
         if (!icon) return "";
 
-        return `<button type="button" class="media-hub-capture-btn has-tooltip" data-capture-type="${btnType}" data-uploader-id="${uploaderId}" data-tooltip="${title}" data-tooltip-position="top">${icon}</button>`;
+        return `<button type="button" class="media-hub-capture-btn${sizeClass} has-tooltip" data-capture-type="${btnType}" data-uploader-id="${uploaderId}" data-tooltip="${title}" data-tooltip-position="top">${icon}</button>`;
       })
       .join("");
 
@@ -5678,7 +5777,7 @@ export default class ConfigBuilder {
 
     return `
       <div class="media-hub-capture-expandable" data-uploader-id="${uploaderId}">
-        <button type="button" class="media-hub-capture-toggle has-tooltip" data-uploader-id="${uploaderId}" data-tooltip="Media Capture" data-tooltip-position="top">
+        <button type="button" class="media-hub-capture-toggle${toggleSizeClass} has-tooltip" data-uploader-id="${uploaderId}" data-tooltip="Media Capture" data-tooltip-position="top">
           <span class="toggle-chevron">${chevronIcon}</span>
         </button>
         <div class="media-hub-capture-buttons-wrapper">
@@ -6913,9 +7012,11 @@ export default class ConfigBuilder {
       const buttonIconSvg = this.getModalButtonIcon(buttonIcon);
 
       // Generate media capture buttons HTML using the reusable function
+      const buttonSize = data.config.buttonSize || "md";
       const mediaButtonsHtml = this.getMediaCaptureButtonsHtml(
         mediaButtons,
-        id
+        id,
+        buttonSize
       );
 
       wrapper.innerHTML = `

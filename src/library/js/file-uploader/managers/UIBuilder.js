@@ -23,6 +23,18 @@ export class UIBuilder {
     this.uploader = uploader;
   }
 
+  /**
+   * Get the CSS class for rectangular button size
+   * @returns {string} Size class or empty string for default (md)
+   */
+  getButtonSizeClass() {
+    const size = this.uploader.options.buttonSize;
+    if (size && size !== "md") {
+      return `btn-${size}`;
+    }
+    return "";
+  }
+
   // ============================================================
   // MAIN STRUCTURE CREATION
   // ============================================================
@@ -34,6 +46,12 @@ export class UIBuilder {
     // Create wrapper
     this.uploader.wrapper = document.createElement("div");
     this.uploader.wrapper.className = "media-hub-wrapper";
+
+    // Set button size data attribute for CSS-based sizing
+    const buttonSize = this.uploader.options.buttonSize;
+    if (buttonSize && buttonSize !== "md") {
+      this.uploader.wrapper.dataset.buttonSize = buttonSize;
+    }
 
     // Create drop zone
     this.uploader.dropZone = document.createElement("div");
@@ -165,6 +183,8 @@ export class UIBuilder {
       this.uploader.downloadAllBtn.type = "button";
 
       const classes = ["media-hub-download-all"];
+      const sizeClass = this.getButtonSizeClass();
+      if (sizeClass) classes.push(sizeClass);
       if (this.uploader.options.downloadAllButtonClasses?.length > 0) {
         classes.push(...this.uploader.options.downloadAllButtonClasses);
       }
@@ -209,6 +229,8 @@ export class UIBuilder {
       this.uploader.clearAllBtn.type = "button";
 
       const classes = ["media-hub-clear-all"];
+      const sizeClass = this.getButtonSizeClass();
+      if (sizeClass) classes.push(sizeClass);
       if (this.uploader.options.clearAllButtonClasses?.length > 0) {
         classes.push(...this.uploader.options.clearAllButtonClasses);
       }
@@ -236,7 +258,8 @@ export class UIBuilder {
   createLimitsToggleButton() {
     this.uploader.limitsToggleBtn = document.createElement("button");
     this.uploader.limitsToggleBtn.type = "button";
-    this.uploader.limitsToggleBtn.className = "media-hub-limits-toggle-btn";
+    const sizeClass = this.getButtonSizeClass();
+    this.uploader.limitsToggleBtn.className = `media-hub-limits-toggle-btn${sizeClass ? ` ${sizeClass}` : ""}`;
 
     const iconWrapper = document.createElement("span");
     iconWrapper.className = "media-hub-toggle-icon-wrapper";

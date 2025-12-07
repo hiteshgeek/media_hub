@@ -22,6 +22,18 @@ export default class RecordingUI {
   }
 
   /**
+   * Get the CSS class for button size
+   * @returns {string} Size class or empty string for default (md)
+   */
+  getButtonSizeClass() {
+    const size = this.uploader.options.buttonSize;
+    if (size && size !== "md") {
+      return `media-hub-capture-btn-${size}`;
+    }
+    return "";
+  }
+
+  /**
    * Get the container for recording toolbar
    * Uses external container if specified, otherwise internal captureButtonContainer
    * @returns {HTMLElement|null}
@@ -140,10 +152,13 @@ export default class RecordingUI {
 
     const isExternal = this.isUsingExternalContainer();
 
+    const sizeClass = this.getButtonSizeClass();
+    const btnClass = `media-hub-capture-btn${sizeClass ? ` ${sizeClass}` : ""}`;
+
     // Create pause button
     const pauseBtn = document.createElement("button");
     pauseBtn.type = "button";
-    pauseBtn.className = "media-hub-capture-btn";
+    pauseBtn.className = btnClass;
     pauseBtn.setAttribute("data-action", "pause");
     pauseBtn.setAttribute("data-tooltip", "Pause Recording");
     pauseBtn.setAttribute("data-tooltip-position", "top");
@@ -158,7 +173,7 @@ export default class RecordingUI {
     if (!isExternal && this.uploader.options.enableSystemAudio) {
       systemAudioBtn = document.createElement("button");
       systemAudioBtn.type = "button";
-      systemAudioBtn.className = "media-hub-capture-btn";
+      systemAudioBtn.className = btnClass;
       systemAudioBtn.setAttribute("data-action", "system-audio");
 
       // Check if system audio is available
@@ -186,7 +201,7 @@ export default class RecordingUI {
     if (!isExternal && this.uploader.options.enableMicrophoneAudio) {
       micBtn = document.createElement("button");
       micBtn.type = "button";
-      micBtn.className = "media-hub-capture-btn";
+      micBtn.className = btnClass;
       micBtn.setAttribute("data-action", "microphone");
 
       // Check if microphone is available
@@ -212,7 +227,7 @@ export default class RecordingUI {
     // Create stop button
     const stopBtn = document.createElement("button");
     stopBtn.type = "button";
-    stopBtn.className = "media-hub-capture-btn media-hub-capture-btn-stop";
+    stopBtn.className = `${btnClass} media-hub-capture-btn-stop`;
     stopBtn.setAttribute("data-action", "stop");
     stopBtn.setAttribute("data-tooltip", "Stop Recording");
     stopBtn.setAttribute("data-tooltip-position", "top");
@@ -253,10 +268,13 @@ export default class RecordingUI {
 
     const isExternal = this.isUsingExternalContainer();
 
+    const sizeClass = this.getButtonSizeClass();
+    const btnClass = `media-hub-capture-btn${sizeClass ? ` ${sizeClass}` : ""}`;
+
     // Create pause button
     const pauseBtn = document.createElement("button");
     pauseBtn.type = "button";
-    pauseBtn.className = "media-hub-capture-btn";
+    pauseBtn.className = btnClass;
     pauseBtn.setAttribute("data-action", "pause");
     pauseBtn.setAttribute("data-tooltip", "Pause Recording");
     pauseBtn.setAttribute("data-tooltip-position", "top");
@@ -271,7 +289,7 @@ export default class RecordingUI {
     if (!isExternal && this.uploader.options.enableSystemAudio) {
       systemAudioBtn = document.createElement("button");
       systemAudioBtn.type = "button";
-      systemAudioBtn.className = "media-hub-capture-btn";
+      systemAudioBtn.className = btnClass;
       systemAudioBtn.setAttribute("data-action", "system-audio");
 
       // Check if system audio is available
@@ -297,7 +315,7 @@ export default class RecordingUI {
     // Create stop button (red by default)
     const stopBtn = document.createElement("button");
     stopBtn.type = "button";
-    stopBtn.className = "media-hub-capture-btn media-hub-capture-btn-stop";
+    stopBtn.className = `${btnClass} media-hub-capture-btn-stop`;
     stopBtn.setAttribute("data-action", "stop");
     stopBtn.setAttribute("data-tooltip", "Stop Recording");
     stopBtn.setAttribute("data-tooltip-position", "top");

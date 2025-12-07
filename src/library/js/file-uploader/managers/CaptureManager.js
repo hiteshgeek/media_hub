@@ -31,6 +31,8 @@ export class CaptureManager {
     this.audioRecorder = null;
     this.pageCapture = null;
     this.buttonBuilder = new CaptureButtonBuilder(uploader, this);
+    // Track auto-stop reason for alert messaging
+    this._autoStopReason = null;
   }
 
   // ============================================================
@@ -226,7 +228,7 @@ export class CaptureManager {
   }
 
   /**
-   * Handle video auto-stop (max duration reached)
+   * Handle video auto-stop (max duration or size limit reached)
    * @param {File} file - The recorded video file
    */
   handleVideoAutoStop(file) {
@@ -238,6 +240,20 @@ export class CaptureManager {
       this.uploader.videoRecordBtn.title = "Record Video";
       this.uploader.videoRecordBtn.disabled = false;
     }
+
+    // Show alert based on stop reason
+    if (this._autoStopReason && this._autoStopReason.type === "size") {
+      this.uploader.showInfo(`Recording stopped: file size limit reached (${this._autoStopReason.formattedSize})`);
+    } else {
+      // Max duration reached
+      const maxDuration = this.uploader.options.maxVideoRecordingDuration;
+      const mins = Math.floor(maxDuration / 60);
+      const secs = maxDuration % 60;
+      const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      this.uploader.showInfo(`Recording stopped: maximum duration reached (${durationStr})`);
+    }
+    // Reset reason
+    this._autoStopReason = null;
   }
 
   // ============================================================
@@ -327,7 +343,7 @@ export class CaptureManager {
   }
 
   /**
-   * Handle audio auto-stop (max duration reached)
+   * Handle audio auto-stop (max duration or size limit reached)
    * @param {File} file - The recorded audio file
    */
   handleAudioAutoStop(file) {
@@ -339,6 +355,20 @@ export class CaptureManager {
       this.uploader.audioRecordBtn.title = "Record Audio";
       this.uploader.audioRecordBtn.disabled = false;
     }
+
+    // Show alert based on stop reason
+    if (this._autoStopReason && this._autoStopReason.type === "size") {
+      this.uploader.showInfo(`Recording stopped: file size limit reached (${this._autoStopReason.formattedSize})`);
+    } else {
+      // Max duration reached
+      const maxDuration = this.uploader.options.maxAudioRecordingDuration;
+      const mins = Math.floor(maxDuration / 60);
+      const secs = maxDuration % 60;
+      const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      this.uploader.showInfo(`Recording stopped: maximum duration reached (${durationStr})`);
+    }
+    // Reset reason
+    this._autoStopReason = null;
   }
 
   /**
@@ -347,7 +377,12 @@ export class CaptureManager {
    * @param {string} type - Recording type (video/audio)
    */
   handleRecordingSizeLimitReached(status, type) {
-    console.log(`Recording stopped: file size limit reached (${status.formattedSize})`);
+    // Set reason so auto-stop handler knows it was due to size limit
+    this._autoStopReason = {
+      type: "size",
+      formattedSize: status.formattedSize,
+      recordingType: type
+    };
   }
 
   // ============================================================

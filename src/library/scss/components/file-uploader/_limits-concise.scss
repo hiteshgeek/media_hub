@@ -7,7 +7,7 @@
 // File type chips container
 .#{$component-prefix}-type-chips {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 220px));
   gap: var(--fu-spacing-sm);
 }
 

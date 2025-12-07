@@ -66,6 +66,7 @@ export const OPTION_TO_GROUP = {
   clearAllButtonText: "buttons",
   clearAllButtonClasses: "buttons",
   clearAllButtonElement: "buttons",
+  buttonSize: "buttons",
   // Media Capture
   enableFullPageCapture: "mediaCapture",
   enableRegionCapture: "mediaCapture",

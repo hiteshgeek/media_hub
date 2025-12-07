@@ -133,6 +133,7 @@ export const DEFAULT_OPTIONS = {
     clearAllButtonText: "Clear All",
     clearAllButtonClasses: [],
     clearAllButtonElement: null,
+    buttonSize: "md",
   },
 
   // ============================================================================

@@ -283,3 +283,85 @@ $builder-prefix: "fu-config-builder" !default;
     }
   }
 }
+
+// ============================================================================
+// Button Size Selector
+// Visual button size selector showing actual button samples
+// Layout: 2 items per row, each item shows: label, circular btn, rect btn
+// ============================================================================
+
+.#{$builder-prefix}-button-size-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.#{$builder-prefix}-size-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  // Show 2 items per row with gap consideration
+  flex: 0 0 calc(50% - 4px);
+  max-width: calc(50% - 4px);
+  box-sizing: border-box;
+
+  &:hover:not(.disabled) {
+    background-color: rgba(99, 102, 241, 0.05);
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+
+  &.selected {
+    border-color: #6366f1;
+    background-color: rgba(99, 102, 241, 0.08);
+
+    .#{$builder-prefix}-size-label {
+      color: #6366f1;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.#{$builder-prefix}-size-sample {
+  flex-shrink: 0;
+  pointer-events: none; // Let parent handle clicks
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.#{$builder-prefix}-size-circular {
+  // Uses media-hub-capture-btn styles
+}
+
+.#{$builder-prefix}-size-rect {
+  // Uses media-hub-download-all styles
+  // Override some styles for demo display
+  &.media-hub-download-all {
+    display: inline-flex !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+  }
+}
+
+.#{$builder-prefix}-size-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  text-align: center;
+}

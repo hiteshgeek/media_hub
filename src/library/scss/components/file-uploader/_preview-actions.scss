@@ -227,3 +227,46 @@
     color: #ffffff;
   }
 }
+
+// ============================================================================
+// Button Size Variants via data-button-size attribute on wrapper
+// ============================================================================
+
+.#{$component-prefix}-wrapper[data-button-size="xs"] {
+  .#{$component-prefix}-download,
+  .#{$component-prefix}-delete {
+    width: var(--fu-btn-size-xs);
+    height: var(--fu-btn-size-xs);
+
+    svg {
+      width: var(--fu-btn-icon-xs);
+      height: var(--fu-btn-icon-xs);
+    }
+  }
+}
+
+.#{$component-prefix}-wrapper[data-button-size="sm"] {
+  .#{$component-prefix}-download,
+  .#{$component-prefix}-delete {
+    width: var(--fu-btn-size-sm);
+    height: var(--fu-btn-size-sm);
+
+    svg {
+      width: var(--fu-btn-icon-sm);
+      height: var(--fu-btn-icon-sm);
+    }
+  }
+}
+
+.#{$component-prefix}-wrapper[data-button-size="lg"] {
+  .#{$component-prefix}-download,
+  .#{$component-prefix}-delete {
+    width: var(--fu-btn-size-lg);
+    height: var(--fu-btn-size-lg);
+
+    svg {
+      width: var(--fu-btn-icon-lg);
+      height: var(--fu-btn-icon-lg);
+    }
+  }
+}

@@ -28,6 +28,18 @@ export class CaptureButtonBuilder {
     this.captureManager = captureManager;
   }
 
+  /**
+   * Get the CSS class for button size
+   * @returns {string} Size class or empty string for default (md)
+   */
+  getButtonSizeClass() {
+    const size = this.uploader.options.buttonSize;
+    if (size && size !== "md") {
+      return `media-hub-capture-btn-${size}`;
+    }
+    return "";
+  }
+
   // ============================================================
   // MAIN BUTTON CREATION
   // ============================================================
@@ -70,7 +82,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.fullPageCaptureBtn = document.createElement("button");
     this.uploader.fullPageCaptureBtn.type = "button";
-    this.uploader.fullPageCaptureBtn.className = "media-hub-capture-btn has-tooltip";
+    const fullPageSizeClass = this.getButtonSizeClass();
+    this.uploader.fullPageCaptureBtn.className = `media-hub-capture-btn${fullPageSizeClass ? ` ${fullPageSizeClass}` : ""} has-tooltip`;
     this.uploader.fullPageCaptureBtn.setAttribute("data-tooltip", "Capture Full Page");
     this.uploader.fullPageCaptureBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.fullPageCaptureBtn.innerHTML = getIcon("fullpage_capture");
@@ -91,7 +104,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.regionCaptureBtn = document.createElement("button");
     this.uploader.regionCaptureBtn.type = "button";
-    this.uploader.regionCaptureBtn.className = "media-hub-capture-btn has-tooltip";
+    const regionSizeClass = this.getButtonSizeClass();
+    this.uploader.regionCaptureBtn.className = `media-hub-capture-btn${regionSizeClass ? ` ${regionSizeClass}` : ""} has-tooltip`;
     this.uploader.regionCaptureBtn.setAttribute("data-tooltip", "Capture Region");
     this.uploader.regionCaptureBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.regionCaptureBtn.innerHTML = getIcon("region_capture");
@@ -112,7 +126,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.screenshotBtn = document.createElement("button");
     this.uploader.screenshotBtn.type = "button";
-    this.uploader.screenshotBtn.className = "media-hub-capture-btn has-tooltip";
+    const screenshotSizeClass = this.getButtonSizeClass();
+    this.uploader.screenshotBtn.className = `media-hub-capture-btn${screenshotSizeClass ? ` ${screenshotSizeClass}` : ""} has-tooltip`;
     this.uploader.screenshotBtn.setAttribute("data-tooltip", "Capture Screenshot");
     this.uploader.screenshotBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.screenshotBtn.innerHTML = getIcon("camera");
@@ -133,7 +148,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.videoRecordBtn = document.createElement("button");
     this.uploader.videoRecordBtn.type = "button";
-    this.uploader.videoRecordBtn.className = "media-hub-capture-btn has-tooltip";
+    const videoSizeClass = this.getButtonSizeClass();
+    this.uploader.videoRecordBtn.className = `media-hub-capture-btn${videoSizeClass ? ` ${videoSizeClass}` : ""} has-tooltip`;
     this.uploader.videoRecordBtn.setAttribute("data-tooltip", "Record Screen");
     this.uploader.videoRecordBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.videoRecordBtn.innerHTML = getIcon("video");
@@ -156,7 +172,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.audioRecordBtn = document.createElement("button");
     this.uploader.audioRecordBtn.type = "button";
-    this.uploader.audioRecordBtn.className = "media-hub-capture-btn has-tooltip";
+    const audioSizeClass = this.getButtonSizeClass();
+    this.uploader.audioRecordBtn.className = `media-hub-capture-btn${audioSizeClass ? ` ${audioSizeClass}` : ""} has-tooltip`;
     this.uploader.audioRecordBtn.setAttribute("data-tooltip", "Record Audio");
     this.uploader.audioRecordBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.audioRecordBtn.innerHTML = getIcon("audio");
@@ -258,7 +275,8 @@ export class CaptureButtonBuilder {
 
     this.uploader.captureToggleBtn = document.createElement("button");
     this.uploader.captureToggleBtn.type = "button";
-    this.uploader.captureToggleBtn.className = "media-hub-capture-toggle has-tooltip";
+    const toggleSizeClass = this.getButtonSizeClass();
+    this.uploader.captureToggleBtn.className = `media-hub-capture-toggle${toggleSizeClass ? ` ${toggleSizeClass.replace("capture-btn", "capture-toggle")}` : ""} has-tooltip`;
     this.uploader.captureToggleBtn.setAttribute("data-tooltip", "Media Capture");
     this.uploader.captureToggleBtn.setAttribute("data-tooltip-position", "top");
     this.uploader.captureToggleBtn.innerHTML = `<span class="toggle-chevron">${getIcon("chevron_right")}</span>`;

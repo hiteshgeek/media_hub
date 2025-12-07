@@ -361,6 +361,18 @@ export function getOptionDefinitions() {
           hint: "Text for clear-all button",
           dependsOn: "showClearAllButton",
         },
+        buttonSize: {
+          type: "buttonSizeSelect",
+          default: "md",
+          label: "Button Size",
+          hint: "Size of all action buttons (capture, download, delete, clear, etc.)",
+          options: [
+            { value: "xs", label: "XS" },
+            { value: "sm", label: "SM" },
+            { value: "md", label: "MD" },
+            { value: "lg", label: "LG" },
+          ],
+        },
       },
     },
 
