@@ -3,18 +3,29 @@
 /**
  * Get the base URL path for the file_uploader project
  * Works regardless of where the project is hosted
+ *
+ * Supports paths like:
+ * - /file_uploader/index.php -> /file_uploader
+ * - /file_uploader/usage/demo.php -> /file_uploader
+ * - /file_uploader/file-uploader/index.php -> /file_uploader
+ * - /file_uploader/file-uploader/usage/demo.php -> /file_uploader
+ * - /file_uploader/file-carousel/usage/demo.php -> /file_uploader
  */
 function get_base_path()
 {
     // Get the directory of the current script relative to document root
     $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+    $parts = explode('/', trim($scriptDir, '/'));
 
-    // If we're in a subdirectory like 'usage', go up one level
-    if (basename($scriptDir) === 'usage') {
-        return dirname($scriptDir);
+    // Known subdirectory names that are NOT the root
+    $subDirs = ['usage', 'file-uploader', 'file-carousel', 'media-capture'];
+
+    // Walk backwards removing subdirectories until we find the root
+    while (!empty($parts) && in_array(end($parts), $subDirs)) {
+        array_pop($parts);
     }
 
-    return $scriptDir;
+    return '/' . implode('/', $parts);
 }
 
 function asset_manifest($type = 'css')

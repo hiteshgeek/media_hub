@@ -62,7 +62,7 @@ include_once __DIR__ . '/includes/functions.php';
 
     <!-- Config Builder Script -->
     <script type="module">
-        import ConfigBuilder from './src/library/js/components/ConfigBuilder.js';
+        import { ConfigBuilder } from '<?php echo asset('file-uploader.js'); ?>';
 
         // Initialize the config builder
         const builder = new ConfigBuilder('#configBuilder', {
