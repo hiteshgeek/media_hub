@@ -1,0 +1,212 @@
+<?php
+/**
+ * File Upload Handler
+ * Handles AJAX file uploads with validation
+ */
+
+header('Content-Type: application/json');
+
+// Load configuration and functions
+$config = require_once '../config.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Get base path for URLs (e.g., /file_uploader)
+$basePath = get_base_path();
+
+// Get custom upload directory from request (optional)
+$uploadSubDir = '';
+if (isset($_POST['uploadDir']) && !empty($_POST['uploadDir'])) {
+    // Sanitize the upload directory path to prevent directory traversal attacks
+    $uploadSubDir = trim($_POST['uploadDir'], '/\\');
+    // Remove any directory traversal attempts
+    $uploadSubDir = str_replace(['..', '\\'], ['', '/'], $uploadSubDir);
+    // Ensure it ends with a slash
+    $uploadSubDir = rtrim($uploadSubDir, '/') . '/';
+}
+
+// Determine the final upload directory
+$uploadDir = $config['upload_dir'] . $uploadSubDir;
+$uploadUrlPath = '/uploads/' . $uploadSubDir;
+
+// Create uploads directory if it doesn't exist
+if (!is_dir($uploadDir)) {
+    if (!mkdir($uploadDir, 0755, true)) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Failed to create upload directory'
+        ]);
+        exit;
+    }
+}
+
+// Check if file was uploaded
+if (!isset($_FILES['file']) || $_FILES['file']['error'] === UPLOAD_ERR_NO_FILE) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'No file uploaded'
+    ]);
+    exit;
+}
+
+$file = $_FILES['file'];
+$originalName = basename($file['name']);
+
+// Check for upload errors
+if ($file['error'] !== UPLOAD_ERR_OK) {
+    $errorMessages = [
+        UPLOAD_ERR_INI_SIZE => 'exceeds upload_max_filesize directive in php.ini',
+        UPLOAD_ERR_FORM_SIZE => 'exceeds MAX_FILE_SIZE directive in HTML form',
+        UPLOAD_ERR_PARTIAL => 'was only partially uploaded',
+        UPLOAD_ERR_NO_TMP_DIR => 'upload failed - missing temporary folder',
+        UPLOAD_ERR_CANT_WRITE => 'upload failed - cannot write file to disk',
+        UPLOAD_ERR_EXTENSION => 'upload was stopped by a PHP extension'
+    ];
+
+    $errorMsg = $errorMessages[$file['error']] ?? 'unknown upload error';
+    echo json_encode([
+        'success' => false,
+        'error' => "\"{$originalName}\" {$errorMsg}"
+    ]);
+    exit;
+}
+
+// Validate file size (not empty)
+if ($file['size'] === 0) {
+    echo json_encode([
+        'success' => false,
+        'error' => "\"{$originalName}\" is empty"
+    ]);
+    exit;
+}
+
+// Get file extension
+$extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+// Validate file extension
+if (!in_array($extension, $config['allowed_extensions'])) {
+    // Return first 5 extensions with "+X more" if there are more
+    $displayExtensions = array_slice($config['allowed_extensions'], 0, 5);
+    $moreCount = count($config['allowed_extensions']) - 5;
+
+    echo json_encode([
+        'success' => false,
+        'error' => [
+            'filename' => $originalName,
+            'error' => 'File type not allowed',
+            'allowed' => $displayExtensions,
+            'moreCount' => $moreCount > 0 ? $moreCount : 0
+        ]
+    ]);
+    exit;
+}
+
+// Determine file type for per-type size limit validation
+$fileType = 'other';
+if (in_array($extension, $config['image_extensions'])) {
+    $fileType = 'image';
+} elseif (in_array($extension, $config['video_extensions'])) {
+    $fileType = 'video';
+} elseif (in_array($extension, $config['audio_extensions'])) {
+    $fileType = 'audio';
+} elseif (in_array($extension, $config['document_extensions'])) {
+    $fileType = 'document';
+} elseif (in_array($extension, $config['archive_extensions'])) {
+    $fileType = 'archive';
+}
+
+// Validate per-file max size (use per-type limit if available, otherwise use general limit)
+if (isset($config['per_file_max_size_per_type'][$fileType])) {
+    // Use per-type limit for this file type
+    $perFileLimit = $config['per_file_max_size_per_type'][$fileType];
+    $limitDisplay = $config['per_file_max_size_per_type_display'][$fileType] ?? 'unknown';
+    if ($file['size'] > $perFileLimit) {
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'filename' => $originalName,
+                'error' => 'File size exceeds limit',
+                'limit' => $limitDisplay,
+                'fileType' => $fileType
+            ]
+        ]);
+        exit;
+    }
+} else {
+    // Fallback to general per-file max size (for types without specific limit)
+    if ($file['size'] > $config['per_file_max_size']) {
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'filename' => $originalName,
+                'error' => 'File size exceeds limit',
+                'limit' => $config['per_file_max_size_display']
+            ]
+        ]);
+        exit;
+    }
+}
+
+// Validate MIME type
+$finfo = finfo_open(FILEINFO_MIME_TYPE);
+$mimeType = finfo_file($finfo, $file['tmp_name']);
+finfo_close($finfo);
+
+if (!in_array($mimeType, $config['allowed_types'])) {
+    echo json_encode([
+        'success' => false,
+        'error' => [
+            'filename' => $originalName,
+            'error' => 'Invalid file type',
+            'mimeType' => $mimeType
+        ]
+    ]);
+    exit;
+}
+
+// Generate filename
+if ($config['unique_filenames']) {
+    $filename = uniqid() . '_' . time() . '.' . $extension;
+} else {
+    $filename = $originalName;
+    // If file exists, add number suffix
+    $counter = 1;
+    while (file_exists($uploadDir . $filename)) {
+        $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
+        $filename = $nameWithoutExt . '_' . $counter . '.' . $extension;
+        $counter++;
+    }
+}
+
+$destination = $uploadDir . $filename;
+
+// Move uploaded file
+if (!move_uploaded_file($file['tmp_name'], $destination)) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Failed to move uploaded file'
+    ]);
+    exit;
+}
+
+// Determine file type for preview
+$fileType = 'other';
+if (in_array($extension, $config['image_extensions'])) {
+    $fileType = 'image';
+} elseif (in_array($extension, $config['video_extensions'])) {
+    $fileType = 'video';
+}
+
+// Return success response
+echo json_encode([
+    'success' => true,
+    'file' => [
+        'name' => $originalName,
+        'filename' => $filename,
+        'size' => $file['size'],
+        'type' => $mimeType,
+        'extension' => $extension,
+        'fileType' => $fileType,
+        'url' => $basePath . $uploadUrlPath . $filename,
+        'path' => $destination
+    ]
+]);
