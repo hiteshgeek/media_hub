@@ -124,6 +124,12 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+
+  // Add separator between items (not for first item)
+  & + & {
+    padding-left: var(--fu-spacing-md);
+    border-left: 1px solid var(--fu-color-border-light);
+  }
 }
 
 .#{$component-prefix}-compact-item-header {

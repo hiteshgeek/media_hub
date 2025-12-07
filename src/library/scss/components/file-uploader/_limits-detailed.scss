@@ -322,7 +322,7 @@
 
 .#{$component-prefix}-general-limits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
   gap: var(--fu-spacing-md);
 
   @media (max-width: 480px) {
