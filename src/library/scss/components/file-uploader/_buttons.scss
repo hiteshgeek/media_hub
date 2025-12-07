@@ -13,9 +13,16 @@
   border-top: 1px solid var(--fu-color-border);
   pointer-events: none;
   cursor: default;
+  flex-wrap: wrap;
 
   > * {
     pointer-events: auto;
+  }
+
+  // Push capture container to right (last child or only child)
+  > .#{$component-prefix}-capture-container,
+  > .#{$component-prefix}-capture-expandable {
+    margin-left: auto;
   }
 }
 

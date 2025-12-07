@@ -32,18 +32,19 @@ export class EventManager {
    * Attach all event handlers
    */
   attachEvents() {
-    // Click to browse - only on dropzone or header, not on previews or buttons
+    // Click to browse - only on dropzone content area, not on previews, buttons, or action container
     this.uploader.dropZone.addEventListener("click", (e) => {
+      // Elements that should NOT trigger file selection
       const isPreview = e.target.closest(".media-hub-preview");
-      const isDownloadBtn = e.target.closest(".media-hub-download-all");
-      const isClearBtn = e.target.closest(".media-hub-clear-all");
-      const isButtonContainer = e.target.closest(".media-hub-button-container");
       const isActionContainer = e.target.closest(".media-hub-action-container");
+      const isLimits = e.target.closest(".media-hub-limits");
       const isInput = e.target === this.uploader.fileInput;
 
-      if (!isPreview && !isDownloadBtn && !isClearBtn && !isButtonContainer && !isActionContainer && !isInput) {
-        this.uploader.fileInput.click();
+      if (isPreview || isActionContainer || isLimits || isInput) {
+        return;
       }
+
+      this.uploader.fileInput.click();
     });
 
     // File input change
@@ -65,6 +66,12 @@ export class EventManager {
     this.uploader.dropZone.addEventListener("drop", (e) => {
       e.preventDefault();
       this.uploader.dropZone.classList.remove("media-hub-dragover");
+
+      // Don't handle drops on action container (buttons area)
+      const isActionContainer = e.target.closest(".media-hub-action-container");
+      if (isActionContainer) {
+        return;
+      }
 
       const crossUploaderData = e.dataTransfer.getData("application/x-file-uploader");
 

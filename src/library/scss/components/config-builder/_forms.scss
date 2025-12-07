@@ -365,3 +365,37 @@ $builder-prefix: "fu-config-builder" !default;
   text-transform: uppercase;
   text-align: center;
 }
+
+// ============================================================================
+// Timer Size Selector
+// Visual timer size selector showing actual recording indicator samples
+// ============================================================================
+
+.#{$builder-prefix}-timer-size-selector {
+  // Override grid layout for timer - single timer per option, full width display
+  .#{$builder-prefix}-size-option {
+    flex: 0 0 calc(50% - 4px);
+    max-width: calc(50% - 4px);
+  }
+}
+
+.#{$builder-prefix}-timer-sample {
+  pointer-events: none; // Let parent handle clicks
+
+  // Ensure recording indicator displays properly in preview
+  &.media-hub-recording-indicator {
+    display: inline-flex !important;
+    position: relative;
+    margin: 0;
+
+    // Reduce time display width for compact preview
+    .media-hub-recording-time {
+      min-width: auto !important;
+    }
+
+    // Ensure dot animation is visible
+    .media-hub-recording-dot {
+      animation: media-hub-blink 1s ease-in-out infinite;
+    }
+  }
+}

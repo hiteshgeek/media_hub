@@ -6,6 +6,8 @@
 
 // Note: This file is imported into _file-uploader.scss and inherits its variables
 
+@use "../shared/mixins" as *;
+
 // ============================================================================
 // Capture Button States (Recording-specific)
 // ============================================================================
@@ -60,13 +62,17 @@
   justify-content: center;
   align-items: center;
   gap: var(--fu-spacing-sm);
-  padding: var(--fu-spacing-sm) var(--fu-spacing-md);
+  @include timer-size("md"); // Default to medium
   background-color: var(--fu-error-600);
   color: white;
-  border-radius: var(--fu-radius-lg);
-  font-size: var(--fu-font-size-sm);
+  border-radius: 9999px; // Fully rounded pill shape
   font-weight: var(--fu-font-weight-medium);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  // Timer size variants - all use fully rounded corners
+  &.timer-xs { @include timer-size("xs"); gap: var(--fu-spacing-xs); }
+  &.timer-sm { @include timer-size("sm"); gap: var(--fu-spacing-xs); }
+  &.timer-lg { @include timer-size("lg"); gap: var(--fu-spacing-md); }
 }
 
 // Recording type icon (video/audio/webcam)
@@ -78,15 +84,15 @@
   cursor: help;
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: var(--fu-timer-icon-md);
+    height: var(--fu-timer-icon-md);
     fill: currentColor;
   }
 }
 
 .media-hub-recording-dot {
-  width: 8px;
-  height: 8px;
+  width: var(--fu-timer-dot-md);
+  height: var(--fu-timer-dot-md);
   border-radius: 50%;
   background-color: white;
   animation: media-hub-blink 1s ease-in-out infinite;

@@ -373,6 +373,69 @@ export function getOptionDefinitions() {
             { value: "lg", label: "LG" },
           ],
         },
+        timerSize: {
+          type: "timerSizeSelect",
+          default: "md",
+          label: "Timer Size",
+          hint: "Size of the recording timer indicator (matches button height sizes)",
+          options: [
+            { value: "xs", label: "XS" },
+            { value: "sm", label: "SM" },
+            { value: "md", label: "MD" },
+            { value: "lg", label: "LG" },
+          ],
+          showWhen: (config) => config.enableVideoRecording || config.enableAudioRecording,
+        },
+        collapsibleCaptureButtons: {
+          type: "boolean",
+          default: false,
+          label: "Collapsible Capture Buttons",
+          hint: "Show capture buttons in a collapsible/expandable format with toggle button",
+          showWhen: (config) =>
+            config.enableFullPageCapture ||
+            config.enableRegionCapture ||
+            config.enableScreenCapture ||
+            config.enableVideoRecording ||
+            config.enableAudioRecording,
+        },
+        // Modal Buttons Group
+        modalMediaButtons: {
+          type: "multiSelect",
+          default: [],
+          label: "Media Capture Buttons",
+          hint: "Show media capture buttons alongside the modal button for quick access (only enabled options from Media Capture section are available)",
+          options: ["fullpage", "region", "screenshot", "video", "audio"],
+          optionLabels: {
+            fullpage: "Full Page Capture",
+            region: "Region Capture",
+            screenshot: "Screenshot Capture",
+            video: "Screen Recording",
+            audio: "Audio Recording",
+          },
+          filterOptions: (config) => {
+            const available = [];
+            if (config.enableFullPageCapture) available.push("fullpage");
+            if (config.enableRegionCapture) available.push("region");
+            if (config.enableScreenCapture) available.push("screenshot");
+            if (config.enableVideoRecording) available.push("video");
+            if (config.enableAudioRecording) available.push("audio");
+            return available;
+          },
+          showWhen: (config) =>
+            config.displayMode === "modal-minimal" ||
+            config.displayMode === "modal-detailed",
+          group: "Modal Buttons",
+        },
+        enableModalDropZone: {
+          type: "boolean",
+          default: true,
+          label: "Enable Drop Zone on Button",
+          hint: "Allow drag and drop files directly onto the modal trigger button",
+          showWhen: (config) =>
+            config.displayMode === "modal-minimal" ||
+            config.displayMode === "modal-detailed",
+          group: "Modal Buttons",
+        },
       },
     },
 
@@ -580,20 +643,7 @@ export function getOptionDefinitions() {
           group: "Audio Recording",
         },
 
-        // Display Options Group
-        collapsibleCaptureButtons: {
-          type: "boolean",
-          default: false,
-          label: "Collapsible Capture Buttons",
-          hint: "Show capture buttons in a collapsible/expandable format with toggle button",
-          showWhen: (config) =>
-            config.enableFullPageCapture ||
-            config.enableRegionCapture ||
-            config.enableScreenCapture ||
-            config.enableVideoRecording ||
-            config.enableAudioRecording,
-          group: "Display Options",
-        },
+        // Timer Display Options Group
         showRecordingTime: {
           type: "boolean",
           default: true,
@@ -828,41 +878,6 @@ export function getOptionDefinitions() {
             { value: "5", label: "Bootstrap 5" },
           ],
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
-        },
-        modalMediaButtons: {
-          type: "multiSelect",
-          default: [],
-          label: "Media Capture Buttons",
-          hint: "Show media capture buttons alongside the modal button for quick access (only enabled options from Media Capture section are available)",
-          options: ["fullpage", "region", "screenshot", "video", "audio"],
-          optionLabels: {
-            fullpage: "Full Page Capture",
-            region: "Region Capture",
-            screenshot: "Screenshot Capture",
-            video: "Screen Recording",
-            audio: "Audio Recording",
-          },
-          filterOptions: (config) => {
-            const available = [];
-            if (config.enableFullPageCapture) available.push("fullpage");
-            if (config.enableRegionCapture) available.push("region");
-            if (config.enableScreenCapture) available.push("screenshot");
-            if (config.enableVideoRecording) available.push("video");
-            if (config.enableAudioRecording) available.push("audio");
-            return available;
-          },
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
-        },
-        enableModalDropZone: {
-          type: "boolean",
-          default: true,
-          label: "Enable Drop Zone on Button",
-          hint: "Allow drag and drop files directly onto the modal trigger button",
           showWhen: (config) =>
             config.displayMode === "modal-minimal" ||
             config.displayMode === "modal-detailed",

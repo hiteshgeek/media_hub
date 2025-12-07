@@ -34,6 +34,18 @@ export default class RecordingUI {
   }
 
   /**
+   * Get the CSS class for timer size
+   * @returns {string} Size class or empty string for default (md)
+   */
+  getTimerSizeClass() {
+    const size = this.uploader.options.timerSize;
+    if (size && size !== "md") {
+      return `timer-${size}`;
+    }
+    return "";
+  }
+
+  /**
    * Get the container for recording toolbar
    * Uses external container if specified, otherwise internal captureButtonContainer
    * @returns {HTMLElement|null}
@@ -706,7 +718,8 @@ export default class RecordingUI {
     // External/modal view is minimal - elapsed time only, no limit, no size
 
     this.externalRecordingIndicator = document.createElement("div");
-    this.externalRecordingIndicator.className = "media-hub-recording-indicator media-hub-recording-indicator--minimal";
+    const timerSizeClass = this.getTimerSizeClass();
+    this.externalRecordingIndicator.className = `media-hub-recording-indicator media-hub-recording-indicator--minimal${timerSizeClass ? ` ${timerSizeClass}` : ""}`;
 
     // Recording type icon
     const typeIcon = this.getRecordingTypeIcon(this.recordingType);

@@ -228,7 +228,9 @@ export class CaptureButtonBuilder {
     }
 
     this.uploader.recordingIndicator = document.createElement("div");
-    this.uploader.recordingIndicator.className = "media-hub-recording-indicator";
+    const timerSize = options.timerSize;
+    const timerSizeClass = timerSize && timerSize !== "md" ? ` timer-${timerSize}` : "";
+    this.uploader.recordingIndicator.className = `media-hub-recording-indicator${timerSizeClass}`;
     this.uploader.recordingIndicator.style.display = "none";
 
     let innerHTML = '<span class="media-hub-recording-dot"></span>';

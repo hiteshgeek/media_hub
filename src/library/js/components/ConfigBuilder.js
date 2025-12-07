@@ -1448,6 +1448,14 @@ export default class ConfigBuilder {
           dependencyIndicator
         );
         break;
+      case "timerSizeSelect":
+        content = this.renderTimerSizeSelect(
+          key,
+          def,
+          isDisabled,
+          dependencyIndicator
+        );
+        break;
       default:
         return "";
     }
@@ -1853,6 +1861,57 @@ export default class ConfigBuilder {
           ${this.renderOptionKey(key)}
         </label>
         <div class="fu-config-builder-button-size-selector" data-option="${key}" data-type="buttonSizeSelect">
+          ${buttons}
+        </div>
+        <div class="fu-config-builder-hint">${def.hint}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render timer size selector with visual preview of timer indicator
+   */
+  renderTimerSizeSelect(
+    key,
+    def,
+    isDisabled = false,
+    dependencyIndicator = ""
+  ) {
+    const currentValue = this.config[key] || def.default;
+
+    // Recording dot SVG
+    const dotSvg = `<span class="media-hub-recording-dot"></span>`;
+
+    // Video icon SVG for recording type indicator
+    const videoIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="currentColor"><path d="M96 64c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L96 64zM464 336l73.5 58.8c4.2 3.4 9.4 5.2 14.8 5.2 13.1 0 23.7-10.6 23.7-23.7l0-240.6c0-13.1-10.6-23.7-23.7-23.7-5.4 0-10.6 1.8-14.8 5.2L464 176 464 336z"/></svg>`;
+
+    const buttons = def.options
+      .map((opt) => {
+        const isSelected = currentValue === opt.value;
+        const timerSizeClass = opt.value !== "md" ? `timer-${opt.value}` : "";
+        return `
+          <div class="fu-config-builder-size-option ${isSelected ? "selected" : ""}" data-size="${opt.value}" data-option="${key}">
+            <span class="fu-config-builder-size-label">${opt.label}</span>
+            <div class="fu-config-builder-timer-sample media-hub-recording-indicator ${timerSizeClass}"
+              ${isDisabled ? "style='pointer-events:none;opacity:0.5'" : ""}
+              title="Timer indicator (${opt.label})">
+              <span class="media-hub-recording-type">${videoIcon}</span>
+              ${dotSvg}
+              <span class="media-hub-recording-time">00:00</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    return `
+      <div class="fu-config-builder-group ${isDisabled ? "disabled" : ""}">
+        <label class="fu-config-builder-label">
+          ${def.label}
+          ${dependencyIndicator}
+          ${this.renderOptionKey(key)}
+        </label>
+        <div class="fu-config-builder-button-size-selector fu-config-builder-timer-size-selector" data-option="${key}" data-type="timerSizeSelect">
           ${buttons}
         </div>
         <div class="fu-config-builder-hint">${def.hint}</div>
@@ -3223,14 +3282,19 @@ export default class ConfigBuilder {
         });
       });
 
-    // Button size select (visual button samples)
+    // Button size select (visual button samples) - also handles timer size select
     this.element
       .querySelectorAll('.fu-config-builder-button-size-selector')
       .forEach((container) => {
         container.querySelectorAll('.fu-config-builder-size-option').forEach((option) => {
           option.addEventListener("click", () => {
+            // Check if button sample is disabled (for button size)
             const sampleBtn = option.querySelector('.fu-config-builder-size-sample');
             if (sampleBtn && sampleBtn.disabled) return;
+
+            // Check if timer sample is disabled (for timer size)
+            const timerSample = option.querySelector('.fu-config-builder-timer-sample');
+            if (timerSample && timerSample.style.pointerEvents === 'none') return;
 
             const optionKey = option.dataset.option;
             const sizeValue = option.dataset.size;

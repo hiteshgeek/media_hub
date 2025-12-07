@@ -326,6 +326,60 @@
   }
 }
 
+/// Timer/recording indicator size mixin
+/// @param {String} $size - Size variant (xs, sm, md, lg)
+@mixin timer-size($size: "md") {
+  @if $size == "xs" {
+    height: var(--fu-timer-height-xs);
+    padding: var(--fu-timer-padding-xs);
+    font-size: var(--fu-timer-font-xs);
+    .media-hub-recording-dot {
+      width: var(--fu-timer-dot-xs);
+      height: var(--fu-timer-dot-xs);
+    }
+    .media-hub-recording-type svg {
+      width: var(--fu-timer-icon-xs);
+      height: var(--fu-timer-icon-xs);
+    }
+  } @else if $size == "sm" {
+    height: var(--fu-timer-height-sm);
+    padding: var(--fu-timer-padding-sm);
+    font-size: var(--fu-timer-font-sm);
+    .media-hub-recording-dot {
+      width: var(--fu-timer-dot-sm);
+      height: var(--fu-timer-dot-sm);
+    }
+    .media-hub-recording-type svg {
+      width: var(--fu-timer-icon-sm);
+      height: var(--fu-timer-icon-sm);
+    }
+  } @else if $size == "md" {
+    height: var(--fu-timer-height-md);
+    padding: var(--fu-timer-padding-md);
+    font-size: var(--fu-timer-font-md);
+    .media-hub-recording-dot {
+      width: var(--fu-timer-dot-md);
+      height: var(--fu-timer-dot-md);
+    }
+    .media-hub-recording-type svg {
+      width: var(--fu-timer-icon-md);
+      height: var(--fu-timer-icon-md);
+    }
+  } @else if $size == "lg" {
+    height: var(--fu-timer-height-lg);
+    padding: var(--fu-timer-padding-lg);
+    font-size: var(--fu-timer-font-lg);
+    .media-hub-recording-dot {
+      width: var(--fu-timer-dot-lg);
+      height: var(--fu-timer-dot-lg);
+    }
+    .media-hub-recording-type svg {
+      width: var(--fu-timer-icon-lg);
+      height: var(--fu-timer-icon-lg);
+    }
+  }
+}
+
 /// Button base styles
 /// @param {Color} $bg - Background color
 /// @param {Color} $color - Text color
