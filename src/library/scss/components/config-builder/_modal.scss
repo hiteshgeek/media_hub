@@ -608,6 +608,20 @@ $builder-prefix: "fu-config-builder" !default;
   }
 }
 
+// Recording state for collapsible capture buttons
+.file-uploader-capture-expandable.recording {
+  .file-uploader-capture-buttons-wrapper {
+    max-width: 500px;
+    opacity: 1;
+    overflow: visible;
+
+    .file-uploader-capture-container {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+  }
+}
+
 // Media capture buttons container
 .file-uploader-capture-container {
   display: inline-flex;

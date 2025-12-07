@@ -223,6 +223,16 @@
   }
 }
 
+// Recording state for collapsible capture buttons
+.#{$component-prefix}-capture-expandable.recording {
+  .#{$component-prefix}-capture-buttons-wrapper {
+    max-width: 500px;
+    opacity: 1;
+    padding-left: 0;
+    overflow: visible;
+  }
+}
+
 // ============================================================================
 // Recording Indicator
 // ============================================================================

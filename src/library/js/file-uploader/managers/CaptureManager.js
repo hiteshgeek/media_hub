@@ -450,6 +450,10 @@ export class CaptureManager {
     if (this.uploader.videoRecordBtn) this.uploader.videoRecordBtn.style.display = "none";
     if (this.uploader.fullPageCaptureBtn) this.uploader.fullPageCaptureBtn.style.display = "none";
     if (this.uploader.regionCaptureBtn) this.uploader.regionCaptureBtn.style.display = "none";
+    // Hide the collapsible toggle button when recording
+    if (this.uploader.captureToggleBtn) this.uploader.captureToggleBtn.style.display = "none";
+    // Add recording state class to expandable container for CSS handling
+    if (this.uploader.captureExpandable) this.uploader.captureExpandable.classList.add("recording");
   }
 
   /**
@@ -461,5 +465,9 @@ export class CaptureManager {
     if (this.uploader.videoRecordBtn) this.uploader.videoRecordBtn.style.display = "";
     if (this.uploader.fullPageCaptureBtn) this.uploader.fullPageCaptureBtn.style.display = "";
     if (this.uploader.regionCaptureBtn) this.uploader.regionCaptureBtn.style.display = "";
+    // Show the collapsible toggle button when recording stops
+    if (this.uploader.captureToggleBtn) this.uploader.captureToggleBtn.style.display = "";
+    // Remove recording state class from expandable container
+    if (this.uploader.captureExpandable) this.uploader.captureExpandable.classList.remove("recording");
   }
 }
