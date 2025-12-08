@@ -972,29 +972,31 @@ export function getOptionDefinitions() {
 
 /**
  * Get the default value for an option
- * @param {Object} fileUploaderDefaults - FileUploader default options
+ * @param {Object} fileUploaderDefaults - FileUploader default options (grouped)
+ * @param {string} categoryKey - Category key (e.g., "urls", "limits")
  * @param {string} key - Option key
  * @param {*} fallbackDefault - Fallback default value
  * @returns {*} The default value
  */
-export function getOptionDefault(fileUploaderDefaults, key, fallbackDefault) {
-  if (fileUploaderDefaults && key in fileUploaderDefaults) {
-    return structuredClone(fileUploaderDefaults[key]);
+export function getOptionDefault(fileUploaderDefaults, categoryKey, key, fallbackDefault) {
+  if (fileUploaderDefaults && fileUploaderDefaults[categoryKey] && key in fileUploaderDefaults[categoryKey]) {
+    return structuredClone(fileUploaderDefaults[categoryKey][key]);
   }
   return fallbackDefault;
 }
 
 /**
- * Get default config from option definitions
+ * Get default config from option definitions (grouped structure)
  * @param {Object} optionDefinitions - Option definitions
- * @param {Object} fileUploaderDefaults - FileUploader defaults
- * @returns {Object} Default config
+ * @param {Object} fileUploaderDefaults - FileUploader defaults (grouped)
+ * @returns {Object} Default config (grouped)
  */
 export function getDefaultConfig(optionDefinitions, fileUploaderDefaults) {
   const config = {};
-  for (const category of Object.values(optionDefinitions)) {
+  for (const [categoryKey, category] of Object.entries(optionDefinitions)) {
+    config[categoryKey] = {};
     for (const [key, def] of Object.entries(category.options)) {
-      config[key] = getOptionDefault(fileUploaderDefaults, key, def.default);
+      config[categoryKey][key] = getOptionDefault(fileUploaderDefaults, categoryKey, key, def.default);
     }
   }
   return config;

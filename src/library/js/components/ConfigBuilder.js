@@ -78,30 +78,19 @@ import {
 } from "./config-builder/SearchUI.js";
 
 /**
- * Get FileUploader's default options (flattened)
- * @returns {Object} Flat object with all default option values
+ * Get FileUploader's default options (grouped)
+ * @returns {Object} Grouped object with all default option values
  */
 function getFileUploaderDefaults() {
   // Import directly from FileUploader class
   if (FileUploader && typeof FileUploader.getDefaultOptions === "function") {
     const groupedDefaults = FileUploader.getDefaultOptions();
-    // Flatten the grouped defaults
-    const flat = {};
-    for (const category of Object.values(groupedDefaults)) {
-      if (
-        typeof category === "object" &&
-        category !== null &&
-        !Array.isArray(category)
-      ) {
-        Object.assign(flat, category);
-      }
-    }
     console.log(
       "ConfigBuilder: Loaded defaults from FileUploader:",
-      Object.keys(flat).length,
-      "options"
+      Object.keys(groupedDefaults).length,
+      "groups"
     );
-    return flat;
+    return groupedDefaults;
   }
   // Fallback: try window.FileUploader (for IIFE)
   if (
@@ -110,22 +99,12 @@ function getFileUploaderDefaults() {
     typeof window.FileUploader.getDefaultOptions === "function"
   ) {
     const groupedDefaults = window.FileUploader.getDefaultOptions();
-    const flat = {};
-    for (const category of Object.values(groupedDefaults)) {
-      if (
-        typeof category === "object" &&
-        category !== null &&
-        !Array.isArray(category)
-      ) {
-        Object.assign(flat, category);
-      }
-    }
     console.log(
       "ConfigBuilder: Loaded defaults from window.FileUploader:",
-      Object.keys(flat).length,
-      "options"
+      Object.keys(groupedDefaults).length,
+      "groups"
     );
-    return flat;
+    return groupedDefaults;
   }
   // Final fallback: return empty object (will use hardcoded defaults in option definitions)
   console.warn(
