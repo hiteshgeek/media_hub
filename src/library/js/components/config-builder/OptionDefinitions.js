@@ -103,7 +103,7 @@ export function getOptionDefinitions() {
     },
 
     // File Size Limits
-    sizeLimits: {
+    limits: {
       title: "File Size Limits",
       icon: "size",
       options: {

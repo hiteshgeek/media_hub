@@ -1043,7 +1043,7 @@ export default class ConfigBuilder {
     )) {
       const isActive = categoryKey === activeCategory;
       const sliderConfigHtml =
-        categoryKey === "sizeLimits" ? this.renderSliderConfig() : "";
+        categoryKey === "limits" ? this.renderSliderConfig() : "";
       const perTypeLimitsConfigHtml =
         categoryKey === "perTypeLimits" ? this.renderPerTypeLimitsConfig() : "";
 
