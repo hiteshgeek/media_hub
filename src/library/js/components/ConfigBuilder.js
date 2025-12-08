@@ -1697,16 +1697,19 @@ export default class ConfigBuilder {
   /**
    * Render number input option (with slider for maxFiles)
    */
-  renderNumberInput(key, def, isDisabled = false, dependencyIndicator = "") {
+  renderNumberInput(key, def, isDisabled = false, dependencyIndicator = "", categoryKey = null) {
     // Use slider design for maxFiles
     if (key === "maxFiles") {
       return this.renderCountSliderInput(
         key,
         def,
         isDisabled,
-        dependencyIndicator
+        dependencyIndicator,
+        categoryKey
       );
     }
+
+    const value = categoryKey ? this.config[categoryKey][key] : this.config[key];
 
     return `
       <div class="fu-config-builder-group ${isDisabled ? "disabled" : ""}">
@@ -1717,7 +1720,7 @@ export default class ConfigBuilder {
         </label>
         <input type="number" class="fu-config-builder-input"
                data-option="${key}" data-type="number"
-               value="${this.config[key]}"
+               value="${value}"
                min="${def.min || 0}"
                max="${def.max || 999999}"
                step="${def.step || 1}"
@@ -1734,9 +1737,10 @@ export default class ConfigBuilder {
     key,
     def,
     isDisabled = false,
-    dependencyIndicator = ""
+    dependencyIndicator = "",
+    categoryKey = null
   ) {
-    const value = this.config[key] || 0;
+    const value = categoryKey ? (this.config[categoryKey][key] || 0) : (this.config[key] || 0);
     const min = def.min || 1;
     const max = def.max || 100;
     const step = def.step || 1;
