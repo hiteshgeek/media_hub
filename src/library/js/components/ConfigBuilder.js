@@ -1052,7 +1052,7 @@ export default class ConfigBuilder {
       if (categoryKey === "perTypeLimits") {
         categoryContent = this.renderPerTypeLimitsContent(category.options);
       } else {
-        categoryContent = this.renderCategoryOptions(category.options);
+        categoryContent = this.renderCategoryOptions(category.options, categoryKey);
       }
 
       html += `
@@ -1296,7 +1296,7 @@ export default class ConfigBuilder {
   /**
    * Render options for a category
    */
-  renderCategoryOptions(options) {
+  renderCategoryOptions(options, categoryKey) {
     let html = "";
 
     // Check if any options have groups
@@ -1320,7 +1320,7 @@ export default class ConfigBuilder {
 
       // Render ungrouped options first (if any)
       for (const { key, def } of ungrouped) {
-        html += this.renderOption(key, def);
+        html += this.renderOption(key, def, categoryKey);
       }
 
       // Render grouped options
@@ -1335,7 +1335,7 @@ export default class ConfigBuilder {
           <div class="fu-config-builder-option-group-content">`;
 
         for (const { key, def } of groupOptions) {
-          html += this.renderOption(key, def);
+          html += this.renderOption(key, def, categoryKey);
         }
 
         html += `</div></div>`;
@@ -1343,7 +1343,7 @@ export default class ConfigBuilder {
     } else {
       // No groups, render all options directly
       for (const [key, def] of Object.entries(options)) {
-        html += this.renderOption(key, def);
+        html += this.renderOption(key, def, categoryKey);
       }
     }
 
@@ -1372,7 +1372,7 @@ export default class ConfigBuilder {
   /**
    * Render a single option
    */
-  renderOption(key, def) {
+  renderOption(key, def, categoryKey) {
     const isDisabled = !this.isDependencySatisfied(def);
     const dependencyClass = isDisabled ? "fu-config-builder-disabled" : "";
     const dependencyIndicator = def.dependsOn
@@ -1387,14 +1387,15 @@ export default class ConfigBuilder {
     let content = "";
     switch (def.type) {
       case "boolean":
-        content = this.renderToggle(key, def, isDisabled, dependencyIndicator);
+        content = this.renderToggle(key, def, isDisabled, dependencyIndicator, categoryKey);
         break;
       case "text":
         content = this.renderTextInput(
           key,
           def,
           isDisabled,
-          dependencyIndicator
+          dependencyIndicator,
+          categoryKey
         );
         break;
       case "number":
@@ -1402,7 +1403,8 @@ export default class ConfigBuilder {
           key,
           def,
           isDisabled,
-          dependencyIndicator
+          dependencyIndicator,
+          categoryKey
         );
         break;
       case "size":
@@ -1410,7 +1412,8 @@ export default class ConfigBuilder {
           key,
           def,
           isDisabled,
-          dependencyIndicator
+          dependencyIndicator,
+          categoryKey
         );
         break;
       case "select":
@@ -1709,8 +1712,8 @@ export default class ConfigBuilder {
   /**
    * Render size input with slider and +/- buttons
    */
-  renderSizeInput(key, def, isDisabled = false, dependencyIndicator = "") {
-    const bytes = this.config[key];
+  renderSizeInput(key, def, isDisabled = false, dependencyIndicator = "", categoryKey = null) {
+    const bytes = categoryKey ? this.config[categoryKey][key] : this.config[key];
     // Determine best unit and value for display
     const { value: displayValue, unit: displayUnit } =
       this.bytesToBestUnit(bytes);
