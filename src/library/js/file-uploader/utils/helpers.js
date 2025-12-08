@@ -40,19 +40,26 @@ export function getFileExtension(filename) {
 /**
  * Determine file type category from extension
  * @param {string} extension - File extension
- * @param {Object} options - Options containing extension arrays
+ * @param {Object} options - Options containing extension arrays (supports both flat and grouped structure)
  * @returns {string} File type: 'image', 'video', 'audio', 'document', 'archive', or 'other'
  */
 export function getFileType(extension, options) {
-  if (options.imageExtensions.includes(extension)) {
+  // Support both grouped (options.fileTypes.imageExtensions) and flat (options.imageExtensions) structure
+  const imageExtensions = options.fileTypes?.imageExtensions || options.imageExtensions || [];
+  const videoExtensions = options.fileTypes?.videoExtensions || options.videoExtensions || [];
+  const audioExtensions = options.fileTypes?.audioExtensions || options.audioExtensions || [];
+  const documentExtensions = options.fileTypes?.documentExtensions || options.documentExtensions || [];
+  const archiveExtensions = options.fileTypes?.archiveExtensions || options.archiveExtensions || [];
+
+  if (imageExtensions.includes(extension)) {
     return "image";
-  } else if (options.videoExtensions.includes(extension)) {
+  } else if (videoExtensions.includes(extension)) {
     return "video";
-  } else if (options.audioExtensions.includes(extension)) {
+  } else if (audioExtensions.includes(extension)) {
     return "audio";
-  } else if (options.documentExtensions.includes(extension)) {
+  } else if (documentExtensions.includes(extension)) {
     return "document";
-  } else if (options.archiveExtensions.includes(extension)) {
+  } else if (archiveExtensions.includes(extension)) {
     return "archive";
   }
   return "other";
