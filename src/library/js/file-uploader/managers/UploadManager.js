@@ -454,9 +454,14 @@ export class UploadManager {
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+
+      // Delay removing link to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 1000);
 
       if (result.type === "zip" && result.cleanup) {
+        // Increased timeout to give browser time to download before cleanup
         setTimeout(async () => {
           try {
             const cleanupData = this.buildRequestData("cleanup", { filename: result.cleanup }, {});
@@ -471,7 +476,7 @@ export class UploadManager {
           } catch (error) {
             console.warn("Failed to cleanup temporary zip:", error);
           }
-        }, 2000);
+        }, 5000);
       }
     } catch (error) {
       this.uploader.showError(`Download failed: ${error.message}`);
