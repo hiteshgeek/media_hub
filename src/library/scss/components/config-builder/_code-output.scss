@@ -195,6 +195,131 @@ $builder-prefix: "fu-config-builder" !default;
 }
 
 // ============================================================================
+// Include Defaults Toggle
+// ============================================================================
+
+.#{$builder-prefix}-code-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #374151;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #4b5563;
+  }
+
+  input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #6366f1;
+    cursor: pointer;
+  }
+}
+
+// ============================================================================
+// Defaults Reference Section
+// ============================================================================
+
+.#{$builder-prefix}-defaults-section {
+  background: #f8fafc;
+  border-top: 1px dashed #e5e7eb;
+  overflow: hidden;
+
+  .#{$builder-prefix}-defaults-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+
+    span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+    }
+  }
+
+  .#{$builder-prefix}-defaults-chevron {
+    width: 16px;
+    height: 16px;
+    stroke: #94a3b8;
+    transition: transform 0.2s ease;
+  }
+
+  .#{$builder-prefix}-defaults-hint {
+    font-size: 10px;
+    font-weight: 400;
+    color: #94a3b8;
+    margin-left: auto;
+  }
+
+  .#{$builder-prefix}-defaults-content {
+    display: none;
+    padding: 0 14px 14px;
+    max-height: 300px;
+    overflow: auto;
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      background: #1f2937;
+      border-radius: 6px;
+      font-family: "SF Mono", Monaco, "Courier New", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #e5e7eb;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    // Syntax highlighting
+    .code-keyword {
+      color: #c084fc;
+    }
+    .code-string {
+      color: #86efac;
+    }
+    .code-number {
+      color: #fcd34d;
+    }
+    .code-boolean {
+      color: #f472b6;
+    }
+    .code-property {
+      color: #60a5fa;
+    }
+    .code-comment {
+      color: #6b7280;
+      font-style: italic;
+    }
+  }
+
+  // Expanded state
+  &.expanded {
+    .#{$builder-prefix}-defaults-chevron {
+      transform: rotate(180deg);
+    }
+
+    .#{$builder-prefix}-defaults-content {
+      display: block;
+    }
+  }
+}
+
+// ============================================================================
 // Copy success animation
 // ============================================================================
 

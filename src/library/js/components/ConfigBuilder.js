@@ -4448,10 +4448,16 @@ export default class ConfigBuilder {
       }
 
       const isActive = id === this.activeUploaderId;
+
+      // Check if "include defaults" is enabled for this uploader/type (JS only)
+      const includeDefaultsKey = `${id}-${type}-includeDefaults`;
+      const includeDefaults = this.includeDefaultsState?.[includeDefaultsKey] || false;
+
       let code;
       if (type === "js") {
-        code = this.generateSingleUploaderJsCode(id, data);
+        code = this.generateSingleUploaderJsCode(id, data, includeDefaults);
       } else if (type === "php") {
+        // PHP always includes all defaults with changed values marked
         code = this.generateSingleUploaderPhpCode(id, data);
       }
 
@@ -4459,6 +4465,27 @@ export default class ConfigBuilder {
         type === "js"
           ? this.highlightJsCode(code)
           : this.highlightPhpCode(code);
+
+      // Generate defaults section code (JS only - PHP already shows all defaults)
+      let defaultsSection = "";
+      if (type === "js") {
+        const defaultsCode = this.generateDefaultsOnlyCode(id, data, type);
+        const highlightedDefaultsCode = this.highlightJsCode(defaultsCode);
+        defaultsSection = `
+          <!-- Defaults Reference Section (not included in copy) -->
+          <div class="fu-config-builder-defaults-section" data-uploader-id="${id}" data-type="${type}">
+            <div class="fu-config-builder-defaults-header" data-action="toggle-defaults-section" data-uploader-id="${id}" data-type="${type}">
+              <svg class="fu-config-builder-defaults-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              <span>Default Values Reference</span>
+              <span class="fu-config-builder-defaults-hint">(for reference only - not copied)</span>
+            </div>
+            <div class="fu-config-builder-defaults-content">
+              <pre>${highlightedDefaultsCode}</pre>
+            </div>
+          </div>`;
+      }
 
       // Generate filename from uploader name
       const filename =
@@ -4468,6 +4495,13 @@ export default class ConfigBuilder {
           .replace(/^-|-$/g, "") || `uploader`;
 
       const fileExt = type === "js" ? "js" : "php";
+
+      // Include Defaults toggle only for JS (PHP always shows all defaults)
+      const includeDefaultsToggle = type === "js" ? `
+                <label class="fu-config-builder-code-toggle" title="Include all default values in the generated code">
+                  <input type="checkbox" data-action="toggle-defaults" data-uploader-id="${id}" data-type="${type}" ${includeDefaults ? "checked" : ""}>
+                  <span>Include Defaults</span>
+                </label>` : "";
 
       html += `
         <div class="fu-config-builder-code-card ${
@@ -4480,7 +4514,7 @@ export default class ConfigBuilder {
           ? ' <span class="fu-config-builder-code-badge">Editing</span>'
           : ""
       }</span>
-              <div class="fu-config-builder-code-actions">
+              <div class="fu-config-builder-code-actions">${includeDefaultsToggle}
                 <button class="fu-config-builder-code-btn" data-action="copy" data-uploader-id="${id}" data-type="${type}">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -4501,7 +4535,7 @@ export default class ConfigBuilder {
             <div class="fu-config-builder-code-content">
               <pre>${highlightedCode}</pre>
             </div>
-          </div>
+          </div>${defaultsSection}
         </div>
       `;
     });
@@ -4729,16 +4763,45 @@ export default class ConfigBuilder {
    * Attach event handlers to code card buttons
    */
   attachCodeCardEvents(container, type) {
+    // Initialize includeDefaultsState if not exists
+    if (!this.includeDefaultsState) {
+      this.includeDefaultsState = {};
+    }
+
+    // Toggle defaults checkbox
+    container.querySelectorAll('[data-action="toggle-defaults"]').forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        const uploaderId = checkbox.dataset.uploaderId;
+        const checkboxType = checkbox.dataset.type;
+        const includeDefaultsKey = `${uploaderId}-${checkboxType}-includeDefaults`;
+        this.includeDefaultsState[includeDefaultsKey] = checkbox.checked;
+        this.updateCodeOutput();
+      });
+    });
+
+    // Toggle defaults section visibility
+    container.querySelectorAll('[data-action="toggle-defaults-section"]').forEach((header) => {
+      header.addEventListener("click", () => {
+        const section = header.closest(".fu-config-builder-defaults-section");
+        if (section) {
+          section.classList.toggle("expanded");
+        }
+      });
+    });
+
     // Standard copy buttons (for JS and PHP tabs)
     container.querySelectorAll('[data-action="copy"]').forEach((btn) => {
       btn.addEventListener("click", () => {
         const uploaderId = btn.dataset.uploaderId;
         const uploaderData = this.uploaderInstances[uploaderId];
+        const btnType = btn.dataset.type;
+        const includeDefaultsKey = `${uploaderId}-${btnType}-includeDefaults`;
+        const includeDefaults = this.includeDefaultsState?.[includeDefaultsKey] || false;
         let code;
         if (type === "js") {
-          code = this.generateSingleUploaderJsCode(uploaderId, uploaderData);
+          code = this.generateSingleUploaderJsCode(uploaderId, uploaderData, includeDefaults);
         } else if (type === "php") {
-          code = this.generateSingleUploaderPhpCode(uploaderId, uploaderData);
+          code = this.generateSingleUploaderPhpCode(uploaderId, uploaderData, includeDefaults);
         }
         this.copyToClipboard(code, btn);
       });
@@ -4750,13 +4813,16 @@ export default class ConfigBuilder {
         const uploaderId = btn.dataset.uploaderId;
         const uploaderData = this.uploaderInstances[uploaderId];
         const filename = btn.dataset.filename;
+        const btnType = btn.dataset.type;
+        const includeDefaultsKey = `${uploaderId}-${btnType}-includeDefaults`;
+        const includeDefaults = this.includeDefaultsState?.[includeDefaultsKey] || false;
         let code, ext, mimeType;
         if (type === "js") {
-          code = this.generateSingleUploaderJsCode(uploaderId, uploaderData);
+          code = this.generateSingleUploaderJsCode(uploaderId, uploaderData, includeDefaults);
           ext = "js";
           mimeType = "text/javascript";
         } else if (type === "php") {
-          code = this.generateSingleUploaderPhpCode(uploaderId, uploaderData);
+          code = this.generateSingleUploaderPhpCode(uploaderId, uploaderData, includeDefaults);
           ext = "php";
           mimeType = "text/php";
         }
@@ -4837,8 +4903,11 @@ export default class ConfigBuilder {
   /**
    * Generate JS code for a single uploader
    * Always generates plain FileUploader config, never modal wrapper code
+   * @param {string} id - Uploader ID
+   * @param {Object} data - Uploader data
+   * @param {boolean} includeDefaults - Whether to include default values in the output
    */
-  generateSingleUploaderJsCode(id, data) {
+  generateSingleUploaderJsCode(id, data, includeDefaults = false) {
     const changedConfig = this.getChangedConfig(data.config);
     const displayMode = data.config.displayMode || "inline";
 
@@ -4859,10 +4928,22 @@ export default class ConfigBuilder {
     const groupedConfig = this.groupChangedConfig(changedConfig);
     const hasChanges = Object.keys(changedConfig).length > 0;
 
-    // Generate defaults comment header
-    let code = this.generateDefaultsComment(changedConfig, "js");
+    // If includeDefaults is true, merge defaults with changed config
+    let configToOutput = groupedConfig;
+    if (includeDefaults) {
+      configToOutput = this.getMergedConfigWithDefaults(changedConfig, "js");
+    }
 
-    if (!hasChanges) {
+    let code = "";
+
+    const groupKeys = GROUP_ORDER.filter((g) => configToOutput[g]);
+
+    if (!hasChanges && !includeDefaults) {
+      code += `const ${varName} = new FileUploader('#${containerId}');`;
+      return code;
+    }
+
+    if (groupKeys.length === 0) {
       code += `const ${varName} = new FileUploader('#${containerId}');`;
       return code;
     }
@@ -4870,10 +4951,9 @@ export default class ConfigBuilder {
     code += `const ${varName} = new FileUploader('#${containerId}', {\n`;
 
     // Output grouped config
-    const groupKeys = GROUP_ORDER.filter((g) => groupedConfig[g]);
     groupKeys.forEach((groupKey, groupIndex) => {
       const groupTitle = GROUP_TITLES[groupKey] || groupKey;
-      const groupEntries = Object.entries(groupedConfig[groupKey]);
+      const groupEntries = Object.entries(configToOutput[groupKey]);
       const isLastGroup = groupIndex === groupKeys.length - 1;
 
       code += `  // ${groupTitle}\n`;
@@ -4891,6 +4971,190 @@ export default class ConfigBuilder {
     code += `});`;
 
     return code;
+  }
+
+  /**
+   * Get merged config with defaults for display purposes
+   * @param {Object} changedConfig - The changed configuration values
+   * @param {string} language - 'js' or 'php'
+   * @returns {Object} - Grouped config with all defaults included
+   */
+  getMergedConfigWithDefaults(changedConfig, language = "js") {
+    const defaults = this.getDefaultConfig();
+    const changedKeys = Object.keys(changedConfig);
+
+    // PHP-relevant keys only (server-side validation)
+    const phpRelevantKeys = [
+      "allowedExtensions",
+      "allowedMimeTypes",
+      "imageExtensions",
+      "videoExtensions",
+      "audioExtensions",
+      "documentExtensions",
+      "archiveExtensions",
+      "perFileMaxSize",
+      "perFileMaxSizeDisplay",
+      "perFileMaxSizePerType",
+      "perFileMaxSizePerTypeDisplay",
+      "perTypeMaxTotalSize",
+      "perTypeMaxTotalSizeDisplay",
+      "perTypeMaxFileCount",
+      "totalMaxSize",
+      "totalMaxSizeDisplay",
+      "maxFiles",
+      "uploadDir",
+    ];
+
+    // PHP-relevant groups only
+    const phpRelevantGroups = ["limits", "perTypeLimits", "fileTypes", "urls"];
+
+    // Group all defaults by category
+    const groupedDefaults = {};
+    Object.entries(defaults).forEach(([key, defaultValue]) => {
+      // For PHP, skip non-relevant keys
+      if (language === "php" && !phpRelevantKeys.includes(key)) return;
+
+      const group = OPTION_TO_GROUP[key] || "other";
+
+      // For PHP, skip non-relevant groups
+      if (language === "php" && !phpRelevantGroups.includes(group)) return;
+
+      if (!groupedDefaults[group]) {
+        groupedDefaults[group] = {};
+      }
+
+      // Use changed value if available, otherwise use default
+      groupedDefaults[group][key] = changedKeys.includes(key)
+        ? changedConfig[key]
+        : defaultValue;
+    });
+
+    return groupedDefaults;
+  }
+
+  /**
+   * Generate defaults-only code for display in a separate section
+   * @param {string} id - Uploader ID
+   * @param {Object} data - Uploader data
+   * @param {string} language - 'js' or 'php'
+   * @returns {string} - Code showing only default values
+   */
+  generateDefaultsOnlyCode(id, data, language = "js") {
+    const changedConfig = this.getChangedConfig(data.config, language === "php");
+    const changedKeys = Object.keys(changedConfig);
+
+    // Get defaults - use fileUploaderDefaults (flattened) for accurate defaults
+    let defaults = this.fileUploaderDefaults;
+
+    // Fallback to getDefaultConfig if fileUploaderDefaults is empty
+    if (!defaults || Object.keys(defaults).length === 0) {
+      defaults = this.getDefaultConfig();
+    }
+
+    // PHP-relevant groups for server-side validation
+    const phpRelevantGroups = ["urls", "limits", "perTypeLimits", "fileTypes"];
+
+    // Hardcoded PHP defaults as ultimate fallback
+    const phpDefaults = {
+      uploadDir: "",
+      perFileMaxSize: 10 * 1024 * 1024,
+      perFileMaxSizeDisplay: "10MB",
+      totalMaxSize: 100 * 1024 * 1024,
+      totalMaxSizeDisplay: "100MB",
+      maxFiles: 10,
+      perFileMaxSizePerType: {},
+      perFileMaxSizePerTypeDisplay: {},
+      perTypeMaxTotalSize: {},
+      perTypeMaxTotalSizeDisplay: {},
+      perTypeMaxFileCount: {},
+      allowedExtensions: [],
+      imageExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+      videoExtensions: ["mp4", "mpeg", "mov", "avi", "webm"],
+      audioExtensions: ["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"],
+      documentExtensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"],
+      archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
+    };
+
+    // Define which keys belong to which PHP group
+    const phpGroupKeys = {
+      urls: ["uploadDir"],
+      limits: ["perFileMaxSize", "perFileMaxSizeDisplay", "totalMaxSize", "totalMaxSizeDisplay", "maxFiles"],
+      perTypeLimits: ["perFileMaxSizePerType", "perFileMaxSizePerTypeDisplay", "perTypeMaxTotalSize", "perTypeMaxTotalSizeDisplay", "perTypeMaxFileCount"],
+      fileTypes: ["allowedExtensions", "imageExtensions", "videoExtensions", "audioExtensions", "documentExtensions", "archiveExtensions"],
+    };
+
+    if (language === "php") {
+      let code = "[\n";
+      let groupIndex = 0;
+      const totalGroups = phpRelevantGroups.length;
+
+      phpRelevantGroups.forEach((groupKey) => {
+        const keysInGroup = phpGroupKeys[groupKey] || [];
+        const groupTitle = PHP_GROUP_TITLES[groupKey] || GROUP_TITLES[groupKey] || groupKey;
+        const isLastGroup = groupIndex === totalGroups - 1;
+        groupIndex++;
+
+        code += `    // ${groupTitle}\n`;
+        code += `    '${groupKey}' => [\n`;
+
+        keysInGroup.forEach((key, keyIndex) => {
+          // Use defaults first, fallback to phpDefaults
+          let value = defaults[key];
+          if (value === undefined) {
+            value = phpDefaults[key];
+          }
+          if (value === undefined) return; // Skip if still not found
+
+          const isChanged = changedKeys.includes(key);
+          const marker = isChanged ? " // <- changed" : "";
+          const comma = keyIndex < keysInGroup.length - 1 ? "," : "";
+          const phpValue = this.jsValueToPhp(value, key);
+          code += `        '${key}' => ${phpValue}${comma}${marker}\n`;
+        });
+
+        code += `    ]${isLastGroup ? "" : ","}\n`;
+      });
+
+      code += "]";
+      return code;
+    } else {
+      // For JS, group by OPTION_TO_GROUP mapping
+      const groupedDefaults = {};
+      Object.entries(defaults).forEach(([key, defaultValue]) => {
+        const group = OPTION_TO_GROUP[key] || "other";
+        if (!groupedDefaults[group]) {
+          groupedDefaults[group] = {};
+        }
+        groupedDefaults[group][key] = defaultValue;
+      });
+
+      let code = "{\n";
+      const groupKeys = GROUP_ORDER.filter((g) => groupedDefaults[g]);
+
+      groupKeys.forEach((groupKey, groupIndex) => {
+        const groupTitle = GROUP_TITLES[groupKey] || groupKey;
+        const groupEntries = Object.entries(groupedDefaults[groupKey]);
+        const isLastGroup = groupIndex === groupKeys.length - 1;
+
+        code += `  // ${groupTitle}\n`;
+        code += `  ${groupKey}: {\n`;
+
+        groupEntries.forEach(([key, value], index) => {
+          const isChanged = changedKeys.includes(key);
+          const marker = isChanged ? " // <- changed" : "";
+          const comma = index < groupEntries.length - 1 ? "," : "";
+          const formattedValue = this.formatJsValue(key, value, "    ", comma);
+          // Remove the comma from formattedValue and add marker before it
+          const valueWithoutTrailingComma = formattedValue.replace(/,(\s*\/\/.*)?\s*$/, "$1");
+          code += `    ${key}: ${valueWithoutTrailingComma}${comma}${marker}\n`;
+        });
+
+        code += `  }${isLastGroup ? "" : ","}\n`;
+      });
+
+      code += "}";
+      return code;
+    }
   }
 
   /**
@@ -5694,47 +5958,83 @@ export default class ConfigBuilder {
 
   /**
    * Generate PHP code for a single uploader
+   * Always shows all defaults with changed values marked
+   * @param {string} id - Uploader ID
+   * @param {Object} data - Uploader data
+   * @param {boolean} includeDefaults - Ignored, always includes defaults for PHP
    */
-  generateSingleUploaderPhpCode(id, data) {
+  generateSingleUploaderPhpCode(id, data, includeDefaults = false) {
     const changedConfig = this.getChangedConfig(data.config, true); // server-only
-
-    // Generate defaults comment header
-    const defaultsComment = this.generateDefaultsComment(changedConfig, "php");
+    const changedKeys = Object.keys(changedConfig);
 
     let code = `<?php\n/**\n * ${data.name} - Server Configuration\n * Generated by Config Builder\n */\n\n`;
 
-    // Add defaults reference comment if there are changes
-    if (defaultsComment) {
-      code += defaultsComment;
+    // Get defaults
+    let defaults = this.fileUploaderDefaults;
+    if (!defaults || Object.keys(defaults).length === 0) {
+      defaults = this.getDefaultConfig();
     }
 
-    // Group the changed config by category
-    const groupedConfig = this.groupChangedConfig(changedConfig);
-    const hasChanges = Object.keys(changedConfig).length > 0;
+    // Hardcoded PHP defaults as fallback
+    const phpDefaults = {
+      uploadDir: "",
+      perFileMaxSize: 10 * 1024 * 1024,
+      perFileMaxSizeDisplay: "10MB",
+      totalMaxSize: 100 * 1024 * 1024,
+      totalMaxSizeDisplay: "100MB",
+      maxFiles: 10,
+      perFileMaxSizePerType: {},
+      perFileMaxSizePerTypeDisplay: {},
+      perTypeMaxTotalSize: {},
+      perTypeMaxTotalSizeDisplay: {},
+      perTypeMaxFileCount: {},
+      allowedExtensions: [],
+      imageExtensions: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+      videoExtensions: ["mp4", "mpeg", "mov", "avi", "webm"],
+      audioExtensions: ["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"],
+      documentExtensions: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"],
+      archiveExtensions: ["zip", "rar", "7z", "tar", "gz"],
+    };
 
-    if (!hasChanges) {
-      code += `return [];\n`;
-      return code;
-    }
+    // PHP-relevant groups
+    const phpRelevantGroups = ["urls", "limits", "perTypeLimits", "fileTypes"];
+
+    // Define which keys belong to which PHP group
+    const phpGroupKeys = {
+      urls: ["uploadDir"],
+      limits: ["perFileMaxSize", "perFileMaxSizeDisplay", "totalMaxSize", "totalMaxSizeDisplay", "maxFiles"],
+      perTypeLimits: ["perFileMaxSizePerType", "perFileMaxSizePerTypeDisplay", "perTypeMaxTotalSize", "perTypeMaxTotalSizeDisplay", "perTypeMaxFileCount"],
+      fileTypes: ["allowedExtensions", "imageExtensions", "videoExtensions", "audioExtensions", "documentExtensions", "archiveExtensions"],
+    };
 
     code += `return [\n`;
 
-    // Output grouped config (only PHP-relevant groups)
-    const phpRelevantGroups = ["urls", "limits", "perTypeLimits", "fileTypes"];
-    const groupKeys = phpRelevantGroups.filter((g) => groupedConfig[g]);
-    groupKeys.forEach((groupKey, groupIndex) => {
-      const groupTitle =
-        PHP_GROUP_TITLES[groupKey] || GROUP_TITLES[groupKey] || groupKey;
-      const groupEntries = Object.entries(groupedConfig[groupKey]);
-      const isLastGroup = groupIndex === groupKeys.length - 1;
+    phpRelevantGroups.forEach((groupKey, groupIndex) => {
+      const keysInGroup = phpGroupKeys[groupKey] || [];
+      const groupTitle = PHP_GROUP_TITLES[groupKey] || GROUP_TITLES[groupKey] || groupKey;
+      const isLastGroup = groupIndex === phpRelevantGroups.length - 1;
 
       code += `    // ${groupTitle}\n`;
       code += `    '${groupKey}' => [\n`;
 
-      groupEntries.forEach(([key, value], index) => {
-        const comma = index < groupEntries.length - 1 ? "," : "";
+      keysInGroup.forEach((key, keyIndex) => {
+        // Get value: use changed value if exists, otherwise default, otherwise phpDefaults
+        let value;
+        if (changedKeys.includes(key)) {
+          value = changedConfig[key];
+        } else if (defaults[key] !== undefined) {
+          value = defaults[key];
+        } else {
+          value = phpDefaults[key];
+        }
+
+        if (value === undefined) return; // Skip if still not found
+
+        const isChanged = changedKeys.includes(key);
+        const marker = isChanged ? " // <- changed" : "";
+        const comma = keyIndex < keysInGroup.length - 1 ? "," : "";
         const phpValue = this.jsValueToPhp(value, key);
-        code += `        '${key}' => ${phpValue}${comma}\n`;
+        code += `        '${key}' => ${phpValue}${comma}${marker}\n`;
       });
 
       code += `    ]${isLastGroup ? "" : ","}\n`;
