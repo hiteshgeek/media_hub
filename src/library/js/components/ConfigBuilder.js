@@ -1709,7 +1709,7 @@ export default class ConfigBuilder {
       );
     }
 
-    const value = categoryKey ? this.config[categoryKey][key] : this.config[key];
+    const value = categoryKey ? (this.config[categoryKey]?.[key] ?? def.default ?? 0) : (this.config[key] ?? def.default ?? 0);
 
     return `
       <div class="fu-config-builder-group ${isDisabled ? "disabled" : ""}">
@@ -1740,7 +1740,7 @@ export default class ConfigBuilder {
     dependencyIndicator = "",
     categoryKey = null
   ) {
-    const value = categoryKey ? (this.config[categoryKey][key] || 0) : (this.config[key] || 0);
+    const value = categoryKey ? (this.config[categoryKey]?.[key] ?? def.default ?? 0) : (this.config[key] ?? def.default ?? 0);
     const min = def.min || 1;
     const max = def.max || 100;
     const step = def.step || 1;
@@ -1798,7 +1798,7 @@ export default class ConfigBuilder {
    * Render size input with slider and +/- buttons
    */
   renderSizeInput(key, def, isDisabled = false, dependencyIndicator = "", categoryKey = null) {
-    const bytes = categoryKey ? this.config[categoryKey][key] : this.config[key];
+    const bytes = categoryKey ? (this.config[categoryKey]?.[key] ?? def.default ?? 0) : (this.config[key] ?? def.default ?? 0);
     // Determine best unit and value for display
     const { value: displayValue, unit: displayUnit } =
       this.bytesToBestUnit(bytes);
