@@ -13,14 +13,10 @@ $config = require_once '../config.php';
 $jsConfig = [
     'allowedExtensions' => $config['allowed_extensions'],
     'perFileMaxSize' => $config['per_file_max_size'],
-    'perFileMaxSizeDisplay' => $config['per_file_max_size_display'],
     'perFileMaxSizePerType' => $config['per_file_max_size_per_type'] ?? [],
-    'perFileMaxSizePerTypeDisplay' => $config['per_file_max_size_per_type_display'] ?? [],
     'perTypeMaxTotalSize' => $config['per_type_max_total_size'],
-    'perTypeMaxTotalSizeDisplay' => $config['per_type_max_total_size_display'],
     'perTypeMaxFileCount' => $config['per_type_max_file_count'] ?? [],
     'totalMaxSize' => $config['total_max_size'],
-    'totalMaxSizeDisplay' => $config['total_max_size_display'],
     'maxFiles' => $config['max_files'],
     'imageExtensions' => $config['image_extensions'],
     'videoExtensions' => $config['video_extensions'],
@@ -29,6 +25,7 @@ $jsConfig = [
     'archiveExtensions' => $config['archive_extensions']
     // Note: URL options (uploadUrl, deleteUrl, etc.) are NOT included here
     // because they should be set by the user based on their project structure
+    // Display values (*Display) are NOT included - they are auto-generated in JavaScript
 ];
 
 echo json_encode($jsConfig);

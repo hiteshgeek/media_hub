@@ -46,9 +46,7 @@ export const DEFAULT_OPTIONS = {
   // ============================================================================
   limits: {
     perFileMaxSize: 10 * 1024 * 1024, // 10MB
-    perFileMaxSizeDisplay: "10MB",
     totalMaxSize: 100 * 1024 * 1024, // 100MB
-    totalMaxSizeDisplay: "100MB",
     maxFiles: 10,
   },
 
@@ -58,9 +56,7 @@ export const DEFAULT_OPTIONS = {
   // ============================================================================
   perTypeLimits: {
     perFileMaxSizePerType: {},
-    perFileMaxSizePerTypeDisplay: {},
     perTypeMaxTotalSize: {},
-    perTypeMaxTotalSizeDisplay: {},
     perTypeMaxFileCount: {},
   },
 

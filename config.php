@@ -5,29 +5,6 @@
  * This configuration is shared between PHP and JavaScript
  */
 
-/**
- * Convert bytes to human-readable file size
- * @param int $bytes File size in bytes
- * @return string Human-readable file size (e.g., "5MB", "1.5GB")
- */
-function formatFileSize($bytes)
-{
-    if ($bytes === 0) return '0 Bytes';
-
-    $k = 1024;
-    $sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    $i = floor(log($bytes) / log($k));
-
-    $value = round($bytes / pow($k, $i), 2);
-
-    // Remove unnecessary decimals (e.g., 5.00 becomes 5)
-    if ($value == floor($value)) {
-        $value = floor($value);
-    }
-
-    return $value . $sizes[$i];
-}
-
 // Define file size limits in bytes
 $perFileMaxSize = 5 * 1024 * 1024;  // 5MB (fallback for types without specific limit)
 $totalMaxSize = 100 * 1024 * 1024;  // 100MB (total for all files combined)
@@ -35,7 +12,7 @@ $totalMaxSize = 100 * 1024 * 1024;  // 100MB (total for all files combined)
 // Per file max size limit - maximum size for a SINGLE file of each type
 $perFileMaxSizePerType = [
     'image' => 10 * 1024 * 1024,      // 10MB per image file
-    'video' => 100 * 1024 * 1024,      // 50MB per video file
+    'video' => 100 * 1024 * 1024,     // 100MB per video file
     'audio' => 25 * 1024 * 1024,      // 25MB per audio file
     'document' => 10 * 1024 * 1024,   // 10MB per document file
     'archive' => 20 * 1024 * 1024,    // 20MB per archive file
@@ -58,20 +35,6 @@ $perTypeMaxFileCount = [
     'document' => 5,
     'archive' => 2,
 ];
-
-// Auto-generate human-readable display values
-$perFileMaxSizeDisplay = formatFileSize($perFileMaxSize);
-$totalMaxSizeDisplay = formatFileSize($totalMaxSize);
-
-$perFileMaxSizePerTypeDisplay = [];
-foreach ($perFileMaxSizePerType as $type => $size) {
-    $perFileMaxSizePerTypeDisplay[$type] = formatFileSize($size);
-}
-
-$perTypeMaxTotalSizeDisplay = [];
-foreach ($perTypeMaxTotalSize as $type => $size) {
-    $perTypeMaxTotalSizeDisplay[$type] = formatFileSize($size);
-}
 
 return [
     // Upload directory (relative to this file)
@@ -173,22 +136,18 @@ return [
 
     // Per file max size (fallback for types without specific limit)
     'per_file_max_size' => $perFileMaxSize,
-    'per_file_max_size_display' => $perFileMaxSizeDisplay,  // auto-generated
 
     // Per file max size per type - maximum size for a SINGLE file of each type
     'per_file_max_size_per_type' => $perFileMaxSizePerType,
-    'per_file_max_size_per_type_display' => $perFileMaxSizePerTypeDisplay,  // auto-generated
 
     // Per type max total size - maximum TOTAL size for all files of that type combined
     'per_type_max_total_size' => $perTypeMaxTotalSize,
-    'per_type_max_total_size_display' => $perTypeMaxTotalSizeDisplay,  // auto-generated
 
     // Per type max file count - maximum number of files allowed for each type
     'per_type_max_file_count' => $perTypeMaxFileCount,
 
     // Total max size - maximum size across all files combined
     'total_max_size' => $totalMaxSize,
-    'total_max_size_display' => $totalMaxSizeDisplay,  // auto-generated
 
     // Maximum number of files
     'max_files' => 10,
