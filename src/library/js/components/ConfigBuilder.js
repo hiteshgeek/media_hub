@@ -139,12 +139,11 @@ export default class ConfigBuilder {
     // All available options with metadata
     this.optionDefinitions = this.getOptionDefinitions();
 
-    // Current config values (grouped structure)
-    this.config = this.getDefaultConfig();
-    console.log(
-      "ConfigBuilder: config initialized with defaults:",
-      this.config
-    );
+    // Current config values (grouped structure) - will be populated from PHP
+    this.config = null;
+
+    // PHP config loaded from server
+    this.phpConfig = null;
 
     // Current active preset
     this.currentPreset = "default";
@@ -262,13 +261,88 @@ export default class ConfigBuilder {
   /**
    * Initialize the config builder
    */
-  init() {
+  async init() {
+    // Fetch PHP config from server
+    await this.fetchPHPConfig();
+
+    // Initialize config with PHP defaults merged with FileUploader defaults
+    this.config = this.getDefaultConfig();
+    console.log(
+      "ConfigBuilder: config initialized with PHP defaults:",
+      this.config
+    );
+
     this.render();
     this.attachEvents();
     this.initTooltips();
     this.updateCodeOutput();
     this.updatePreview();
     this.applyTheme();
+  }
+
+  /**
+   * Fetch PHP configuration from get-config.php
+   */
+  async fetchPHPConfig() {
+    try {
+      const response = await fetch("./api/get-config.php");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      this.phpConfig = await response.json();
+      console.log(
+        "ConfigBuilder: PHP config fetched from server:",
+        this.phpConfig
+      );
+
+      // Merge PHP config into fileUploaderDefaults for limits and file types
+      if (this.phpConfig.perFileMaxSize !== undefined) {
+        this.fileUploaderDefaults.limits.perFileMaxSize = this.phpConfig.perFileMaxSize;
+      }
+      if (this.phpConfig.totalMaxSize !== undefined) {
+        this.fileUploaderDefaults.limits.totalMaxSize = this.phpConfig.totalMaxSize;
+      }
+      if (this.phpConfig.maxFiles !== undefined) {
+        this.fileUploaderDefaults.limits.maxFiles = this.phpConfig.maxFiles;
+      }
+      if (this.phpConfig.perFileMaxSizePerType !== undefined) {
+        this.fileUploaderDefaults.perTypeLimits.perFileMaxSizePerType = this.phpConfig.perFileMaxSizePerType;
+      }
+      if (this.phpConfig.perTypeMaxTotalSize !== undefined) {
+        this.fileUploaderDefaults.perTypeLimits.perTypeMaxTotalSize = this.phpConfig.perTypeMaxTotalSize;
+      }
+      if (this.phpConfig.perTypeMaxFileCount !== undefined) {
+        this.fileUploaderDefaults.perTypeLimits.perTypeMaxFileCount = this.phpConfig.perTypeMaxFileCount;
+      }
+      if (this.phpConfig.allowedExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.allowedExtensions = this.phpConfig.allowedExtensions;
+      }
+      if (this.phpConfig.imageExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.imageExtensions = this.phpConfig.imageExtensions;
+      }
+      if (this.phpConfig.videoExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.videoExtensions = this.phpConfig.videoExtensions;
+      }
+      if (this.phpConfig.audioExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.audioExtensions = this.phpConfig.audioExtensions;
+      }
+      if (this.phpConfig.documentExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.documentExtensions = this.phpConfig.documentExtensions;
+      }
+      if (this.phpConfig.archiveExtensions !== undefined) {
+        this.fileUploaderDefaults.fileTypes.archiveExtensions = this.phpConfig.archiveExtensions;
+      }
+
+      console.log(
+        "ConfigBuilder: fileUploaderDefaults merged with PHP config:",
+        this.fileUploaderDefaults
+      );
+    } catch (error) {
+      console.warn(
+        "ConfigBuilder: Could not fetch PHP config from server, using JavaScript defaults:",
+        error
+      );
+    }
   }
 
   /**
