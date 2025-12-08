@@ -28,7 +28,7 @@ import { CrossUploaderManager, uploaderRegistry } from "../file-uploader/manager
 import { CarouselManager } from "../file-uploader/managers/CarouselManager.js";
 
 // Utilities
-import { formatAlertDetails } from "../file-uploader/utils/helpers.js";
+import { formatAlertDetails, formatFileSize } from "../file-uploader/utils/helpers.js";
 import RecordingUI from "../utils/RecordingUI.js";
 
 // UI Components
