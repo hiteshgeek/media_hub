@@ -4028,7 +4028,10 @@ export default class ConfigBuilder {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Delay revoking the URL to give browser time to start download
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
   }
 
   /**
