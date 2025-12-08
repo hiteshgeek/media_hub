@@ -90,16 +90,19 @@ include_once __DIR__ . '/../../includes/functions.php';
             }
         });
 
-        // Override default URLs for subfolder location
-        builder.config.urls.uploadUrl = '../../api/upload.php';
-        builder.config.urls.deleteUrl = '../../api/delete.php';
-        builder.config.urls.downloadAllUrl = '../../api/download-all.php';
-        builder.config.urls.cleanupZipUrl = '../../api/cleanup-zip.php';
-        builder.config.urls.copyFileUrl = '../../api/copy-file.php';
+        // Wait for builder to finish initializing (fetching PHP config)
+        builder.ready.then(() => {
+            // Override default URLs for subfolder location
+            builder.config.urls.uploadUrl = '../../api/upload.php';
+            builder.config.urls.deleteUrl = '../../api/delete.php';
+            builder.config.urls.downloadAllUrl = '../../api/download-all.php';
+            builder.config.urls.cleanupZipUrl = '../../api/cleanup-zip.php';
+            builder.config.urls.copyFileUrl = '../../api/copy-file.php';
 
-        // Refresh the UI and preview to apply URL changes
-        builder.updateCodeOutput();
-        builder.updatePreview();
+            // Refresh the UI and preview to apply URL changes
+            builder.updateCodeOutput();
+            builder.updatePreview();
+        });
 
         // Make it globally accessible for debugging
         window.configBuilder = builder;

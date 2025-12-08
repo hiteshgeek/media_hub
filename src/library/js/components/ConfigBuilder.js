@@ -192,7 +192,8 @@ export default class ConfigBuilder {
       localStorage.getItem("fu-config-builder-style-section") ||
       "primaryColors";
 
-    this.init();
+    // Initialize and expose ready promise for external code to wait for initialization
+    this.ready = this.init();
   }
 
   /**
@@ -266,7 +267,12 @@ export default class ConfigBuilder {
     await this.fetchPHPConfig();
 
     // Re-generate config with PHP defaults merged into FileUploader defaults
-    this.config = this.getDefaultConfig();
+    // IMPORTANT: Update existing config object in-place instead of replacing it
+    // This preserves any external references to builder.config
+    const newConfig = this.getDefaultConfig();
+    Object.keys(this.config).forEach(key => delete this.config[key]);
+    Object.assign(this.config, newConfig);
+
     console.log(
       "ConfigBuilder: config updated with PHP defaults:",
       this.config
