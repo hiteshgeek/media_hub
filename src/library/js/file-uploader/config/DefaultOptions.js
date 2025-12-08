@@ -146,6 +146,10 @@ export const DEFAULT_OPTIONS = {
     clearAllButtonClasses: [],
     clearAllButtonElement: null,
     buttonSize: "md",
+    timerSize: "md",
+    collapsibleCaptureButtons: false,
+    modalMediaButtons: [],
+    enableModalDropZone: true,
   },
 
   // ============================================================================
@@ -158,7 +162,6 @@ export const DEFAULT_OPTIONS = {
     enableScreenCapture: true,
     enableVideoRecording: true,
     enableAudioRecording: true,
-    collapsibleCaptureButtons: false,
     maxVideoRecordingDuration: 300,
     maxAudioRecordingDuration: 300,
     recordingCountdownDuration: 3,
