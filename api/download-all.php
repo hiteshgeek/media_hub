@@ -62,7 +62,7 @@ if (count($files) === 1) {
     echo json_encode([
         'success' => true,
         'type' => 'single',
-        'url' => 'uploads/' . $filename,
+        'url' => '/media_hub/uploads/' . $filename,
         'filename' => $files[0]['originalName']
     ]);
     exit;
@@ -137,7 +137,7 @@ if ($addedFiles === 0) {
 echo json_encode([
     'success' => true,
     'type' => 'zip',
-    'url' => 'uploads/' . $zipFilename,
+    'url' => '/media_hub/uploads/' . $zipFilename,
     'filename' => 'files.zip',
     'fileCount' => $addedFiles,
     'cleanup' => $zipFilename // For cleanup after download
