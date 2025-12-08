@@ -6,7 +6,7 @@
  */
 
 // Define file size limits in bytes
-$perFileMaxSize = 5 * 1024 * 1024;  // 5MB (fallback for types without specific limit)
+$perFileMaxSize = 3 * 1024 * 1024;  // 5MB (fallback for types without specific limit)
 $totalMaxSize = 100 * 1024 * 1024;  // 100MB (total for all files combined)
 
 // Per file max size limit - maximum size for a SINGLE file of each type
