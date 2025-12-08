@@ -139,10 +139,10 @@ export default class ConfigBuilder {
     // All available options with metadata
     this.optionDefinitions = this.getOptionDefinitions();
 
-    // Current config values (grouped structure) - will be populated from PHP
-    this.config = null;
+    // Current config values (grouped structure) - initialize with JS defaults immediately
+    this.config = this.getDefaultConfig();
 
-    // PHP config loaded from server
+    // PHP config loaded from server (will update config in init())
     this.phpConfig = null;
 
     // Current active preset
@@ -265,13 +265,14 @@ export default class ConfigBuilder {
     // Fetch PHP config from server
     await this.fetchPHPConfig();
 
-    // Initialize config with PHP defaults merged with FileUploader defaults
+    // Re-generate config with PHP defaults merged into FileUploader defaults
     this.config = this.getDefaultConfig();
     console.log(
-      "ConfigBuilder: config initialized with PHP defaults:",
+      "ConfigBuilder: config updated with PHP defaults:",
       this.config
     );
 
+    // Re-render UI with updated config
     this.render();
     this.attachEvents();
     this.initTooltips();
@@ -285,7 +286,7 @@ export default class ConfigBuilder {
    */
   async fetchPHPConfig() {
     try {
-      const response = await fetch("./api/get-config.php");
+      const response = await fetch("../../api/get-config.php");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
