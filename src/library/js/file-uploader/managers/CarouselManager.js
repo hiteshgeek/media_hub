@@ -33,7 +33,7 @@ export class CarouselManager {
    * Initialize the carousel preview component
    */
   init() {
-    if (!this.uploader.options.enableCarouselPreview) return;
+    if (!this.uploader.options.carousel.enableCarouselPreview) return;
 
     // Create carousel container (appended to body for proper z-index stacking)
     this.carouselContainer = document.createElement("div");
@@ -44,13 +44,13 @@ export class CarouselManager {
     this.carousel = new FileCarousel({
       container: this.carouselContainer,
       files: [],
-      autoPreload: this.uploader.options.carouselAutoPreload,
-      enableManualLoading: this.uploader.options.carouselEnableManualLoading,
-      showDownloadButton: this.uploader.options.carouselShowDownloadButton,
-      visibleTypes: this.uploader.options.carouselVisibleTypes,
-      previewableTypes: this.uploader.options.carouselPreviewableTypes,
-      maxPreviewRows: this.uploader.options.carouselMaxPreviewRows,
-      maxTextPreviewChars: this.uploader.options.carouselMaxTextPreviewChars,
+      autoPreload: this.uploader.options.carousel.carouselAutoPreload,
+      enableManualLoading: this.uploader.options.carousel.carouselEnableManualLoading,
+      showDownloadButton: this.uploader.options.carousel.carouselShowDownloadButton,
+      visibleTypes: this.uploader.options.carousel.carouselVisibleTypes,
+      previewableTypes: this.uploader.options.carousel.carouselPreviewableTypes,
+      maxPreviewRows: this.uploader.options.carousel.carouselMaxPreviewRows,
+      maxTextPreviewChars: this.uploader.options.carousel.carouselMaxTextPreviewChars,
       onFileDownload: (file) => {
         // Use the file uploader's download logic
         const fileObj = this.uploader.files.find((f) => f.id === file.originalId);
@@ -141,7 +141,7 @@ export class CarouselManager {
    * Update carousel with current files
    */
   update() {
-    if (!this.carousel || !this.uploader.options.enableCarouselPreview) return;
+    if (!this.carousel || !this.uploader.options.carousel.enableCarouselPreview) return;
 
     const carouselFiles = this.getCarouselFiles();
     this.carousel.updateFiles(carouselFiles);
@@ -152,7 +152,7 @@ export class CarouselManager {
    * @param {string} fileId - File ID to open
    */
   open(fileId) {
-    if (!this.carousel || !this.uploader.options.enableCarouselPreview) return;
+    if (!this.carousel || !this.uploader.options.carousel.enableCarouselPreview) return;
 
     // Update carousel files first
     this.update();

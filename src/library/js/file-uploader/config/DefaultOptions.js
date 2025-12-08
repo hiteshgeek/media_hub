@@ -253,56 +253,44 @@ export const DEFAULT_OPTIONS = {
 // ============================================================
 
 /**
- * Flatten grouped options into a flat object for internal use
- * @param {Object} groupedOptions - Options organized by category
- * @returns {Object} - Flat options object
+ * Deep merge two objects, preserving the grouped structure
+ * @param {Object} target - Target object
+ * @param {Object} source - Source object to merge
+ * @returns {Object} - Merged object
  */
-export function flattenOptions(groupedOptions) {
-  const flat = {};
-  for (const category of Object.values(groupedOptions)) {
-    if (
-      typeof category === "object" &&
-      category !== null &&
-      !Array.isArray(category)
-    ) {
-      Object.assign(flat, category);
+function deepMerge(target, source) {
+  const result = { ...target };
+
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      if (
+        source[key] &&
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key]) &&
+        target[key] &&
+        typeof target[key] === "object" &&
+        !Array.isArray(target[key])
+      ) {
+        // Both are objects, merge recursively
+        result[key] = deepMerge(target[key], source[key]);
+      } else {
+        // Otherwise, override with source value
+        result[key] = source[key];
+      }
     }
   }
-  return flat;
+
+  return result;
 }
 
 /**
- * Merge user grouped options with defaults
- * Supports both grouped and flat option formats for backward compatibility
- *
- * @param {Object} userOptions - User-provided options (grouped or flat)
+ * Merge user options with defaults, preserving grouped structure
+ * @param {Object} userOptions - User-provided options (grouped structure)
  * @param {Object} defaults - Default grouped options
- * @returns {Object} - Merged flat options object for internal use
+ * @returns {Object} - Merged grouped options object
  */
 export function mergeGroupedOptions(userOptions, defaults = DEFAULT_OPTIONS) {
-  // Start with flattened defaults
-  const flatDefaults = flattenOptions(defaults);
-
-  // Flatten user options - supports both grouped and flat formats
-  const flatUserOptions = {};
-  const groupKeys = Object.keys(defaults);
-
-  for (const [key, value] of Object.entries(userOptions)) {
-    if (
-      groupKeys.includes(key) &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      value !== null
-    ) {
-      // This is a category object - flatten it
-      Object.assign(flatUserOptions, value);
-    } else if (!groupKeys.includes(key)) {
-      // This is a flat option (not a category key) - include it directly
-      flatUserOptions[key] = value;
-    }
-  }
-
-  return { ...flatDefaults, ...flatUserOptions };
+  return deepMerge(defaults, userOptions);
 }
 
 /**

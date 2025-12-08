@@ -33,7 +33,7 @@ export class CaptureButtonBuilder {
    * @returns {string} Size class or empty string for default (md)
    */
   getButtonSizeClass() {
-    const size = this.uploader.options.buttonSize;
+    const size = this.uploader.options.buttons.buttonSize;
     if (size && size !== "md") {
       return `media-hub-capture-btn-${size}`;
     }
@@ -60,7 +60,7 @@ export class CaptureButtonBuilder {
 
     // Append capture buttons to action container
     if (this.uploader.captureButtonContainer.children.length > 0) {
-      if (this.uploader.options.collapsibleCaptureButtons) {
+      if (this.uploader.options.mediaCapture.collapsibleCaptureButtons) {
         this.createCollapsibleContainer();
       } else {
         this.uploader.actionContainer.appendChild(this.uploader.captureButtonContainer);
@@ -76,7 +76,7 @@ export class CaptureButtonBuilder {
    * Create full page capture button
    */
   createFullPageCaptureButton() {
-    if (!this.uploader.options.enableFullPageCapture || !PageCapture.isSupported()) {
+    if (!this.uploader.options.mediaCapture.enableFullPageCapture || !PageCapture.isSupported()) {
       return;
     }
 
@@ -98,7 +98,7 @@ export class CaptureButtonBuilder {
    * Create region capture button
    */
   createRegionCaptureButton() {
-    if (!this.uploader.options.enableRegionCapture || !PageCapture.isSupported()) {
+    if (!this.uploader.options.mediaCapture.enableRegionCapture || !PageCapture.isSupported()) {
       return;
     }
 
@@ -120,7 +120,7 @@ export class CaptureButtonBuilder {
    * Create screenshot button
    */
   createScreenshotButton() {
-    if (!this.uploader.options.enableScreenCapture || !ScreenCapture.isSupported()) {
+    if (!this.uploader.options.mediaCapture.enableScreenCapture || !ScreenCapture.isSupported()) {
       return;
     }
 
@@ -142,7 +142,7 @@ export class CaptureButtonBuilder {
    * Create video record button
    */
   createVideoRecordButton() {
-    if (!this.uploader.options.enableVideoRecording || !VideoRecorder.isSupported()) {
+    if (!this.uploader.options.mediaCapture.enableVideoRecording || !VideoRecorder.isSupported()) {
       return;
     }
 
@@ -166,7 +166,7 @@ export class CaptureButtonBuilder {
    * Create audio record button
    */
   createAudioRecordButton() {
-    if (!this.uploader.options.enableAudioRecording || !AudioWorkletRecorder.isSupported()) {
+    if (!this.uploader.options.mediaCapture.enableAudioRecording || !AudioWorkletRecorder.isSupported()) {
       return;
     }
 

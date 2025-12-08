@@ -86,11 +86,11 @@ include_once __DIR__ . '/../../includes/functions.php';
         });
 
         // Override default URLs for subfolder location
-        builder.config.uploadUrl = '../../api/upload.php';
-        builder.config.deleteUrl = '../../api/delete.php';
-        builder.config.downloadAllUrl = '../../api/download-all.php';
-        builder.config.cleanupZipUrl = '../../api/cleanup-zip.php';
-        builder.config.copyFileUrl = '../../api/copy-file.php';
+        builder.config.urls.uploadUrl = '../../api/upload.php';
+        builder.config.urls.deleteUrl = '../../api/delete.php';
+        builder.config.urls.downloadAllUrl = '../../api/download-all.php';
+        builder.config.urls.cleanupZipUrl = '../../api/cleanup-zip.php';
+        builder.config.urls.copyFileUrl = '../../api/copy-file.php';
 
         // Refresh the UI and preview to apply URL changes
         builder.updateCodeOutput();

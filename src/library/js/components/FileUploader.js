@@ -77,8 +77,8 @@ export default class FileUploader {
     // Initialize state
     this.files = [];
     this.selectedFiles = new Set();
-    this.limitsViewMode = this.options.defaultLimitsView || "concise";
-    this.limitsVisible = this.options.defaultLimitsVisible !== false;
+    this.limitsViewMode = this.options.limitsDisplay.defaultLimitsView || "concise";
+    this.limitsVisible = this.options.limitsDisplay.defaultLimitsVisible !== false;
     this.draggedFileObj = null;
 
     // Initialize recording UI
@@ -99,18 +99,18 @@ export default class FileUploader {
    * Validate button configuration options
    */
   validateButtonConfig() {
-    if (this.options.showDownloadAllButton && this.options.downloadAllButtonElement) {
+    if (this.options.buttons.showDownloadAllButton && this.options.buttons.downloadAllButtonElement) {
       console.error(
         "FileUploader: Cannot use both showDownloadAllButton and downloadAllButtonElement. Using internal button."
       );
-      this.options.downloadAllButtonElement = null;
+      this.options.buttons.downloadAllButtonElement = null;
     }
 
-    if (this.options.showClearAllButton && this.options.clearAllButtonElement) {
+    if (this.options.buttons.showClearAllButton && this.options.buttons.clearAllButtonElement) {
       console.error(
         "FileUploader: Cannot use both showClearAllButton and clearAllButtonElement. Using internal button."
       );
-      this.options.clearAllButtonElement = null;
+      this.options.buttons.clearAllButtonElement = null;
     }
   }
 
@@ -135,7 +135,7 @@ export default class FileUploader {
    */
   async init() {
     // Fetch config from server if enabled
-    if (this.options.autoFetchConfig) {
+    if (this.options.behavior.autoFetchConfig) {
       await this.fetchConfig();
     }
 
@@ -155,7 +155,7 @@ export default class FileUploader {
    */
   async fetchConfig() {
     try {
-      const response = await fetch(this.options.configUrl);
+      const response = await fetch(this.options.urls.configUrl);
       const config = await response.json();
 
       // Known category keys that should be flattened
@@ -190,17 +190,17 @@ export default class FileUploader {
     const files = Array.from(fileList);
 
     // Check multiple file limit
-    if (!this.options.multiple && files.length > 1) {
+    if (!this.options.behavior.multiple && files.length > 1) {
       this.showError("Only one file allowed at a time");
       return;
     }
 
     // Check max files limit
-    if (files.length + this.files.length > this.options.maxFiles) {
+    if (files.length + this.files.length > this.options.limits.maxFiles) {
       this.showError({
         filename: "",
         error: "Too many files",
-        details: formatAlertDetails("Maximum:", `${this.options.maxFiles} files`),
+        details: formatAlertDetails("Maximum:", `${this.options.limits.maxFiles} files`),
       });
       return;
     }
@@ -282,8 +282,8 @@ export default class FileUploader {
     }
 
     Alert.error(message, {
-      animation: this.options.alertAnimation,
-      duration: this.options.alertDuration,
+      animation: this.options.alerts.alertAnimation,
+      duration: this.options.alerts.alertDuration,
     });
   }
 
@@ -293,8 +293,8 @@ export default class FileUploader {
    */
   showSuccess(message) {
     Alert.success(message, {
-      animation: this.options.alertAnimation,
-      duration: this.options.alertDuration,
+      animation: this.options.alerts.alertAnimation,
+      duration: this.options.alerts.alertDuration,
     });
   }
 
@@ -304,8 +304,8 @@ export default class FileUploader {
    */
   showWarning(message) {
     Alert.warning(message, {
-      animation: this.options.alertAnimation,
-      duration: this.options.alertDuration,
+      animation: this.options.alerts.alertAnimation,
+      duration: this.options.alerts.alertDuration,
     });
   }
 
@@ -315,8 +315,8 @@ export default class FileUploader {
    */
   showInfo(message) {
     Alert.info(message, {
-      animation: this.options.alertAnimation,
-      duration: this.options.alertDuration,
+      animation: this.options.alerts.alertAnimation,
+      duration: this.options.alerts.alertDuration,
     });
   }
 
@@ -522,7 +522,7 @@ export default class FileUploader {
     }
 
     // Update options
-    this.options.theme = theme;
+    this.options.theme.theme = theme;
 
     // Update wrapper data attribute
     if (this.wrapper) {
@@ -540,7 +540,7 @@ export default class FileUploader {
    * @returns {string} Current theme: "auto" | "light" | "dark"
    */
   getTheme() {
-    return this.options.theme || "auto";
+    return this.options.theme.theme || "auto";
   }
 
   // ============================================================
@@ -552,7 +552,7 @@ export default class FileUploader {
    */
   destroy() {
     // Cleanup uploaded files from server if option is enabled
-    if (this.options.cleanupOnDestroy) {
+    if (this.options.behavior.cleanupOnDestroy) {
       this.cleanupUploadedFiles();
     }
 

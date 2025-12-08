@@ -37,30 +37,30 @@ export class LimitsDisplayManager {
     const totalSize = this.getTotalSize();
     const totalSizeFormatted = formatFileSize(totalSize);
     const fileCount = this.uploader.files.filter((f) => f.uploaded).length;
-    const typeLimits = this.uploader.options.perTypeMaxTotalSizeDisplay;
+    const typeLimits = this.uploader.options.perTypeLimits.perTypeMaxTotalSizeDisplay;
     const isDetailed = this.uploader.limitsViewMode === "detailed";
 
-    const sizePercentage = this.uploader.options.totalMaxSize > 0
-      ? (totalSize / this.uploader.options.totalMaxSize) * 100
+    const sizePercentage = this.uploader.options.limits.totalMaxSize > 0
+      ? (totalSize / this.uploader.options.limits.totalMaxSize) * 100
       : 0;
-    const filePercentage = this.uploader.options.maxFiles > 0
-      ? (fileCount / this.uploader.options.maxFiles) * 100
+    const filePercentage = this.uploader.options.limits.maxFiles > 0
+      ? (fileCount / this.uploader.options.limits.maxFiles) * 100
       : 0;
 
     const hasTypeLimits =
       (typeLimits && Object.keys(typeLimits).length > 0) ||
-      (this.uploader.options.perFileMaxSizePerType && Object.keys(this.uploader.options.perFileMaxSizePerType).length > 0) ||
-      (this.uploader.options.perTypeMaxFileCount && Object.keys(this.uploader.options.perTypeMaxFileCount).length > 0);
+      (this.uploader.options.perTypeLimits.perFileMaxSizePerType && Object.keys(this.uploader.options.perTypeLimits.perFileMaxSizePerType).length > 0) ||
+      (this.uploader.options.perTypeLimits.perTypeMaxFileCount && Object.keys(this.uploader.options.perTypeLimits.perTypeMaxFileCount).length > 0);
 
     const allTypesWithLimits = [
       ...new Set([
-        ...Object.keys(this.uploader.options.perTypeMaxTotalSizeDisplay || {}),
-        ...Object.keys(this.uploader.options.perFileMaxSizePerType || {}),
-        ...Object.keys(this.uploader.options.perTypeMaxFileCount || {}),
+        ...Object.keys(this.uploader.options.perTypeLimits.perTypeMaxTotalSizeDisplay || {}),
+        ...Object.keys(this.uploader.options.perTypeLimits.perFileMaxSizePerType || {}),
+        ...Object.keys(this.uploader.options.perTypeLimits.perTypeMaxFileCount || {}),
       ]),
     ];
 
-    const viewModeToggleButton = this.uploader.options.allowLimitsViewToggle && hasTypeLimits
+    const viewModeToggleButton = this.uploader.options.limitsDisplay.allowLimitsViewToggle && hasTypeLimits
       ? this.createViewModeToggle(isDetailed)
       : "";
 
@@ -86,10 +86,10 @@ export class LimitsDisplayManager {
     if (this.uploader.buttonContainer) {
       this.uploader.buttonContainer.style.display = hasFiles ? "flex" : "none";
     }
-    if (this.uploader.downloadAllBtn && this.uploader.options.downloadAllButtonElement) {
+    if (this.uploader.downloadAllBtn && this.uploader.options.buttons.downloadAllButtonElement) {
       this.uploader.downloadAllBtn.disabled = !hasFiles;
     }
-    if (this.uploader.clearAllBtn && this.uploader.options.clearAllButtonElement) {
+    if (this.uploader.clearAllBtn && this.uploader.options.buttons.clearAllButtonElement) {
       this.uploader.clearAllBtn.disabled = !hasFiles;
     }
   }
@@ -137,10 +137,10 @@ export class LimitsDisplayManager {
       : "";
 
     const typeCount = this.getFileTypeCount(type);
-    const typeCountLimit = this.uploader.options.perTypeMaxFileCount[type] || this.uploader.options.maxFiles;
+    const typeCountLimit = this.uploader.options.perTypeLimits.perTypeMaxFileCount[type] || this.uploader.options.limits.maxFiles;
     const typeSize = this.getFileTypeSize(type);
     const typeSizeFormatted = formatFileSize(typeSize);
-    const typeLimitBytes = this.uploader.options.perTypeMaxTotalSize[type] || 0;
+    const typeLimitBytes = this.uploader.options.perTypeLimits.perTypeMaxTotalSize[type] || 0;
 
     let typeProgressPercentage = 0;
     if (typeLimitBytes > 0) {
@@ -150,7 +150,7 @@ export class LimitsDisplayManager {
     }
 
     const typeIcon = getIcon(type, { class: "media-hub-type-icon" });
-    const perFileLimitDisplay = this.uploader.options.perFileMaxSizePerTypeDisplay[type] || this.uploader.options.perFileMaxSizeDisplay || "";
+    const perFileLimitDisplay = this.uploader.options.perTypeLimits.perFileMaxSizePerTypeDisplay[type] || this.uploader.options.limits.perFileMaxSizeDisplay || "";
 
     return `
       <div class="media-hub-type-card" ${tooltipText ? `data-tooltip="${tooltipText}" data-tooltip-position="top"` : ""}>
@@ -159,24 +159,24 @@ export class LimitsDisplayManager {
           <span class="media-hub-type-name">${capitalizeFirst(type)}</span>
         </div>
         <div class="media-hub-type-card-body">
-          ${this.uploader.options.showPerFileLimit && perFileLimitDisplay ? `
+          ${this.uploader.options.limitsDisplay.showPerFileLimit && perFileLimitDisplay ? `
             <div class="media-hub-type-stat">
               <span class="media-hub-type-stat-label">Per file</span>
               <span class="media-hub-type-stat-value">${perFileLimitDisplay}</span>
             </div>
           ` : ""}
-          ${this.uploader.options.showTypeGroupSize ? `
+          ${this.uploader.options.limitsDisplay.showTypeGroupSize ? `
             <div class="media-hub-type-stat">
               <span class="media-hub-type-stat-label">Used</span>
               <span class="media-hub-type-stat-value">${typeSizeFormatted}${typeLimitBytes > 0 && limit ? ` / ${limit}` : ""}</span>
             </div>
-            ${this.uploader.options.showTypeProgressBar ? `
+            ${this.uploader.options.limitsDisplay.showTypeProgressBar ? `
               <div class="media-hub-type-progress">
                 <div class="media-hub-type-progress-bar" style="width: ${Math.min(100, typeProgressPercentage)}%"></div>
               </div>
             ` : ""}
           ` : ""}
-          ${this.uploader.options.showTypeGroupCount ? `
+          ${this.uploader.options.limitsDisplay.showTypeGroupCount ? `
             <div class="media-hub-type-stat">
               <span class="media-hub-type-stat-label">Files</span>
               <span class="media-hub-type-stat-value">${typeCount} / ${typeCountLimit}</span>
@@ -188,15 +188,15 @@ export class LimitsDisplayManager {
   }
 
   renderOtherTypeCard(allTypesWithLimits) {
-    const typesWithLimits = Object.keys(this.uploader.options.perFileMaxSizePerType || {});
-    const allTypesCovered = this.uploader.options.allowedExtensions.every((ext) => {
+    const typesWithLimits = Object.keys(this.uploader.options.perTypeLimits.perFileMaxSizePerType || {});
+    const allTypesCovered = this.uploader.options.fileTypes.allowedExtensions.every((ext) => {
       const fileType = getFileType(ext, this.uploader.options);
       return typesWithLimits.includes(fileType);
     });
 
-    if (allTypesCovered || !this.uploader.options.showPerFileLimit) return "";
+    if (allTypesCovered || !this.uploader.options.limitsDisplay.showPerFileLimit) return "";
 
-    const otherExtensions = this.uploader.options.allowedExtensions.filter((ext) => {
+    const otherExtensions = this.uploader.options.fileTypes.allowedExtensions.filter((ext) => {
       const fileType = getFileType(ext, this.uploader.options);
       return !typesWithLimits.includes(fileType);
     });
@@ -214,7 +214,7 @@ export class LimitsDisplayManager {
         <div class="media-hub-type-card-body">
           <div class="media-hub-type-stat">
             <span class="media-hub-type-stat-label">Per file</span>
-            <span class="media-hub-type-stat-value">${this.uploader.options.perFileMaxSizeDisplay}</span>
+            <span class="media-hub-type-stat-value">${this.uploader.options.limits.perFileMaxSizeDisplay}</span>
           </div>
         </div>
       </div>
@@ -232,8 +232,8 @@ export class LimitsDisplayManager {
             <div class="media-hub-general-card-icon">${getIcon("storage", { class: "media-hub-general-icon" })}</div>
             <div class="media-hub-general-card-content">
               <span class="media-hub-general-card-label">Total Size</span>
-              <span class="media-hub-general-card-value">${totalSizeFormatted} / ${this.uploader.options.totalMaxSizeDisplay}</span>
-              ${this.uploader.options.showProgressBar ? `
+              <span class="media-hub-general-card-value">${totalSizeFormatted} / ${this.uploader.options.limits.totalMaxSizeDisplay}</span>
+              ${this.uploader.options.limitsDisplay.showProgressBar ? `
                 <div class="media-hub-general-card-progress">
                   <div class="media-hub-general-card-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div>
                 </div>
@@ -244,8 +244,8 @@ export class LimitsDisplayManager {
             <div class="media-hub-general-card-icon">${getIcon("calculator", { class: "media-hub-general-icon" })}</div>
             <div class="media-hub-general-card-content">
               <span class="media-hub-general-card-label">Total Files</span>
-              <span class="media-hub-general-card-value">${fileCount} / ${this.uploader.options.maxFiles}</span>
-              ${this.uploader.options.showProgressBar ? `
+              <span class="media-hub-general-card-value">${fileCount} / ${this.uploader.options.limits.maxFiles}</span>
+              ${this.uploader.options.limitsDisplay.showProgressBar ? `
                 <div class="media-hub-general-card-progress">
                   <div class="media-hub-general-card-progress-bar" style="width: ${Math.min(100, filePercentage)}%"></div>
                 </div>
@@ -282,13 +282,13 @@ export class LimitsDisplayManager {
     const limit = typeLimits ? typeLimits[type] : null;
     const allowedExtensions = this.getAllowedExtensionsForType(type);
     const typeCount = this.getFileTypeCount(type);
-    const typeCountLimit = this.uploader.options.perTypeMaxFileCount[type] || this.uploader.options.maxFiles;
+    const typeCountLimit = this.uploader.options.perTypeLimits.perTypeMaxFileCount[type] || this.uploader.options.limits.maxFiles;
     const typeIcon = getIcon(type, { class: "media-hub-chip-icon" });
     const tooltipText = allowedExtensions.length > 0
       ? `Allowed: ${allowedExtensions.map((ext) => `.${ext}`).join(", ")}`
       : "";
 
-    const perFileLimitDisplay = this.uploader.options.perFileMaxSizePerTypeDisplay[type] || this.uploader.options.perFileMaxSizeDisplay || "";
+    const perFileLimitDisplay = this.uploader.options.perTypeLimits.perFileMaxSizePerTypeDisplay[type] || this.uploader.options.limits.perFileMaxSizeDisplay || "";
 
     const infoItems = [];
     if (perFileLimitDisplay) {
@@ -314,14 +314,14 @@ export class LimitsDisplayManager {
   }
 
   renderOtherTypeChip(allTypesWithLimits) {
-    const allTypesCovered = this.uploader.options.allowedExtensions.every((ext) => {
+    const allTypesCovered = this.uploader.options.fileTypes.allowedExtensions.every((ext) => {
       const fileType = getFileType(ext, this.uploader.options);
       return allTypesWithLimits.includes(fileType);
     });
 
     if (allTypesCovered) return "";
 
-    const otherExtensions = this.uploader.options.allowedExtensions.filter((ext) => {
+    const otherExtensions = this.uploader.options.fileTypes.allowedExtensions.filter((ext) => {
       const fileType = getFileType(ext, this.uploader.options);
       return !allTypesWithLimits.includes(fileType);
     });
@@ -329,7 +329,7 @@ export class LimitsDisplayManager {
     const tooltipText = otherExtensions.length > 0
       ? `Allowed: ${otherExtensions.map((ext) => `.${ext}`).join(", ")}`
       : "";
-    const otherPerFileLimit = this.uploader.options.perFileMaxSizeDisplay || "";
+    const otherPerFileLimit = this.uploader.options.limits.perFileMaxSizeDisplay || "";
 
     return `
       <div class="media-hub-type-chip-expanded" ${tooltipText ? `data-tooltip="${tooltipText}" data-tooltip-position="top"` : ""}>
@@ -352,9 +352,9 @@ export class LimitsDisplayManager {
         <div class="media-hub-compact-item">
           <div class="media-hub-compact-item-header">
             <span class="media-hub-compact-item-label">Size</span>
-            <span class="media-hub-compact-item-value">${totalSizeFormatted} / ${this.uploader.options.totalMaxSizeDisplay}</span>
+            <span class="media-hub-compact-item-value">${totalSizeFormatted} / ${this.uploader.options.limits.totalMaxSizeDisplay}</span>
           </div>
-          ${this.uploader.options.showProgressBar ? `
+          ${this.uploader.options.limitsDisplay.showProgressBar ? `
             <div class="media-hub-compact-progress">
               <div class="media-hub-compact-progress-bar" style="width: ${Math.min(100, sizePercentage)}%"></div>
             </div>
@@ -363,9 +363,9 @@ export class LimitsDisplayManager {
         <div class="media-hub-compact-item">
           <div class="media-hub-compact-item-header">
             <span class="media-hub-compact-item-label">Files</span>
-            <span class="media-hub-compact-item-value">${fileCount} / ${this.uploader.options.maxFiles}</span>
+            <span class="media-hub-compact-item-value">${fileCount} / ${this.uploader.options.limits.maxFiles}</span>
           </div>
-          ${this.uploader.options.showProgressBar ? `
+          ${this.uploader.options.limitsDisplay.showProgressBar ? `
             <div class="media-hub-compact-progress">
               <div class="media-hub-compact-progress-bar" style="width: ${Math.min(100, filePercentage)}%"></div>
             </div>
@@ -421,17 +421,17 @@ export class LimitsDisplayManager {
 
   getAllowedExtensionsForType(type) {
     const typeMap = {
-      image: this.uploader.options.imageExtensions,
-      video: this.uploader.options.videoExtensions,
-      audio: this.uploader.options.audioExtensions,
-      document: this.uploader.options.documentExtensions,
-      archive: this.uploader.options.archiveExtensions,
+      image: this.uploader.options.fileTypes.imageExtensions,
+      video: this.uploader.options.fileTypes.videoExtensions,
+      audio: this.uploader.options.fileTypes.audioExtensions,
+      document: this.uploader.options.fileTypes.documentExtensions,
+      archive: this.uploader.options.fileTypes.archiveExtensions,
     };
 
     const extensions = typeMap[type.toLowerCase()] || [];
 
-    if (this.uploader.options.allowedExtensions.length > 0) {
-      return extensions.filter((ext) => this.uploader.options.allowedExtensions.includes(ext));
+    if (this.uploader.options.fileTypes.allowedExtensions.length > 0) {
+      return extensions.filter((ext) => this.uploader.options.fileTypes.allowedExtensions.includes(ext));
     }
 
     return extensions;

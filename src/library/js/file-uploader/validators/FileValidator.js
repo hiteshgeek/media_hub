@@ -39,7 +39,7 @@ export class FileValidator {
     const totalFileCount = files.length;
 
     // Check max files limit
-    if (totalFileCount >= this.options.maxFiles) {
+    if (totalFileCount >= this.options.limits.maxFiles) {
       return {
         valid: false,
         error: {
@@ -47,7 +47,7 @@ export class FileValidator {
           error: "Maximum file limit reached",
           details: this.formatAlertDetails(
             "Limit:",
-            `${this.options.maxFiles} files`
+            `${this.options.limits.maxFiles} files`
           ),
         },
       };
@@ -56,13 +56,13 @@ export class FileValidator {
     // Check file extension
     const extension = this.getFileExtension(file.name);
     if (
-      this.options.allowedExtensions.length > 0 &&
-      !this.options.allowedExtensions.includes(extension)
+      this.options.fileTypes.allowedExtensions.length > 0 &&
+      !this.options.fileTypes.allowedExtensions.includes(extension)
     ) {
       const allowedExtensions = this.options.allowedExtensions
         .slice(0, 5)
         .map((ext) => `.${ext}`);
-      const moreCount = this.options.allowedExtensions.length - 5;
+      const moreCount = this.options.fileTypes.allowedExtensions.length - 5;
       if (moreCount > 0) {
         allowedExtensions.push(`+${moreCount} more`);
       }
@@ -79,11 +79,11 @@ export class FileValidator {
     // Check per-file size limit
     const fileType = this.getFileType(extension);
     const perFileLimit =
-      this.options.perFileMaxSizePerType[fileType] ||
-      this.options.perFileMaxSize;
+      this.options.perTypeLimits.perFileMaxSizePerType[fileType] ||
+      this.options.limits.perFileMaxSize;
     const perFileLimitDisplay =
-      this.options.perFileMaxSizePerTypeDisplay[fileType] ||
-      this.options.perFileMaxSizeDisplay;
+      this.options.perTypeLimits.perFileMaxSizePerTypeDisplay[fileType] ||
+      this.options.limits.perFileMaxSizeDisplay;
 
     if (file.size > perFileLimit) {
       return {
@@ -100,11 +100,11 @@ export class FileValidator {
     }
 
     // Check per-file-type TOTAL size limit
-    const typeLimit = this.options.perTypeMaxTotalSize[fileType];
+    const typeLimit = this.options.perTypeLimits.perTypeMaxTotalSize[fileType];
     if (typeLimit) {
       const currentTypeSize = this.getFileTypeSize(fileType);
       if (currentTypeSize + file.size > typeLimit) {
-        const limitDisplay = this.options.perTypeMaxTotalSizeDisplay[fileType];
+        const limitDisplay = this.options.perTypeLimits.perTypeMaxTotalSizeDisplay[fileType];
         const remaining = typeLimit - currentTypeSize;
         return {
           valid: false,
@@ -125,8 +125,8 @@ export class FileValidator {
 
     // Check total size limit
     const currentTotalSize = this.getTotalSize();
-    if (currentTotalSize + file.size > this.options.totalMaxSize) {
-      const remaining = this.options.totalMaxSize - currentTotalSize;
+    if (currentTotalSize + file.size > this.options.limits.totalMaxSize) {
+      const remaining = this.options.limits.totalMaxSize - currentTotalSize;
       return {
         valid: false,
         error: {
@@ -159,7 +159,7 @@ export class FileValidator {
     const totalFileCount = files.length;
 
     // Check max files limit
-    if (totalFileCount >= this.options.maxFiles) {
+    if (totalFileCount >= this.options.limits.maxFiles) {
       return {
         valid: false,
         error: {
@@ -167,7 +167,7 @@ export class FileValidator {
           error: "Maximum file limit reached",
           details: this.formatAlertDetails(
             "Limit:",
-            `${this.options.maxFiles} files`
+            `${this.options.limits.maxFiles} files`
           ),
         },
       };
@@ -176,13 +176,13 @@ export class FileValidator {
     // Check file extension
     const extension = fileObj.extension || this.getFileExtension(fileObj.name);
     if (
-      this.options.allowedExtensions.length > 0 &&
-      !this.options.allowedExtensions.includes(extension)
+      this.options.fileTypes.allowedExtensions.length > 0 &&
+      !this.options.fileTypes.allowedExtensions.includes(extension)
     ) {
       const allowedExtensions = this.options.allowedExtensions
         .slice(0, 5)
         .map((ext) => `.${ext}`);
-      const moreCount = this.options.allowedExtensions.length - 5;
+      const moreCount = this.options.fileTypes.allowedExtensions.length - 5;
       if (moreCount > 0) {
         allowedExtensions.push(`+${moreCount} more`);
       }
@@ -199,11 +199,11 @@ export class FileValidator {
     // Check per-file size limit
     const fileType = this.getFileType(extension);
     const perFileLimit =
-      this.options.perFileMaxSizePerType[fileType] ||
-      this.options.perFileMaxSize;
+      this.options.perTypeLimits.perFileMaxSizePerType[fileType] ||
+      this.options.limits.perFileMaxSize;
     const perFileLimitDisplay =
-      this.options.perFileMaxSizePerTypeDisplay[fileType] ||
-      this.options.perFileMaxSizeDisplay;
+      this.options.perTypeLimits.perFileMaxSizePerTypeDisplay[fileType] ||
+      this.options.limits.perFileMaxSizeDisplay;
 
     if (fileObj.size > perFileLimit) {
       return {
@@ -223,11 +223,11 @@ export class FileValidator {
     }
 
     // Check per-file-type TOTAL size limit
-    const typeLimit = this.options.perTypeMaxTotalSize[fileType];
+    const typeLimit = this.options.perTypeLimits.perTypeMaxTotalSize[fileType];
     if (typeLimit) {
       const currentTypeSize = this.getFileTypeSize(fileType);
       if (currentTypeSize + fileObj.size > typeLimit) {
-        const limitDisplay = this.options.perTypeMaxTotalSizeDisplay[fileType];
+        const limitDisplay = this.options.perTypeLimits.perTypeMaxTotalSizeDisplay[fileType];
         const remaining = typeLimit - currentTypeSize;
         return {
           valid: false,
@@ -247,7 +247,7 @@ export class FileValidator {
     }
 
     // Check per-file-type file COUNT limit
-    const typeCountLimit = this.options.perTypeMaxFileCount[fileType];
+    const typeCountLimit = this.options.perTypeLimits.perTypeMaxFileCount[fileType];
     if (typeCountLimit) {
       const currentTypeCount = this.getFileTypeCount(fileType);
       if (currentTypeCount >= typeCountLimit) {
@@ -267,8 +267,8 @@ export class FileValidator {
 
     // Check total size limit
     const currentTotalSize = this.getTotalSize();
-    if (currentTotalSize + fileObj.size > this.options.totalMaxSize) {
-      const remaining = this.options.totalMaxSize - currentTotalSize;
+    if (currentTotalSize + fileObj.size > this.options.limits.totalMaxSize) {
+      const remaining = this.options.limits.totalMaxSize - currentTotalSize;
       return {
         valid: false,
         error: {
@@ -301,7 +301,7 @@ export class FileValidator {
    * @returns {Object|null} - Returns the duplicate file object if found, null otherwise
    */
   checkDuplicate(file) {
-    const checkBy = this.options.duplicateCheckBy;
+    const checkBy = this.options.behavior.duplicateCheckBy;
     const files = this.getFiles();
 
     // Only check against uploaded or uploading files
@@ -353,7 +353,7 @@ export class FileValidator {
    * @returns {Object|null} - Duplicate file object or null
    */
   checkDuplicateByNameSize(name, size) {
-    const checkBy = this.options.duplicateCheckBy;
+    const checkBy = this.options.behavior.duplicateCheckBy;
     const files = this.getFiles();
     const existingFiles = files.filter((f) => f.uploaded);
 
@@ -399,15 +399,15 @@ export class FileValidator {
    * @returns {string} - File type (image, video, audio, document, archive, other)
    */
   getFileType(extension) {
-    if (this.options.imageExtensions.includes(extension)) {
+    if (this.options.fileTypes.imageExtensions.includes(extension)) {
       return "image";
-    } else if (this.options.videoExtensions.includes(extension)) {
+    } else if (this.options.fileTypes.videoExtensions.includes(extension)) {
       return "video";
-    } else if (this.options.audioExtensions.includes(extension)) {
+    } else if (this.options.fileTypes.audioExtensions.includes(extension)) {
       return "audio";
-    } else if (this.options.documentExtensions.includes(extension)) {
+    } else if (this.options.fileTypes.documentExtensions.includes(extension)) {
       return "document";
-    } else if (this.options.archiveExtensions.includes(extension)) {
+    } else if (this.options.fileTypes.archiveExtensions.includes(extension)) {
       return "archive";
     }
     return "other";

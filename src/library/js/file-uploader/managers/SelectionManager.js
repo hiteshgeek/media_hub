@@ -98,7 +98,7 @@ export class SelectionManager {
         { files: selectedFilesData }
       );
 
-      const response = await fetch(this.uploader.options.downloadAllUrl, {
+      const response = await fetch(this.uploader.options.urls.downloadAllUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export class SelectionManager {
               {}
             );
 
-            await fetch(this.uploader.options.cleanupZipUrl, {
+            await fetch(this.uploader.options.urls.cleanupZipUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -170,7 +170,7 @@ export class SelectionManager {
     }
 
     // Confirm deletion if enabled
-    if (this.uploader.options.confirmBeforeDelete) {
+    if (this.uploader.options.behavior.confirmBeforeDelete) {
       const confirmed = await this.uploader.crossUploaderManager.showConfirmDialog({
         title: "Delete Selected",
         message: `Are you sure you want to delete <strong>${selectedFileIds.length}</strong> selected file(s)?`,

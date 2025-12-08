@@ -99,7 +99,7 @@ export class EventManager {
    * Set up external drop zone for drag-and-drop file uploads
    */
   setupExternalDropZone() {
-    const externalDropZone = this.uploader.options.externalDropZone;
+    const externalDropZone = this.uploader.options.dragDrop.externalDropZone;
     if (!externalDropZone) return;
 
     let dropZoneElement;
@@ -112,7 +112,7 @@ export class EventManager {
     if (!dropZoneElement) return;
 
     this.externalDropZoneElement = dropZoneElement;
-    const activeClass = this.uploader.options.externalDropZoneActiveClass;
+    const activeClass = this.uploader.options.dragDrop.externalDropZoneActiveClass;
 
     dropZoneElement.setAttribute("data-tooltip", "Drop files here");
     dropZoneElement.setAttribute("data-tooltip-position", "top");
@@ -196,7 +196,7 @@ export class EventManager {
    * Attach beforeunload handler for cleanup
    */
   attachBeforeUnloadHandler() {
-    if (!this.uploader.options.cleanupOnUnload) {
+    if (!this.uploader.options.behavior.cleanupOnUnload) {
       return;
     }
 

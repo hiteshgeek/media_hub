@@ -45,7 +45,7 @@ export class PreviewManager {
     preview.dataset.fileId = fileObj.id;
 
     // Make preview draggable for cross-uploader drag-drop
-    if (this.uploader.options.enableCrossUploaderDrag) {
+    if (this.uploader.options.dragDrop.enableCrossUploaderDrag) {
       preview.draggable = true;
       preview.dataset.uploaderId = this.uploader.instanceId;
       this.uploader.eventManager.attachPreviewDragEvents(preview, fileObj);
@@ -113,10 +113,10 @@ export class PreviewManager {
 
     const actions = `
       <div class="media-hub-actions">
-        <button type="button" class="media-hub-download" data-file-id="${fileObj.id}" title="Download file" style="display: none;">
+        <button type="button" class="media-hub-download" data-file-id="${fileObj.id}" data-tooltip="Download file" data-tooltip-position="top" style="display: none;">
           ${getIcon("download")}
         </button>
-        <button type="button" class="media-hub-delete" data-file-id="${fileObj.id}" title="Delete file">
+        <button type="button" class="media-hub-delete" data-file-id="${fileObj.id}" data-tooltip="Delete file" data-tooltip-position="top">
           ${getIcon("trash")}
         </button>
       </div>
@@ -164,7 +164,7 @@ export class PreviewManager {
     // Attach delete event
     const deleteBtn = preview.querySelector(".media-hub-delete");
     deleteBtn.addEventListener("click", async () => {
-      if (this.uploader.options.confirmBeforeDelete) {
+      if (this.uploader.options.behavior.confirmBeforeDelete) {
         const confirmed = await this.uploader.crossUploaderManager.showConfirmDialog({
           title: "Delete File",
           message: `Are you sure you want to delete "<strong>${fileObj.name}</strong>"?`,
@@ -199,7 +199,7 @@ export class PreviewManager {
     fileObj.downloadBtn = downloadBtn;
 
     // Attach click event to open carousel preview
-    if (this.uploader.options.enableCarouselPreview) {
+    if (this.uploader.options.carousel.enableCarouselPreview) {
       previewInner.addEventListener("click", (e) => {
         if (
           e.target.closest(".media-hub-checkbox") ||

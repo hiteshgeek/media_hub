@@ -60,12 +60,12 @@ export class CrossUploaderManager {
       return;
     }
 
-    if (this.uploader.options.preventDuplicates) {
+    if (this.uploader.options.behavior.preventDuplicates) {
       const duplicate = this.checkDuplicateByNameSize(sourceFileObj.name, sourceFileObj.size);
       if (duplicate) {
         this.uploader.showError(`"${sourceFileObj.name}" is a duplicate file and has already been uploaded.`);
-        if (this.uploader.options.onDuplicateFile) {
-          this.uploader.options.onDuplicateFile(sourceFileObj, duplicate);
+        if (this.uploader.options.callbacks.onDuplicateFile) {
+          this.uploader.options.callbacks.onDuplicateFile(sourceFileObj, duplicate);
         }
         return;
       }
@@ -75,7 +75,7 @@ export class CrossUploaderManager {
     if (!action) return;
 
     const sourceUploadDir = sourceUploader.options.uploadDir || "";
-    const targetUploadDir = this.uploader.options.uploadDir || "";
+    const targetUploadDir = this.uploader.options.urls.uploadDir || "";
     const needsServerCopy = sourceUploadDir !== targetUploadDir;
 
     const result = await this.copyFileFromUploader(sourceFileObj, sourceUploader);
@@ -105,7 +105,7 @@ export class CrossUploaderManager {
    * @returns {Object|null} - Returns the duplicate file object if found
    */
   checkDuplicateByNameSize(name, size) {
-    const checkBy = this.uploader.options.duplicateCheckBy;
+    const checkBy = this.uploader.options.behavior.duplicateCheckBy;
     const existingFiles = this.uploader.files.filter((f) => f.uploaded || f.uploading);
 
     for (const existingFile of existingFiles) {
@@ -306,7 +306,7 @@ export class CrossUploaderManager {
    */
   async copyFileFromUploader(sourceFileObj, sourceUploader) {
     const sourceUploadDir = sourceUploader.options.uploadDir || "";
-    const targetUploadDir = this.uploader.options.uploadDir || "";
+    const targetUploadDir = this.uploader.options.urls.uploadDir || "";
     const needsServerCopy = sourceUploadDir !== targetUploadDir;
 
     let serverFilename = sourceFileObj.serverFilename;
@@ -324,7 +324,7 @@ export class CrossUploaderManager {
           sourceUploader,
         });
 
-        const response = await fetch(this.uploader.options.copyFileUrl, {
+        const response = await fetch(this.uploader.options.urls.copyFileUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -389,24 +389,24 @@ export class CrossUploaderManager {
    */
   validateCrossUploaderFile(fileObj) {
     const totalFileCount = this.uploader.files.length;
-    if (totalFileCount >= this.uploader.options.maxFiles) {
+    if (totalFileCount >= this.uploader.options.limits.maxFiles) {
       return {
         valid: false,
         error: {
           filename: fileObj.name,
           error: "Maximum file limit reached",
-          details: formatAlertDetails("Limit:", `${this.uploader.options.maxFiles} files`),
+          details: formatAlertDetails("Limit:", `${this.uploader.options.limits.maxFiles} files`),
         },
       };
     }
 
     const extension = fileObj.extension || fileObj.name.split(".").pop().toLowerCase();
     if (
-      this.uploader.options.allowedExtensions.length > 0 &&
-      !this.uploader.options.allowedExtensions.includes(extension)
+      this.uploader.options.fileTypes.allowedExtensions.length > 0 &&
+      !this.uploader.options.fileTypes.allowedExtensions.includes(extension)
     ) {
-      const allowedExtensions = this.uploader.options.allowedExtensions.slice(0, 5).map((ext) => `.${ext}`);
-      const moreCount = this.uploader.options.allowedExtensions.length - 5;
+      const allowedExtensions = this.uploader.options.fileTypes.allowedExtensions.slice(0, 5).map((ext) => `.${ext}`);
+      const moreCount = this.uploader.options.fileTypes.allowedExtensions.length - 5;
       if (moreCount > 0) {
         allowedExtensions.push(`+${moreCount} more`);
       }
@@ -421,8 +421,8 @@ export class CrossUploaderManager {
     }
 
     const fileType = getFileType(extension, this.uploader.options);
-    const perFileLimit = this.uploader.options.perFileMaxSizePerType[fileType] || this.uploader.options.perFileMaxSize;
-    const perFileLimitDisplay = this.uploader.options.perFileMaxSizePerTypeDisplay[fileType] || this.uploader.options.perFileMaxSizeDisplay;
+    const perFileLimit = this.uploader.options.perTypeLimits.perFileMaxSizePerType[fileType] || this.uploader.options.limits.perFileMaxSize;
+    const perFileLimitDisplay = this.uploader.options.perTypeLimits.perFileMaxSizePerTypeDisplay[fileType] || this.uploader.options.limits.perFileMaxSizeDisplay;
 
     if (fileObj.size > perFileLimit) {
       return {
@@ -435,11 +435,11 @@ export class CrossUploaderManager {
       };
     }
 
-    const typeLimit = this.uploader.options.perTypeMaxTotalSize[fileType];
+    const typeLimit = this.uploader.options.perTypeLimits.perTypeMaxTotalSize[fileType];
     if (typeLimit) {
       const currentTypeSize = this.uploader.limitsManager.getFileTypeSize(fileType);
       if (currentTypeSize + fileObj.size > typeLimit) {
-        const limitDisplay = this.uploader.options.perTypeMaxTotalSizeDisplay[fileType];
+        const limitDisplay = this.uploader.options.perTypeLimits.perTypeMaxTotalSizeDisplay[fileType];
         const remaining = typeLimit - currentTypeSize;
         return {
           valid: false,
@@ -452,7 +452,7 @@ export class CrossUploaderManager {
       }
     }
 
-    const typeCountLimit = this.uploader.options.perTypeMaxFileCount[fileType];
+    const typeCountLimit = this.uploader.options.perTypeLimits.perTypeMaxFileCount[fileType];
     if (typeCountLimit) {
       const currentTypeCount = this.uploader.limitsManager.getFileTypeCount(fileType);
       if (currentTypeCount >= typeCountLimit) {
@@ -468,14 +468,14 @@ export class CrossUploaderManager {
     }
 
     const currentTotalSize = this.uploader.limitsManager.getTotalSize();
-    if (currentTotalSize + fileObj.size > this.uploader.options.totalMaxSize) {
-      const remaining = this.uploader.options.totalMaxSize - currentTotalSize;
+    if (currentTotalSize + fileObj.size > this.uploader.options.limits.totalMaxSize) {
+      const remaining = this.uploader.options.limits.totalMaxSize - currentTotalSize;
       return {
         valid: false,
         error: {
           filename: fileObj.name,
           error: "Exceeds total upload size limit",
-          details: formatAlertDetails("Limit:", this.uploader.options.totalMaxSizeDisplay) + " " + formatAlertDetails("Available:", formatFileSize(remaining)),
+          details: formatAlertDetails("Limit:", this.uploader.options.limits.totalMaxSizeDisplay) + " " + formatAlertDetails("Available:", formatFileSize(remaining)),
         },
       };
     }

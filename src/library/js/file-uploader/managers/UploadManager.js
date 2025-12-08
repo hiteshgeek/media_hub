@@ -114,15 +114,15 @@ export class UploadManager {
     fileObj.uploading = true;
     this.updatePreviewState(fileObj, "uploading");
 
-    if (this.uploader.options.onUploadStart) {
-      this.uploader.options.onUploadStart(fileObj);
+    if (this.uploader.options.callbacks.onUploadStart) {
+      this.uploader.options.callbacks.onUploadStart(fileObj);
     }
 
     const formData = new FormData();
     formData.append("file", fileObj.file);
 
-    if (this.uploader.options.uploadDir) {
-      formData.append("uploadDir", this.uploader.options.uploadDir);
+    if (this.uploader.options.urls.uploadDir) {
+      formData.append("uploadDir", this.uploader.options.urls.uploadDir);
     }
 
     // Add additional data to upload request (global + uploadData + onBeforeRequest)
@@ -161,7 +161,7 @@ export class UploadManager {
         });
       });
 
-      xhr.open("POST", this.uploader.options.uploadUrl);
+      xhr.open("POST", this.uploader.options.urls.uploadUrl);
       xhr.send(formData);
 
       const result = await uploadPromise;
@@ -182,8 +182,8 @@ export class UploadManager {
         this.uploader.limitsManager.updateDisplay();
         this.uploader.carouselManager.update();
 
-        if (this.uploader.options.onUploadSuccess) {
-          this.uploader.options.onUploadSuccess(fileObj, result);
+        if (this.uploader.options.callbacks.onUploadSuccess) {
+          this.uploader.options.callbacks.onUploadSuccess(fileObj, result);
         }
       } else {
         const error = new Error(
@@ -208,8 +208,8 @@ export class UploadManager {
       }
       this.uploader.showError(errorData);
 
-      if (this.uploader.options.onUploadError) {
-        this.uploader.options.onUploadError(fileObj, error);
+      if (this.uploader.options.callbacks.onUploadError) {
+        this.uploader.options.callbacks.onUploadError(fileObj, error);
       }
     }
   }
@@ -262,7 +262,7 @@ export class UploadManager {
       overlay.style.display = "flex";
 
       // Show progress bar or spinner based on showUploadProgress option
-      const showProgress = this.uploader.options.showUploadProgress !== false;
+      const showProgress = this.uploader.options.behavior.showUploadProgress !== false;
       if (spinner) spinner.style.display = showProgress ? "none" : "block";
       if (progressContainer) progressContainer.style.display = showProgress ? "block" : "none";
       if (progressText) progressText.style.display = showProgress ? "block" : "none";
@@ -329,13 +329,13 @@ export class UploadManager {
     if (fileObj.uploaded && fileObj.serverFilename) {
       try {
         const baseData = { filename: fileObj.serverFilename };
-        if (this.uploader.options.uploadDir) {
-          baseData.uploadDir = this.uploader.options.uploadDir;
+        if (this.uploader.options.urls.uploadDir) {
+          baseData.uploadDir = this.uploader.options.urls.uploadDir;
         }
 
         const deleteData = this.buildRequestData("delete", baseData, { fileObj });
 
-        const response = await fetch(this.uploader.options.deleteUrl, {
+        const response = await fetch(this.uploader.options.urls.deleteUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -349,8 +349,8 @@ export class UploadManager {
           throw new Error(result.error || "Delete failed");
         }
 
-        if (this.uploader.options.onDeleteSuccess) {
-          this.uploader.options.onDeleteSuccess(fileObj, result);
+        if (this.uploader.options.callbacks.onDeleteSuccess) {
+          this.uploader.options.callbacks.onDeleteSuccess(fileObj, result);
         }
       } catch (error) {
         // Remove deleting state on error
@@ -364,8 +364,8 @@ export class UploadManager {
 
         this.uploader.showError(`Failed to delete ${fileObj.name}: ${error.message}`);
 
-        if (this.uploader.options.onDeleteError) {
-          this.uploader.options.onDeleteError(fileObj, error);
+        if (this.uploader.options.callbacks.onDeleteError) {
+          this.uploader.options.callbacks.onDeleteError(fileObj, error);
         }
         return;
       }
@@ -428,7 +428,7 @@ export class UploadManager {
     try {
       const downloadData = this.buildRequestData("download", { files: uploadedFiles }, { files: uploadedFiles });
 
-      const response = await fetch(this.uploader.options.downloadAllUrl, {
+      const response = await fetch(this.uploader.options.urls.downloadAllUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -461,7 +461,7 @@ export class UploadManager {
           try {
             const cleanupData = this.buildRequestData("cleanup", { filename: result.cleanup }, {});
 
-            await fetch(this.uploader.options.cleanupZipUrl, {
+            await fetch(this.uploader.options.urls.cleanupZipUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -514,7 +514,7 @@ export class UploadManager {
       return;
     }
 
-    if (this.uploader.options.confirmBeforeDelete) {
+    if (this.uploader.options.behavior.confirmBeforeDelete) {
       const confirmed = await this.uploader.crossUploaderManager.showConfirmDialog({
         title: "Clear All Files",
         message: `Are you sure you want to delete all <strong>${uploadedFiles.length}</strong> file(s)?`,
@@ -555,8 +555,8 @@ export class UploadManager {
     }));
 
     const baseData = { files: fileData };
-    if (this.uploader.options.uploadDir) {
-      baseData.uploadDir = this.uploader.options.uploadDir;
+    if (this.uploader.options.urls.uploadDir) {
+      baseData.uploadDir = this.uploader.options.urls.uploadDir;
     }
 
     // Use "delete" type since this is deleting uploaded files (uses deleteData)
@@ -566,9 +566,9 @@ export class UploadManager {
       const blob = new Blob([JSON.stringify(payload)], {
         type: "application/json",
       });
-      navigator.sendBeacon(this.uploader.options.deleteUrl, blob);
+      navigator.sendBeacon(this.uploader.options.urls.deleteUrl, blob);
     } else {
-      fetch(this.uploader.options.deleteUrl, {
+      fetch(this.uploader.options.urls.deleteUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

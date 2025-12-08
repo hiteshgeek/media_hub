@@ -122,9 +122,9 @@ export class CaptureManager {
 
       if (!this.pageCapture) {
         this.pageCapture = new PageCapture({
-          showDimensions: this.uploader.options.regionCaptureShowDimensions,
-          dimensionsPosition: this.uploader.options.regionCaptureDimensionsPosition,
-          immediateCapture: this.uploader.options.regionCaptureImmediateCapture,
+          showDimensions: this.uploader.options.mediaCapture.regionCaptureShowDimensions,
+          dimensionsPosition: this.uploader.options.mediaCapture.regionCaptureDimensionsPosition,
+          immediateCapture: this.uploader.options.mediaCapture.regionCaptureImmediateCapture,
           onCaptureError: (error) => {
             this.uploader.showError(error.message);
           },
@@ -171,11 +171,11 @@ export class CaptureManager {
 
       const maxRecordingSize = this.calculateEffectiveMaxRecordingSize("video");
       this.videoRecorder = new VideoRecorder({
-        maxDuration: this.uploader.options.maxVideoRecordingDuration * 1000,
-        systemAudioConstraints: this.uploader.options.enableSystemAudio,
-        microphoneAudioConstraints: this.uploader.options.enableMicrophoneAudio,
-        videoBitsPerSecond: this.uploader.options.videoBitsPerSecond,
-        audioBitsPerSecond: this.uploader.options.audioBitsPerSecond,
+        maxDuration: this.uploader.options.mediaCapture.maxVideoRecordingDuration * 1000,
+        systemAudioConstraints: this.uploader.options.mediaCapture.enableSystemAudio,
+        microphoneAudioConstraints: this.uploader.options.mediaCapture.enableMicrophoneAudio,
+        videoBitsPerSecond: this.uploader.options.mediaCapture.videoBitsPerSecond,
+        audioBitsPerSecond: this.uploader.options.mediaCapture.audioBitsPerSecond,
         maxFileSize: maxRecordingSize,
         onAutoStop: (file) => this.handleVideoAutoStop(file),
         onSizeLimitReached: (status) => this.handleRecordingSizeLimitReached(status, "video"),
@@ -246,7 +246,7 @@ export class CaptureManager {
       this.uploader.showInfo(`Recording stopped: file size limit reached (${this._autoStopReason.formattedSize})`);
     } else {
       // Max duration reached
-      const maxDuration = this.uploader.options.maxVideoRecordingDuration;
+      const maxDuration = this.uploader.options.mediaCapture.maxVideoRecordingDuration;
       const mins = Math.floor(maxDuration / 60);
       const secs = maxDuration % 60;
       const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
@@ -280,14 +280,14 @@ export class CaptureManager {
         this.uploader.audioRecordBtn.disabled = true;
       }
 
-      const enableMic = this.uploader.options.enableMicrophoneAudio ||
-        (!this.uploader.options.enableMicrophoneAudio && !this.uploader.options.enableSystemAudio);
+      const enableMic = this.uploader.options.mediaCapture.enableMicrophoneAudio ||
+        (!this.uploader.options.mediaCapture.enableMicrophoneAudio && !this.uploader.options.mediaCapture.enableSystemAudio);
 
       const maxAudioRecordingSize = this.calculateEffectiveMaxRecordingSize("audio");
       this.audioRecorder = new AudioWorkletRecorder({
         enableMicrophoneAudio: enableMic,
-        enableSystemAudio: this.uploader.options.enableSystemAudio,
-        maxRecordingDuration: this.uploader.options.maxAudioRecordingDuration,
+        enableSystemAudio: this.uploader.options.mediaCapture.enableSystemAudio,
+        maxRecordingDuration: this.uploader.options.mediaCapture.maxAudioRecordingDuration,
         sampleRate: 48000,
         bitDepth: 16,
         numberOfChannels: 2,
@@ -361,7 +361,7 @@ export class CaptureManager {
       this.uploader.showInfo(`Recording stopped: file size limit reached (${this._autoStopReason.formattedSize})`);
     } else {
       // Max duration reached
-      const maxDuration = this.uploader.options.maxAudioRecordingDuration;
+      const maxDuration = this.uploader.options.mediaCapture.maxAudioRecordingDuration;
       const mins = Math.floor(maxDuration / 60);
       const secs = maxDuration % 60;
       const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
@@ -397,26 +397,26 @@ export class CaptureManager {
   calculateEffectiveMaxRecordingSize(recordingType) {
     const limits = [];
 
-    if (recordingType === "video" && this.uploader.options.maxVideoRecordingFileSize) {
-      limits.push(this.uploader.options.maxVideoRecordingFileSize);
-    } else if (recordingType === "audio" && this.uploader.options.maxAudioRecordingFileSize) {
-      limits.push(this.uploader.options.maxAudioRecordingFileSize);
+    if (recordingType === "video" && this.uploader.options.mediaCapture.maxVideoRecordingFileSize) {
+      limits.push(this.uploader.options.mediaCapture.maxVideoRecordingFileSize);
+    } else if (recordingType === "audio" && this.uploader.options.mediaCapture.maxAudioRecordingFileSize) {
+      limits.push(this.uploader.options.mediaCapture.maxAudioRecordingFileSize);
     }
 
-    if (this.uploader.options.perFileMaxSize) {
-      limits.push(this.uploader.options.perFileMaxSize);
+    if (this.uploader.options.limits.perFileMaxSize) {
+      limits.push(this.uploader.options.limits.perFileMaxSize);
     }
 
-    if (this.uploader.options.perFileMaxSizePerType) {
-      const perTypeLimit = this.uploader.options.perFileMaxSizePerType[recordingType];
+    if (this.uploader.options.perTypeLimits.perFileMaxSizePerType) {
+      const perTypeLimit = this.uploader.options.perTypeLimits.perFileMaxSizePerType[recordingType];
       if (perTypeLimit) {
         limits.push(perTypeLimit);
       }
     }
 
-    if (this.uploader.options.totalMaxSize) {
+    if (this.uploader.options.limits.totalMaxSize) {
       const currentTotalSize = this.getCurrentTotalSize();
-      const remainingTotal = this.uploader.options.totalMaxSize - currentTotalSize;
+      const remainingTotal = this.uploader.options.limits.totalMaxSize - currentTotalSize;
       if (remainingTotal > 0) {
         limits.push(remainingTotal);
       } else {
@@ -424,8 +424,8 @@ export class CaptureManager {
       }
     }
 
-    if (this.uploader.options.perTypeMaxTotalSize) {
-      const perTypeTotalLimit = this.uploader.options.perTypeMaxTotalSize[recordingType];
+    if (this.uploader.options.perTypeLimits.perTypeMaxTotalSize) {
+      const perTypeTotalLimit = this.uploader.options.perTypeLimits.perTypeMaxTotalSize[recordingType];
       if (perTypeTotalLimit) {
         const currentTypeSize = this.getCurrentTypeTotalSize(recordingType);
         const remainingTypeTotal = perTypeTotalLimit - currentTypeSize;
