@@ -7463,7 +7463,10 @@ export default class ConfigBuilder {
               if (window.FileUploader) {
                 const previewConfig = {
                   ...activeData.config,
-                  autoFetchConfig: false,
+                  behavior: {
+                    ...activeData.config.behavior,
+                    autoFetchConfig: false,
+                  },
                 };
                 activeData.instance = new window.FileUploader(
                   `#${containerId}`,
@@ -7640,38 +7643,47 @@ export default class ConfigBuilder {
 
         const previewConfig = {
           ...data.config,
-          autoFetchConfig: false,
-          cleanupOnDestroy: true, // Clean up files when preview is refreshed
+          behavior: {
+            ...data.config.behavior,
+            autoFetchConfig: false,
+            cleanupOnDestroy: true, // Clean up files when preview is refreshed
+          },
         };
 
         // Enable drag-drop on the modal trigger button if option is enabled
         if (enableModalDropZone) {
-          previewConfig.externalDropZone = `.fu-config-builder-modal-btn[data-uploader-id="${id}"]`;
+          previewConfig.dragDrop = {
+            ...previewConfig.dragDrop,
+            externalDropZone: `.fu-config-builder-modal-btn[data-uploader-id="${id}"]`,
+          };
         }
 
         // Enable capture features based on modalMediaButtons selection
         // This ensures the FileUploader instance can handle captures from external buttons
         if (mediaButtons && mediaButtons.length > 0) {
+          previewConfig.mediaCapture = {
+            ...previewConfig.mediaCapture,
+          };
           if (mediaButtons.includes("screenshot")) {
-            previewConfig.enableScreenCapture = true;
+            previewConfig.mediaCapture.enableScreenCapture = true;
           }
           if (mediaButtons.includes("video")) {
-            previewConfig.enableVideoRecording = true;
+            previewConfig.mediaCapture.enableVideoRecording = true;
           }
           if (mediaButtons.includes("audio")) {
-            previewConfig.enableAudioRecording = true;
+            previewConfig.mediaCapture.enableAudioRecording = true;
           }
           if (mediaButtons.includes("fullpage")) {
-            previewConfig.enableFullPageCapture = true;
+            previewConfig.mediaCapture.enableFullPageCapture = true;
           }
           if (mediaButtons.includes("region")) {
-            previewConfig.enableRegionCapture = true;
+            previewConfig.mediaCapture.enableRegionCapture = true;
           }
 
           // Set external recording toolbar container for video/audio recording
           // This shows recording controls (pause, stop, etc.) next to the media capture buttons
           // Use a selector string so it works even after DOM updates
-          previewConfig.externalRecordingToolbarContainer = `.media-hub-capture-container[data-uploader-id="${id}"]`;
+          previewConfig.mediaCapture.externalRecordingToolbarContainer = `.media-hub-capture-container[data-uploader-id="${id}"]`;
         }
 
         data.instance = new window.FileUploader(
@@ -7754,8 +7766,11 @@ export default class ConfigBuilder {
       if (window.FileUploader) {
         const previewConfig = {
           ...data.config,
-          autoFetchConfig: false,
-          cleanupOnDestroy: true, // Clean up files when preview is refreshed
+          behavior: {
+            ...data.config.behavior,
+            autoFetchConfig: false,
+            cleanupOnDestroy: true, // Clean up files when preview is refreshed
+          },
         };
         data.instance = new window.FileUploader(
           `#${containerId}`,
