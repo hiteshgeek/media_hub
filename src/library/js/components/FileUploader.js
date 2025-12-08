@@ -510,6 +510,39 @@ export default class FileUploader {
     return this.uploadManager.downloadFile(fileId);
   }
 
+  /**
+   * Set the theme dynamically
+   * @param {string} theme - Theme to set: "auto" | "light" | "dark"
+   */
+  setTheme(theme) {
+    const validThemes = ["auto", "light", "dark"];
+    if (!validThemes.includes(theme)) {
+      console.warn(`FileUploader: Invalid theme "${theme}". Valid options: ${validThemes.join(", ")}`);
+      return;
+    }
+
+    // Update options
+    this.options.theme = theme;
+
+    // Update wrapper data attribute
+    if (this.wrapper) {
+      if (theme === "auto") {
+        // Remove data-theme to let CSS handle system preference
+        delete this.wrapper.dataset.theme;
+      } else {
+        this.wrapper.dataset.theme = theme;
+      }
+    }
+  }
+
+  /**
+   * Get the current theme
+   * @returns {string} Current theme: "auto" | "light" | "dark"
+   */
+  getTheme() {
+    return this.options.theme || "auto";
+  }
+
   // ============================================================
   // LIFECYCLE
   // ============================================================
