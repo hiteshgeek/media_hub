@@ -5343,8 +5343,8 @@ export default class ConfigBuilder {
         code += `    '${groupKey}' => [\n`;
 
         keysInGroup.forEach((key, keyIndex) => {
-          // Use defaults first, fallback to phpDefaults
-          let value = defaults[key];
+          // Access value from grouped defaults structure
+          let value = defaults[groupKey] ? defaults[groupKey][key] : undefined;
           if (value === undefined) {
             value = phpDefaults[key];
           }
@@ -6262,9 +6262,9 @@ export default class ConfigBuilder {
         // Get value: use changed value if exists, otherwise default, otherwise phpDefaults
         let value;
         if (changedKeys.includes(key)) {
-          value = changedConfig[key];
-        } else if (defaults[key] !== undefined) {
-          value = defaults[key];
+          value = changedConfig[groupKey] ? changedConfig[groupKey][key] : undefined;
+        } else if (defaults[groupKey] && defaults[groupKey][key] !== undefined) {
+          value = defaults[groupKey][key];
         } else {
           value = phpDefaults[key];
         }
