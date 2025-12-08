@@ -33,14 +33,10 @@
 @use "components/recording";
 
 // ------------------------------------------------------------
-// CONFIG BUILDER (Standalone tool)
-// Visual configuration interface
-// ------------------------------------------------------------
-@use "components/config-builder";
-
-// ------------------------------------------------------------
 // SHARED COMPONENTS
 // Alert and tooltip systems
 // ------------------------------------------------------------
 @use "components/tooltip/tooltip" as tooltip; // Modern tooltip system
 @use "components/alert"; // Alert notification system
+
+// Note: ConfigBuilder is now a separate bundle (config-builder.css)

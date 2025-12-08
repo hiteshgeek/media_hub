@@ -8,6 +8,8 @@
  *
  * Each component can be used standalone or together.
  *
+ * Note: ConfigBuilder is now a separate bundle. Import from 'config-builder.js' if needed.
+ *
  * @example
  * // ES Module imports
  * import { FileUploader, FileCarousel, MediaCapture } from 'file-uploader';
@@ -39,12 +41,6 @@ import { FileCarousel } from "./file-carousel/index.js";
 import { MediaCapture } from "./media-capture/index.js";
 
 // ============================================================
-// PROJECT 4: CONFIG BUILDER
-// Visual configuration interface for FileUploader
-// ============================================================
-import ConfigBuilder from "./components/ConfigBuilder.js";
-
-// ============================================================
 // UTILITIES
 // Global tooltip system for all components
 // ============================================================
@@ -59,7 +55,6 @@ export {
   FileUploader,
   FileCarousel,
   MediaCapture,
-  ConfigBuilder,
   TooltipManager,
 };
 
@@ -68,6 +63,5 @@ if (typeof window !== "undefined") {
   window.FileUploader = FileUploader;
   window.FileCarousel = FileCarousel;
   window.MediaCapture = MediaCapture;
-  window.ConfigBuilder = ConfigBuilder;
   window.TooltipManager = TooltipManager;
 }

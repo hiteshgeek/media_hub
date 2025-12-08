@@ -35,7 +35,9 @@
   "scripts": {
     "dev": "gulp dev",
     "prod": "NODE_ENV=production gulp prod",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "with-config-builder": "gulp with-config-builder",
+    "with-config-builder:prod": "NODE_ENV=production gulp with-config-builder"
   },
   "dependencies": {
     "@fix-webm-duration/fix": "^1.0.1",

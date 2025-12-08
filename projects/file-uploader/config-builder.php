@@ -13,6 +13,9 @@ include_once __DIR__ . '/../../includes/functions.php';
     <!-- FileUploader Styles -->
     <link rel="stylesheet" href="<?php echo asset('media-hub.css'); ?>">
 
+    <!-- ConfigBuilder Styles -->
+    <link rel="stylesheet" href="<?php echo asset('config-builder.css'); ?>">
+
     <style>
         /* Reset and base styles */
         *,
@@ -64,10 +67,13 @@ include_once __DIR__ . '/../../includes/functions.php';
     <!-- FileUploader Scripts (IIFE for global access) -->
     <script src="<?php echo asset('media-hub.js', 'nomodule'); ?>"></script>
 
+    <!-- ConfigBuilder Scripts (IIFE for global access) -->
+    <script src="<?php echo asset('config-builder.js', 'nomodule'); ?>"></script>
+
     <!-- Config Builder Script -->
     <script>
-        window.ConfigBuilder = MediaHub.ConfigBuilder;
-        window.FileUploader = MediaHub.FileUploader;
+        // ConfigBuilder is now exposed globally from config-builder.iife.js
+        // FileUploader is exposed from media-hub.iife.js as window.FileUploader
 
         // Initialize the config builder
         const builder = new ConfigBuilder('#configBuilder', {

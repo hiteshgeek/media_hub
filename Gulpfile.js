@@ -95,7 +95,8 @@ async function runPipeline(entries, taskFn) {
 // Asset helpers
 
 function addAllStyles(done) {
-  const entries = styleEntries.map(([srcArr, outName]) =>
+  const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
+  const entries = getStyleEntries(includeConfigBuilder).map(([srcArr, outName]) =>
     gulp
       .src(srcArr)
       .pipe(plugins.plumber({ errorHandler: onError }))
@@ -115,7 +116,8 @@ function addAllStyles(done) {
 // ESM output (for <script type="module">)
 
 function addAllScriptsESM() {
-  const entries = scriptEntries.map(([srcArr, outName]) =>
+  const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
+  const entries = getScriptEntries(includeConfigBuilder).map(([srcArr, outName]) =>
     gulp
       .src(srcArr)
       .pipe(plugins.plumber({ errorHandler: onError }))
@@ -155,10 +157,12 @@ function addAllScriptsESM() {
 // Map entry names to IIFE global names (only libraries need a name, app entries don't)
 const iifeNames = {
   "media-hub.js": "MediaHub", // Library bundle - expose as global
+  "config-builder.js": "ConfigBuilder", // ConfigBuilder bundle - expose as global
 };
 
 function addAllScriptsIIFE() {
-  const entries = scriptEntries.map(([srcArr, outName]) =>
+  const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
+  const entries = getScriptEntries(includeConfigBuilder).map(([srcArr, outName]) =>
     gulp
       .src(srcArr)
       .pipe(plugins.plumber({ errorHandler: onError }))
@@ -213,15 +217,18 @@ gulp.task("clean", async function () {
   await rimraf("dist/**", { glob: true });
 });
 
+// Default entries (without ConfigBuilder)
 const styleEntries = [
   [[config.libCssDir + "/index.scss"], "media-hub.css"],
   [[config.assetsCssDir + "/main.scss"], "main.css"],
 ];
-gulp.task("styles", gulp.series("clean-css", addAllStyles));
 
-// Run cleanup after styles
-gulp.task("styles-clean", gulp.series("styles", "clean-old-css"));
+// ConfigBuilder style entry (separate)
+const configBuilderStyleEntry = [
+  [[config.libCssDir + "/config-builder.scss"], "config-builder.css"],
+];
 
+// Default entries (without ConfigBuilder)
 const scriptEntries = [
   [[config.libJsDir + "/index.js"], "media-hub.js"],
   [[config.assetsJsDir + "/main.js"], "main.js"],
@@ -229,6 +236,29 @@ const scriptEntries = [
   [[config.assetsJsDir + "/bootstrap_4.js"], "bootstrap_4.js"],
   [[config.assetsJsDir + "/bootstrap_5.js"], "bootstrap_5.js"],
 ];
+
+// ConfigBuilder script entry (separate)
+const configBuilderScriptEntry = [
+  [[config.libJsDir + "/config-builder.js"], "config-builder.js"],
+];
+
+// Helper functions to get entries based on build mode
+function getScriptEntries(includeConfigBuilder = false) {
+  return includeConfigBuilder
+    ? [...scriptEntries, ...configBuilderScriptEntry]
+    : scriptEntries;
+}
+
+function getStyleEntries(includeConfigBuilder = false) {
+  return includeConfigBuilder
+    ? [...styleEntries, ...configBuilderStyleEntry]
+    : styleEntries;
+}
+
+gulp.task("styles", gulp.series("clean-css", addAllStyles));
+
+// Run cleanup after styles
+gulp.task("styles-clean", gulp.series("styles", "clean-old-css"));
 
 gulp.task(
   "scripts",
@@ -241,14 +271,33 @@ gulp.task("scripts-clean", gulp.series("scripts", "clean-old-js"));
 // Watch task
 
 gulp.task("watch", function () {
-  gulp.watch(
-    [config.libCssDir + "/**/*.scss", config.assetsCssDir + "/**/*.scss"],
-    gulp.series("styles")
-  );
-  gulp.watch(
-    [config.libJsDir + "/**/*.js", config.assetsJsDir + "/**/*.js"],
-    gulp.series("scripts")
-  );
+  const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
+
+  // Watch library SCSS (exclude config-builder if not included)
+  const scssGlob = includeConfigBuilder
+    ? [config.libCssDir + "/**/*.scss", config.assetsCssDir + "/**/*.scss"]
+    : [
+        config.libCssDir + "/**/*.scss",
+        "!" + config.libCssDir + "/config-builder.scss",
+        "!" + config.libCssDir + "/components/config-builder/**/*.scss",
+        "!" + config.libCssDir + "/components/_config-builder.scss",
+        config.assetsCssDir + "/**/*.scss",
+      ];
+
+  gulp.watch(scssGlob, gulp.series("styles-clean"));
+
+  // Watch library JS (exclude config-builder if not included)
+  const jsGlob = includeConfigBuilder
+    ? [config.libJsDir + "/**/*.js", config.assetsJsDir + "/**/*.js"]
+    : [
+        config.libJsDir + "/**/*.js",
+        "!" + config.libJsDir + "/config-builder.js",
+        "!" + config.libJsDir + "/components/ConfigBuilder.js",
+        "!" + config.libJsDir + "/components/config-builder/**/*.js",
+        config.assetsJsDir + "/**/*.js",
+      ];
+
+  gulp.watch(jsGlob, gulp.series("scripts-clean"));
 });
 
 // Default and dev/prod tasks (must be last)
@@ -261,4 +310,16 @@ gulp.task(
   "prod",
   gulp.series(setProdEnv, "clean", "styles-clean", "scripts-clean")
 );
+
+// Build with ConfigBuilder included
+gulp.task("with-config-builder", (done) => {
+  process.env.INCLUDE_CONFIG_BUILDER = "true";
+
+  if (isProduction()) {
+    gulp.series(setProdEnv, "clean", "styles-clean", "scripts-clean")(done);
+  } else {
+    gulp.series("clean", "styles-clean", "scripts-clean", "watch")(done);
+  }
+});
+
 gulp.task("default", gulp.series("dev"));

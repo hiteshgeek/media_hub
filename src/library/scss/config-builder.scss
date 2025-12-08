@@ -1,0 +1,14 @@
+/**
+ * ConfigBuilder - Styles Entry Point
+ *
+ * Standalone stylesheet for ConfigBuilder component.
+ * This allows ConfigBuilder styles to be built as a separate CSS file.
+ */
+
+// Import shared dependencies using @use (modern Sass)
+@use "shared/variables";
+@use "shared/mixins" as *;
+@use "shared/base";
+
+// Import ConfigBuilder component and all its partials
+@use "components/config-builder";
