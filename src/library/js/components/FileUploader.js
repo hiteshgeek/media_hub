@@ -71,6 +71,9 @@ export default class FileUploader {
     // Merge user options with defaults
     this.options = mergeGroupedOptions(options, DEFAULT_OPTIONS);
 
+    // Auto-generate Display properties from byte values
+    this.generateDisplayProperties();
+
     // Validate button configurations
     this.validateButtonConfig();
 
@@ -158,23 +161,80 @@ export default class FileUploader {
       const response = await fetch(this.options.urls.configUrl);
       const config = await response.json();
 
-      // Known category keys that should be flattened
-      const groupKeys = ["urls", "limits", "perTypeLimits", "fileTypes", "theme", "behavior", "limitsDisplay", "alerts", "buttons", "mediaCapture", "carousel", "displayMode", "crossUploader", "callbacks", "mimeTypes"];
-
-      // Flatten server config same as user options are flattened
-      for (const [key, value] of Object.entries(config)) {
-        if (groupKeys.includes(key) && value && typeof value === "object" && !Array.isArray(value)) {
-          // This is a category object - flatten it into options
-          Object.assign(this.options, value);
-        } else {
-          // Direct assignment for flat options, primitives, and arrays
-          this.options[key] = value;
-        }
+      // Merge config into grouped options structure
+      if (config.perFileMaxSize !== undefined) {
+        this.options.limits.perFileMaxSize = config.perFileMaxSize;
       }
+      if (config.totalMaxSize !== undefined) {
+        this.options.limits.totalMaxSize = config.totalMaxSize;
+      }
+      if (config.maxFiles !== undefined) {
+        this.options.limits.maxFiles = config.maxFiles;
+      }
+      if (config.perFileMaxSizePerType !== undefined) {
+        this.options.perTypeLimits.perFileMaxSizePerType = config.perFileMaxSizePerType;
+      }
+      if (config.perTypeMaxTotalSize !== undefined) {
+        this.options.perTypeLimits.perTypeMaxTotalSize = config.perTypeMaxTotalSize;
+      }
+      if (config.perTypeMaxFileCount !== undefined) {
+        this.options.perTypeLimits.perTypeMaxFileCount = config.perTypeMaxFileCount;
+      }
+      if (config.allowedExtensions !== undefined) {
+        this.options.fileTypes.allowedExtensions = config.allowedExtensions;
+      }
+      if (config.imageExtensions !== undefined) {
+        this.options.fileTypes.imageExtensions = config.imageExtensions;
+      }
+      if (config.videoExtensions !== undefined) {
+        this.options.fileTypes.videoExtensions = config.videoExtensions;
+      }
+      if (config.audioExtensions !== undefined) {
+        this.options.fileTypes.audioExtensions = config.audioExtensions;
+      }
+      if (config.documentExtensions !== undefined) {
+        this.options.fileTypes.documentExtensions = config.documentExtensions;
+      }
+      if (config.archiveExtensions !== undefined) {
+        this.options.fileTypes.archiveExtensions = config.archiveExtensions;
+      }
+      if (config.uploadDir !== undefined) {
+        this.options.urls.uploadDir = config.uploadDir;
+      }
+
+      // Auto-generate Display properties from byte values
+      this.generateDisplayProperties();
     } catch (error) {
       console.warn(
         "FileUploader: Could not fetch config from server, using default options"
       );
+    }
+  }
+
+  /**
+   * Auto-generate *Display properties from byte values
+   */
+  generateDisplayProperties() {
+    // Generate perFileMaxSizeDisplay
+    if (this.options.limits.perFileMaxSize) {
+      this.options.limits.perFileMaxSizeDisplay = formatFileSize(this.options.limits.perFileMaxSize);
+    }
+
+    // Generate totalMaxSizeDisplay
+    if (this.options.limits.totalMaxSize) {
+      this.options.limits.totalMaxSizeDisplay = formatFileSize(this.options.limits.totalMaxSize);
+    }
+
+    // Generate perFileMaxSizePerTypeDisplay
+    this.options.perTypeLimits.perFileMaxSizePerTypeDisplay = {};
+    for (const [type, bytes] of Object.entries(this.options.perTypeLimits.perFileMaxSizePerType)) {
+      this.options.perTypeLimits.perFileMaxSizePerTypeDisplay[type] = formatFileSize(bytes);
+    }
+
+    // Generate perTypeMaxTotalSizeDisplay
+    this.options.perTypeLimits.perTypeMaxTotalSizeDisplay = {};
+    for (const [type, bytes] of Object.entries(this.options.perTypeLimits.perTypeMaxTotalSize)) {
+      this.options.perTypeLimits.perTypeMaxTotalSizeDisplay[type] = formatFileSize(bytes);
     }
   }
 

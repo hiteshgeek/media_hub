@@ -23,15 +23,11 @@ export const OPTION_TO_GROUP = {
   cleanupData: "urls",
   // Limits
   perFileMaxSize: "limits",
-  perFileMaxSizeDisplay: "limits",
   totalMaxSize: "limits",
-  totalMaxSizeDisplay: "limits",
   maxFiles: "limits",
   // Per-Type Limits
   perFileMaxSizePerType: "perTypeLimits",
-  perFileMaxSizePerTypeDisplay: "perTypeLimits",
   perTypeMaxTotalSize: "perTypeLimits",
-  perTypeMaxTotalSizeDisplay: "perTypeLimits",
   perTypeMaxFileCount: "perTypeLimits",
   // File Types
   allowedExtensions: "fileTypes",
@@ -237,14 +233,10 @@ export const PHP_RELEVANT_KEYS = [
   "archiveExtensions",
   // Size limits
   "perFileMaxSize",
-  "perFileMaxSizeDisplay",
   "perFileMaxSizePerType",
-  "perFileMaxSizePerTypeDisplay",
   "perTypeMaxTotalSize",
-  "perTypeMaxTotalSizeDisplay",
   "perTypeMaxFileCount",
   "totalMaxSize",
-  "totalMaxSizeDisplay",
   "maxFiles",
   // Upload directory
   "uploadDir",
