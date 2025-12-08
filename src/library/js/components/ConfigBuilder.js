@@ -2383,7 +2383,7 @@ export default class ConfigBuilder {
             <input type="range"
                    class="fu-config-builder-slider-input"
                    data-slider-type="${type}"
-                   value="${displayValue}"
+                   value="${displayValue || 0}"
                    min="0"
                    max="${maxValue}"
                    step="${stepValue}">
@@ -2454,7 +2454,7 @@ export default class ConfigBuilder {
             <input type="range"
                    class="fu-config-builder-slider-input"
                    data-slider-type="${type}"
-                   value="${value}"
+                   value="${value || 0}"
                    min="0"
                    max="100"
                    step="1">
