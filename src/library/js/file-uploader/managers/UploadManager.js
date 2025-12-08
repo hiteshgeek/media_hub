@@ -449,7 +449,8 @@ export class UploadManager {
       }
 
       const link = document.createElement("a");
-      link.href = result.url;
+      // Convert relative URL to absolute URL to ensure browser can locate the file
+      link.href = new URL(result.url, window.location.href).href;
       link.download = result.filename;
       link.style.display = "none";
       document.body.appendChild(link);
