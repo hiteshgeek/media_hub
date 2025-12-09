@@ -320,6 +320,7 @@ export default class ConfigBuilder {
     this.render();
     this.attachEvents();
     this.initTooltips();
+    this.initDependentOptions();
     this.updateCodeOutput();
     this.updatePreview();
     this.applyTheme();
@@ -4439,6 +4440,7 @@ export default class ConfigBuilder {
     this.render();
     this.attachEvents();
     this.initTooltips();
+    this.initDependentOptions();
     this.onConfigChange(true); // Pass true to indicate this is from preset (don't clear selection)
   }
 
@@ -4446,7 +4448,15 @@ export default class ConfigBuilder {
    * Update dependent options visibility based on their parent option state
    */
   updateDependentOptions(parentOptionKey) {
-    const isEnabled = this.config[parentOptionKey] === true;
+    // Find the category for this option by looking it up in option definitions
+    let isEnabled = false;
+    const optionDefs = this.getOptionDefinitions();
+    for (const [categoryKey, category] of Object.entries(optionDefs)) {
+      if (category.options && category.options[parentOptionKey]) {
+        isEnabled = this.getConfigValue(categoryKey, parentOptionKey, false) === true;
+        break;
+      }
+    }
 
     // Find all elements that depend on this option
     this.element
@@ -4498,6 +4508,30 @@ export default class ConfigBuilder {
           });
         }
       });
+  }
+
+  /**
+   * Initialize all dependent options based on current config values
+   * Called on page load to ensure dependent options reflect the initial state
+   */
+  initDependentOptions() {
+    const optionDefs = this.getOptionDefinitions();
+
+    // Find all options that have affectsOptions (parent options)
+    for (const [categoryKey, category] of Object.entries(optionDefs)) {
+      if (!category.options) continue;
+
+      for (const [optionKey, optionDef] of Object.entries(category.options)) {
+        // Check if this option has dependent options
+        if (optionDef.affectsOptions && optionDef.affectsOptions.length > 0) {
+          this.updateDependentOptions(optionKey);
+        }
+        // Also check if it has dependsOn defined (some options reference parent directly)
+        if (optionDef.dependsOn) {
+          this.updateDependentOptions(optionDef.dependsOn);
+        }
+      }
+    }
   }
 
   /**
@@ -8883,6 +8917,7 @@ export default class ConfigBuilder {
     this.render();
     this.attachEvents();
     this.initTooltips();
+    this.initDependentOptions();
     this.onConfigChange();
   }
 
