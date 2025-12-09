@@ -979,10 +979,10 @@ export function getOptionDefinitions() {
  * @returns {*} The default value
  */
 export function getOptionDefault(fileUploaderDefaults, categoryKey, key, fallbackDefault) {
-  // Special case: theme is a top-level property, not nested
+  // Special case: theme is nested as theme.theme in defaults
   if (categoryKey === "theme" && key === "theme") {
-    if (fileUploaderDefaults && "theme" in fileUploaderDefaults) {
-      return fileUploaderDefaults.theme;
+    if (fileUploaderDefaults?.theme?.theme !== undefined) {
+      return fileUploaderDefaults.theme.theme;
     }
     return fallbackDefault;
   }

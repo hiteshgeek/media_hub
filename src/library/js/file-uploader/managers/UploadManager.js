@@ -36,25 +36,25 @@ export class UploadManager {
   buildRequestData(requestType, baseData = {}, context = {}) {
     const options = this.uploader.options;
 
-    // Map request type to per-request data option
+    // Map request type to per-request data option (these are inside urls category)
     const perRequestDataMap = {
-      upload: options.uploadData,
-      delete: options.deleteData,
-      download: options.downloadData,
-      copy: options.copyData,
-      cleanup: options.cleanupData, // cleanup uses separate cleanupData
+      upload: options.urls.uploadData,
+      delete: options.urls.deleteData,
+      download: options.urls.downloadData,
+      copy: options.urls.copyData,
+      cleanup: options.urls.cleanupData,
     };
 
     // Merge: baseData + additionalData (global) + per-request data
     let data = {
       ...baseData,
-      ...options.additionalData,
+      ...options.urls.additionalData,
       ...(perRequestDataMap[requestType] || {}),
     };
 
     // Call onBeforeRequest callback if provided
-    if (typeof options.onBeforeRequest === "function") {
-      const result = options.onBeforeRequest(requestType, data, context);
+    if (typeof options.callbacks.onBeforeRequest === "function") {
+      const result = options.callbacks.onBeforeRequest(requestType, data, context);
       // If callback returns an object, use it as the new data
       if (result && typeof result === "object") {
         data = result;
@@ -73,24 +73,24 @@ export class UploadManager {
   appendRequestDataToFormData(formData, requestType, context = {}) {
     const options = this.uploader.options;
 
-    // Map request type to per-request data option
+    // Map request type to per-request data option (these are inside urls category)
     const perRequestDataMap = {
-      upload: options.uploadData,
-      delete: options.deleteData,
-      download: options.downloadData,
-      copy: options.copyData,
-      cleanup: options.deleteData,
+      upload: options.urls.uploadData,
+      delete: options.urls.deleteData,
+      download: options.urls.downloadData,
+      copy: options.urls.copyData,
+      cleanup: options.urls.cleanupData,
     };
 
     // Collect all additional data
     let additionalFields = {
-      ...options.additionalData,
+      ...options.urls.additionalData,
       ...(perRequestDataMap[requestType] || {}),
     };
 
     // Call onBeforeRequest callback
-    if (typeof options.onBeforeRequest === "function") {
-      const result = options.onBeforeRequest(requestType, additionalFields, context);
+    if (typeof options.callbacks.onBeforeRequest === "function") {
+      const result = options.callbacks.onBeforeRequest(requestType, additionalFields, context);
       if (result && typeof result === "object") {
         additionalFields = result;
       }
