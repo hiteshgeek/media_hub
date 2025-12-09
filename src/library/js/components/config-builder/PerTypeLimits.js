@@ -46,9 +46,10 @@ export function capitalizeFirst(str) {
  * Render per-type limits grouped by file type
  * @param {Object} builder - ConfigBuilder instance
  * @param {Object} options - Option definitions for per-type limits
+ * @param {string} categoryKey - Category key for grouped config (e.g., "perTypeLimits")
  * @returns {string} HTML string
  */
-export function renderPerTypeLimitsByFileType(builder, options) {
+export function renderPerTypeLimitsByFileType(builder, options, categoryKey = "perTypeLimits") {
   const types = ["image", "video", "audio", "document", "archive"];
   const perFileMaxSizeValues = builder.config.perTypeLimits.perFileMaxSizePerType || {};
   const perTypeMaxTotalSizeValues = builder.config.perTypeLimits.perTypeMaxTotalSize || {};
@@ -215,7 +216,8 @@ export function rerenderPerTypeLimitsPanel(builder) {
   if (!optionsContainer) return;
 
   const category = builder.optionDefinitions.perTypeLimits;
-  optionsContainer.innerHTML = builder.renderPerTypeLimitsContent(category.options);
+  // Pass categoryKey ("perTypeLimits") to ensure proper grouped config structure
+  optionsContainer.innerHTML = builder.renderPerTypeLimitsContent(category.options, "perTypeLimits");
 
   // Re-attach events for the new content
   attachPerTypeByFileTypeEvents(builder);
@@ -260,29 +262,33 @@ export function attachTypeSizeSliderEvents(builder, container) {
       slider.value = value;
       valueInput.value = value || "";
 
-      if (!builder.config[optionKey]) {
-        builder.config[optionKey] = {};
+      // Use grouped structure: config.perTypeLimits.optionKey
+      if (!builder.config.perTypeLimits) {
+        builder.config.perTypeLimits = {};
+      }
+      if (!builder.config.perTypeLimits[optionKey]) {
+        builder.config.perTypeLimits[optionKey] = {};
       }
 
       const displayKey = optionKey + "Display";
-      if (!builder.config[displayKey]) {
-        builder.config[displayKey] = {};
+      if (!builder.config.perTypeLimits[displayKey]) {
+        builder.config.perTypeLimits[displayKey] = {};
       }
 
       if (value > 0) {
         const bytes = builder.unitToBytes(value, unit);
-        builder.config[optionKey][typeKey] = bytes;
-        builder.config[displayKey][typeKey] = value + " " + unit;
+        builder.config.perTypeLimits[optionKey][typeKey] = bytes;
+        builder.config.perTypeLimits[displayKey][typeKey] = value + " " + unit;
       } else {
-        delete builder.config[optionKey][typeKey];
-        delete builder.config[displayKey][typeKey];
+        delete builder.config.perTypeLimits[optionKey][typeKey];
+        delete builder.config.perTypeLimits[displayKey][typeKey];
       }
       builder.onConfigChange();
     };
 
     unitDropdown.addEventListener("change", () => {
       const newUnit = unitDropdown.value;
-      const currentBytes = builder.config[optionKey]?.[typeKey] || 0;
+      const currentBytes = builder.config.perTypeLimits?.[optionKey]?.[typeKey] || 0;
       const newValue = currentBytes > 0 ? builder.bytesToUnit(currentBytes, newUnit) : 0;
       slider.value = newValue;
       valueInput.value = newValue || "";
@@ -340,14 +346,18 @@ export function attachTypeCountSliderEvents(builder, container) {
       slider.value = value;
       valueInput.value = value || "";
 
-      if (!builder.config[optionKey]) {
-        builder.config[optionKey] = {};
+      // Use grouped structure: config.perTypeLimits.optionKey
+      if (!builder.config.perTypeLimits) {
+        builder.config.perTypeLimits = {};
+      }
+      if (!builder.config.perTypeLimits[optionKey]) {
+        builder.config.perTypeLimits[optionKey] = {};
       }
 
       if (value > 0) {
-        builder.config[optionKey][typeKey] = value;
+        builder.config.perTypeLimits[optionKey][typeKey] = value;
       } else {
-        delete builder.config[optionKey][typeKey];
+        delete builder.config.perTypeLimits[optionKey][typeKey];
       }
       builder.onConfigChange();
     };
@@ -400,14 +410,18 @@ export function attachPerTypeByFileTypeEvents(builder) {
         slider.value = value;
         valueInput.value = value || "";
 
-        if (!builder.config[optionKey]) {
-          builder.config[optionKey] = {};
+        // Use grouped structure: config.perTypeLimits.optionKey
+        if (!builder.config.perTypeLimits) {
+          builder.config.perTypeLimits = {};
+        }
+        if (!builder.config.perTypeLimits[optionKey]) {
+          builder.config.perTypeLimits[optionKey] = {};
         }
 
         if (value > 0) {
-          builder.config[optionKey][typeKey] = value;
+          builder.config.perTypeLimits[optionKey][typeKey] = value;
         } else {
-          delete builder.config[optionKey][typeKey];
+          delete builder.config.perTypeLimits[optionKey][typeKey];
         }
         builder.onConfigChange();
       };
@@ -435,22 +449,26 @@ export function attachPerTypeByFileTypeEvents(builder) {
         slider.value = value;
         valueInput.value = value || "";
 
-        if (!builder.config[optionKey]) {
-          builder.config[optionKey] = {};
+        // Use grouped structure: config.perTypeLimits.optionKey
+        if (!builder.config.perTypeLimits) {
+          builder.config.perTypeLimits = {};
+        }
+        if (!builder.config.perTypeLimits[optionKey]) {
+          builder.config.perTypeLimits[optionKey] = {};
         }
 
         const displayKey = optionKey + "Display";
-        if (!builder.config[displayKey]) {
-          builder.config[displayKey] = {};
+        if (!builder.config.perTypeLimits[displayKey]) {
+          builder.config.perTypeLimits[displayKey] = {};
         }
 
         if (value > 0) {
           const bytes = builder.unitToBytes(value, unit);
-          builder.config[optionKey][typeKey] = bytes;
-          builder.config[displayKey][typeKey] = value + " " + unit;
+          builder.config.perTypeLimits[optionKey][typeKey] = bytes;
+          builder.config.perTypeLimits[displayKey][typeKey] = value + " " + unit;
         } else {
-          delete builder.config[optionKey][typeKey];
-          delete builder.config[displayKey][typeKey];
+          delete builder.config.perTypeLimits[optionKey][typeKey];
+          delete builder.config.perTypeLimits[displayKey][typeKey];
         }
         builder.onConfigChange();
       };
@@ -458,7 +476,7 @@ export function attachPerTypeByFileTypeEvents(builder) {
       if (unitDropdown) {
         unitDropdown.addEventListener("change", () => {
           const newUnit = unitDropdown.value;
-          const currentBytes = builder.config[optionKey]?.[typeKey] || 0;
+          const currentBytes = builder.config.perTypeLimits?.[optionKey]?.[typeKey] || 0;
           const newValue = currentBytes > 0 ? builder.bytesToUnit(currentBytes, newUnit) : 0;
           slider.value = newValue;
           valueInput.value = newValue || "";

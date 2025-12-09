@@ -1181,7 +1181,7 @@ export default class ConfigBuilder {
       // Render category content based on view mode
       let categoryContent;
       if (categoryKey === "perTypeLimits") {
-        categoryContent = this.renderPerTypeLimitsContent(category.options);
+        categoryContent = this.renderPerTypeLimitsContent(category.options, categoryKey);
       } else {
         categoryContent = this.renderCategoryOptions(category.options, categoryKey);
       }
@@ -1319,23 +1319,23 @@ export default class ConfigBuilder {
   /**
    * Render per-type limits content based on view mode
    */
-  renderPerTypeLimitsContent(options) {
+  renderPerTypeLimitsContent(options, categoryKey) {
     const viewMode = this.perTypeLimitsViewMode || "byLimitType";
 
     if (viewMode === "byFileType") {
-      return this.renderPerTypeLimitsByFileType(options);
+      return this.renderPerTypeLimitsByFileType(options, categoryKey);
     }
 
     // Default: by limit type (current behavior)
-    return this.renderCategoryOptions(options);
+    return this.renderCategoryOptions(options, categoryKey);
   }
 
   /**
    * Render per-type limits grouped by file type
    * Delegates to PerTypeLimits module
    */
-  renderPerTypeLimitsByFileType(options) {
-    return renderPerTypeLimitsByFileTypeFn(this, options);
+  renderPerTypeLimitsByFileType(options, categoryKey) {
+    return renderPerTypeLimitsByFileTypeFn(this, options, categoryKey);
   }
 
   /**
@@ -1415,7 +1415,7 @@ export default class ConfigBuilder {
             </svg>
           </div>
           <div class="fu-config-builder-category-content">
-            ${this.renderCategoryOptions(category.options)}
+            ${this.renderCategoryOptions(category.options, categoryKey)}
           </div>
         </div>
       `;
@@ -5309,9 +5309,9 @@ export default class ConfigBuilder {
         ? `${varName}Container`
         : varName;
 
-    // Group the changed config by category
-    const groupedConfig = this.groupChangedConfig(changedConfig);
-    const hasChanges = Object.keys(changedConfig).length > 0;
+    // getChangedConfig now returns already grouped structure
+    const groupedConfig = changedConfig;
+    const hasChanges = Object.keys(groupedConfig).length > 0;
 
     // If includeDefaults is true, merge defaults with changed config
     let configToOutput = groupedConfig;
@@ -7036,6 +7036,7 @@ export default class ConfigBuilder {
 
   /**
    * Get changed config (non-default values) for a given config object
+   * Handles grouped config structure (e.g., config.limits.maxFiles)
    */
   getChangedConfig(config, serverOnly = false) {
     const defaults = this.getDefaultConfig();
@@ -7063,25 +7064,43 @@ export default class ConfigBuilder {
       "modalMediaButtons",
     ];
 
-    for (const [key, value] of Object.entries(config)) {
-      if (serverOnly && !serverRelevantKeys.includes(key)) continue;
-      // Skip ConfigBuilder-only keys - they're not FileUploader options
-      if (configBuilderOnlyKeys.includes(key)) continue;
+    // Iterate through grouped config structure
+    for (const [groupKey, groupValue] of Object.entries(config)) {
+      // Skip ConfigBuilder-only keys at top level
+      if (configBuilderOnlyKeys.includes(groupKey)) continue;
 
-      const defaultValue = defaults[key];
+      // Check if this is a grouped category (object with nested options)
+      if (groupValue && typeof groupValue === "object" && !Array.isArray(groupValue)) {
+        const defaultGroup = defaults[groupKey] || {};
 
-      // Check if value differs from default
-      if (JSON.stringify(value) !== JSON.stringify(defaultValue)) {
-        // Skip empty objects/arrays that are default
-        if (
-          typeof value === "object" &&
-          Object.keys(value).length === 0 &&
-          typeof defaultValue === "object" &&
-          Object.keys(defaultValue).length === 0
-        ) {
-          continue;
+        // Iterate through options within the group
+        for (const [optionKey, optionValue] of Object.entries(groupValue)) {
+          // For serverOnly, check if the option key is server-relevant
+          if (serverOnly && !serverRelevantKeys.includes(optionKey)) continue;
+
+          const defaultValue = defaultGroup[optionKey];
+
+          // Check if value differs from default
+          if (JSON.stringify(optionValue) !== JSON.stringify(defaultValue)) {
+            // Skip empty objects/arrays that match empty defaults
+            if (
+              typeof optionValue === "object" &&
+              optionValue !== null &&
+              Object.keys(optionValue).length === 0 &&
+              typeof defaultValue === "object" &&
+              defaultValue !== null &&
+              Object.keys(defaultValue).length === 0
+            ) {
+              continue;
+            }
+
+            // Initialize group in changedConfig if needed
+            if (!changedConfig[groupKey]) {
+              changedConfig[groupKey] = {};
+            }
+            changedConfig[groupKey][optionKey] = optionValue;
+          }
         }
-        changedConfig[key] = value;
       }
     }
 
@@ -7151,8 +7170,8 @@ export default class ConfigBuilder {
 
     uploaders.forEach(([id, data], uploaderIndex) => {
       const isActive = id === this.activeUploaderId;
-      const changedConfig = this.getChangedConfig(data.config);
-      const groupedConfig = this.groupChangedConfig(changedConfig);
+      // getChangedConfig now returns already grouped structure
+      const groupedConfig = this.getChangedConfig(data.config);
 
       // Add comment header for each uploader
       const marker = isActive ? " ← Currently Editing" : "";
