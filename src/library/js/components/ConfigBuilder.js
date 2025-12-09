@@ -234,8 +234,9 @@ export default class ConfigBuilder {
    * @param {any} value - The value to set
    */
   setConfigValue(categoryKey, optionKey, value) {
-    // Special case: theme is a top-level string, not nested
-    if (categoryKey === "theme" || !categoryKey) {
+    // Special case: theme and displayMode are top-level values, not nested
+    // When categoryKey matches optionKey (e.g., displayMode.displayMode), store as top-level
+    if (categoryKey === "theme" || !categoryKey || categoryKey === optionKey) {
       this.config[optionKey] = value;
       return;
     }
@@ -257,8 +258,9 @@ export default class ConfigBuilder {
    * @returns {any} The config value
    */
   getConfigValue(categoryKey, optionKey, defaultValue = undefined) {
-    // Special case: theme is a top-level string, not nested
-    if (categoryKey === "theme" || !categoryKey) {
+    // Special case: theme and displayMode are top-level values, not nested
+    // When categoryKey matches optionKey (e.g., displayMode.displayMode), read from top-level
+    if (categoryKey === "theme" || !categoryKey || categoryKey === optionKey) {
       return this.config[optionKey] ?? defaultValue;
     }
 
