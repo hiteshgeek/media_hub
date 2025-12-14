@@ -96,17 +96,18 @@ async function runPipeline(entries, taskFn) {
 
 function addAllStyles(done) {
   const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
-  const entries = getStyleEntries(includeConfigBuilder).map(([srcArr, outName]) =>
-    gulp
-      .src(srcArr)
-      .pipe(plugins.plumber({ errorHandler: onError }))
-      .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
-      .pipe(sass())
-      .pipe(plugins.concat(outName))
-      .pipe(isProduction() ? plugins.cleanCss() : noop())
-      .pipe(rev())
-      .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
-      .pipe(gulp.dest(config.cssOutDir))
+  const entries = getStyleEntries(includeConfigBuilder).map(
+    ([srcArr, outName]) =>
+      gulp
+        .src(srcArr)
+        .pipe(plugins.plumber({ errorHandler: onError }))
+        .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
+        .pipe(sass())
+        .pipe(plugins.concat(outName))
+        .pipe(isProduction() ? plugins.cleanCss() : noop())
+        .pipe(rev())
+        .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
+        .pipe(gulp.dest(config.cssOutDir))
   );
   return require("merge-stream")(...entries)
     .pipe(rev.manifest(config.cssManifestPath))
@@ -117,36 +118,37 @@ function addAllStyles(done) {
 
 function addAllScriptsESM() {
   const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
-  const entries = getScriptEntries(includeConfigBuilder).map(([srcArr, outName]) =>
-    gulp
-      .src(srcArr)
-      .pipe(plugins.plumber({ errorHandler: onError }))
-      .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
-      .pipe(
-        rollup(
-          {
-            plugins: [
-              rollupResolve({ browser: true }),
-              rollupCommonjs(),
-              rollupBabel({
-                babelHelpers: "bundled",
-                babelrc: false,
-                exclude: "node_modules/**",
-              }),
-            ],
-          },
-          {
-            format: "esm",
-            inlineDynamicImports: true, // Inline dynamic imports to avoid code-splitting
-          }
+  const entries = getScriptEntries(includeConfigBuilder).map(
+    ([srcArr, outName]) =>
+      gulp
+        .src(srcArr)
+        .pipe(plugins.plumber({ errorHandler: onError }))
+        .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
+        .pipe(
+          rollup(
+            {
+              plugins: [
+                rollupResolve({ browser: true }),
+                rollupCommonjs(),
+                rollupBabel({
+                  babelHelpers: "bundled",
+                  babelrc: false,
+                  exclude: "node_modules/**",
+                }),
+              ],
+            },
+            {
+              format: "esm",
+              inlineDynamicImports: true, // Inline dynamic imports to avoid code-splitting
+            }
+          )
         )
-      )
-      .pipe(plugins.concat(outName))
-      .pipe(isProduction() ? uglify() : noop())
-      .pipe(isProduction() ? javascriptObfuscator() : noop())
-      .pipe(rev())
-      .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
-      .pipe(gulp.dest(config.jsOutDir))
+        .pipe(plugins.concat(outName))
+        .pipe(isProduction() ? uglify() : noop())
+        .pipe(isProduction() ? javascriptObfuscator() : noop())
+        .pipe(rev())
+        .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
+        .pipe(gulp.dest(config.jsOutDir))
   );
   return require("merge-stream")(...entries)
     .pipe(rev.manifest(config.jsManifestPath))
@@ -162,37 +164,38 @@ const iifeNames = {
 
 function addAllScriptsIIFE() {
   const includeConfigBuilder = process.env.INCLUDE_CONFIG_BUILDER === "true";
-  const entries = getScriptEntries(includeConfigBuilder).map(([srcArr, outName]) =>
-    gulp
-      .src(srcArr)
-      .pipe(plugins.plumber({ errorHandler: onError }))
-      .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
-      .pipe(
-        rollup(
-          {
-            plugins: [
-              rollupResolve({ browser: true }),
-              rollupCommonjs(),
-              rollupBabel({
-                babelHelpers: "bundled",
-                babelrc: false,
-                exclude: "node_modules/**",
-              }),
-            ],
-          },
-          {
-            format: "iife",
-            name: iifeNames[outName] || undefined, // Only use name for library entries
-            inlineDynamicImports: true, // Inline dynamic imports for IIFE compatibility
-          }
+  const entries = getScriptEntries(includeConfigBuilder).map(
+    ([srcArr, outName]) =>
+      gulp
+        .src(srcArr)
+        .pipe(plugins.plumber({ errorHandler: onError }))
+        .pipe(useSourceMaps() ? plugins.sourcemaps.init() : noop())
+        .pipe(
+          rollup(
+            {
+              plugins: [
+                rollupResolve({ browser: true }),
+                rollupCommonjs(),
+                rollupBabel({
+                  babelHelpers: "bundled",
+                  babelrc: false,
+                  exclude: "node_modules/**",
+                }),
+              ],
+            },
+            {
+              format: "iife",
+              name: iifeNames[outName] || undefined, // Only use name for library entries
+              inlineDynamicImports: true, // Inline dynamic imports for IIFE compatibility
+            }
+          )
         )
-      )
-      .pipe(plugins.concat(outName.replace(/\.js$/, ".iife.js")))
-      .pipe(isProduction() ? uglify() : noop())
-      .pipe(isProduction() ? javascriptObfuscator() : noop())
-      .pipe(rev())
-      .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
-      .pipe(gulp.dest(config.jsOutDir))
+        .pipe(plugins.concat(outName.replace(/\.js$/, ".iife.js")))
+        .pipe(isProduction() ? uglify() : noop())
+        .pipe(isProduction() ? javascriptObfuscator() : noop())
+        .pipe(rev())
+        .pipe(useSourceMaps() ? plugins.sourcemaps.write(".") : noop())
+        .pipe(gulp.dest(config.jsOutDir))
   );
   return require("merge-stream")(...entries)
     .pipe(rev.manifest(config.jsManifestPath, { merge: true }))
@@ -302,9 +305,12 @@ gulp.task("watch", function () {
 
 // Default and dev/prod tasks (must be last)
 gulp.task(
-  "dev",
+  "dev_with_watch",
   gulp.series("clean", "styles-clean", "scripts-clean", "watch")
 );
+
+// Default and dev/prod tasks (must be last)
+gulp.task("dev", gulp.series("clean", "styles-clean", "scripts-clean"));
 // Prod task: set NODE_ENV and run the full clean/build without sourcemaps
 gulp.task(
   "prod",

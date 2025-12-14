@@ -494,6 +494,7 @@ include_once __DIR__ . '/../../includes/functions.php';
             <button class="nav-tab" data-section="module">ES Module Setup</button>
             <button class="nav-tab" data-section="iife">IIFE Setup</button>
             <button class="nav-tab" data-section="php">PHP Backend</button>
+            <button class="nav-tab" data-section="config">Configuration</button>
             <button class="nav-tab" data-section="events">Events</button>
             <button class="nav-tab" data-section="demo">Live Demo</button>
         </nav>
@@ -596,9 +597,13 @@ include_once __DIR__ . '/../../includes/functions.php';
 
     <span class="comment">// Initialize the uploader</span>
     <span class="keyword">const</span> uploader = <span class="keyword">new</span> <span class="function">FileUploader</span>(<span class="string">'#file-uploader'</span>, {
-        <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
-        <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
-        <span class="property">multiple</span>: <span class="keyword">true</span>
+        <span class="property">urls</span>: {
+            <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
+            <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>
+        },
+        <span class="property">behavior</span>: {
+            <span class="property">multiple</span>: <span class="keyword">true</span>
+        }
     });
 <span class="tag">&lt;/script&gt;</span></pre>
                 </div>
@@ -639,29 +644,41 @@ include_once __DIR__ . '/../../includes/functions.php';
 
         <span class="keyword">const</span> uploader = <span class="keyword">new</span> <span class="function">FileUploader</span>(<span class="string">'#file-uploader'</span>, {
             <span class="comment">// URLs (Required)</span>
-            <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
-            <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
-            <span class="property">downloadAllUrl</span>: <span class="string">'/api/download-all.php'</span>,
-            <span class="property">cleanupZipUrl</span>: <span class="string">'/api/cleanup-zip.php'</span>,
+            <span class="property">urls</span>: {
+                <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
+                <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
+                <span class="property">downloadAllUrl</span>: <span class="string">'/api/download-all.php'</span>,
+                <span class="property">cleanupZipUrl</span>: <span class="string">'/api/cleanup-zip.php'</span>
+            },
 
             <span class="comment">// Behavior</span>
-            <span class="property">multiple</span>: <span class="keyword">true</span>,
-            <span class="property">confirmBeforeDelete</span>: <span class="keyword">true</span>,
+            <span class="property">behavior</span>: {
+                <span class="property">multiple</span>: <span class="keyword">true</span>,
+                <span class="property">confirmBeforeDelete</span>: <span class="keyword">true</span>
+            },
 
             <span class="comment">// Limits</span>
-            <span class="property">maxFiles</span>: <span class="string">10</span>,
-            <span class="property">perFileMaxSize</span>: <span class="string">10485760</span>, <span class="comment">// 10MB</span>
+            <span class="property">limits</span>: {
+                <span class="property">maxFiles</span>: <span class="number">10</span>,
+                <span class="property">perFileMaxSize</span>: <span class="number">10485760</span> <span class="comment">// 10MB</span>
+            },
 
             <span class="comment">// UI Options</span>
-            <span class="property">showLimits</span>: <span class="keyword">true</span>,
-            <span class="property">showDownloadAllButton</span>: <span class="keyword">true</span>,
+            <span class="property">limitsDisplay</span>: {
+                <span class="property">showLimits</span>: <span class="keyword">true</span>
+            },
+            <span class="property">buttons</span>: {
+                <span class="property">showDownloadAllButton</span>: <span class="keyword">true</span>
+            },
 
             <span class="comment">// Callbacks</span>
-            <span class="property">onUploadSuccess</span>: (file, response) => {
-                console.log(<span class="string">'Uploaded:'</span>, file.name, response);
-            },
-            <span class="property">onUploadError</span>: (file, error) => {
-                console.error(<span class="string">'Upload failed:'</span>, file.name, error);
+            <span class="property">callbacks</span>: {
+                <span class="property">onUploadSuccess</span>: (file, response) => {
+                    console.log(<span class="string">'Uploaded:'</span>, file.name, response);
+                },
+                <span class="property">onUploadError</span>: (file, error) => {
+                    console.error(<span class="string">'Upload failed:'</span>, file.name, error);
+                }
             }
         });
 
@@ -733,9 +750,13 @@ include_once __DIR__ . '/../../includes/functions.php';
     <span class="keyword">var</span> FileUploader = MediaHub.FileUploader;
 
     <span class="keyword">var</span> uploader = <span class="keyword">new</span> <span class="function">FileUploader</span>(<span class="string">'#file-uploader'</span>, {
-        <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
-        <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
-        <span class="property">multiple</span>: <span class="keyword">true</span>
+        <span class="property">urls</span>: {
+            <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
+            <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>
+        },
+        <span class="property">behavior</span>: {
+            <span class="property">multiple</span>: <span class="keyword">true</span>
+        }
     });
 <span class="tag">&lt;/script&gt;</span></pre>
                 </div>
@@ -767,29 +788,41 @@ include_once __DIR__ . '/../../includes/functions.php';
 
         <span class="keyword">var</span> uploader = <span class="keyword">new</span> <span class="function">FileUploader</span>(<span class="string">'#file-uploader'</span>, {
             <span class="comment">// URLs (Required)</span>
-            <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
-            <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
-            <span class="property">downloadAllUrl</span>: <span class="string">'/api/download-all.php'</span>,
-            <span class="property">cleanupZipUrl</span>: <span class="string">'/api/cleanup-zip.php'</span>,
+            <span class="property">urls</span>: {
+                <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
+                <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
+                <span class="property">downloadAllUrl</span>: <span class="string">'/api/download-all.php'</span>,
+                <span class="property">cleanupZipUrl</span>: <span class="string">'/api/cleanup-zip.php'</span>
+            },
 
             <span class="comment">// Behavior</span>
-            <span class="property">multiple</span>: <span class="keyword">true</span>,
-            <span class="property">confirmBeforeDelete</span>: <span class="keyword">true</span>,
+            <span class="property">behavior</span>: {
+                <span class="property">multiple</span>: <span class="keyword">true</span>,
+                <span class="property">confirmBeforeDelete</span>: <span class="keyword">true</span>
+            },
 
             <span class="comment">// Limits</span>
-            <span class="property">maxFiles</span>: <span class="string">10</span>,
-            <span class="property">perFileMaxSize</span>: <span class="string">10485760</span>, <span class="comment">// 10MB</span>
+            <span class="property">limits</span>: {
+                <span class="property">maxFiles</span>: <span class="number">10</span>,
+                <span class="property">perFileMaxSize</span>: <span class="number">10485760</span> <span class="comment">// 10MB</span>
+            },
 
             <span class="comment">// UI Options</span>
-            <span class="property">showLimits</span>: <span class="keyword">true</span>,
-            <span class="property">showDownloadAllButton</span>: <span class="keyword">true</span>,
+            <span class="property">limitsDisplay</span>: {
+                <span class="property">showLimits</span>: <span class="keyword">true</span>
+            },
+            <span class="property">buttons</span>: {
+                <span class="property">showDownloadAllButton</span>: <span class="keyword">true</span>
+            },
 
             <span class="comment">// Callbacks</span>
-            <span class="property">onUploadSuccess</span>: <span class="keyword">function</span>(file, response) {
-                console.log(<span class="string">'Uploaded:'</span>, file.name, response);
-            },
-            <span class="property">onUploadError</span>: <span class="keyword">function</span>(file, error) {
-                console.error(<span class="string">'Upload failed:'</span>, file.name, error);
+            <span class="property">callbacks</span>: {
+                <span class="property">onUploadSuccess</span>: <span class="keyword">function</span>(file, response) {
+                    console.log(<span class="string">'Uploaded:'</span>, file.name, response);
+                },
+                <span class="property">onUploadError</span>: <span class="keyword">function</span>(file, error) {
+                    console.error(<span class="string">'Upload failed:'</span>, file.name, error);
+                }
             }
         });
 
@@ -1279,6 +1312,723 @@ MediaHub.ConfigBuilder    <span class="comment">// Visual config builder</span><
             </div>
         </section>
 
+        <!-- Section: Configuration -->
+        <section class="section" id="section-config" style="display: none;">
+            <h2 class="section-title">Configuration Options</h2>
+            <p class="section-desc">All configuration options are organized into logical groups. Pass these as nested objects when initializing FileUploader.</p>
+
+            <h3 class="section-subtitle">urls - Server Endpoints</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>uploadUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./upload.php"</code></td>
+                        <td>Server endpoint for file uploads</td>
+                    </tr>
+                    <tr>
+                        <td><code>deleteUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./delete.php"</code></td>
+                        <td>Server endpoint for file deletion</td>
+                    </tr>
+                    <tr>
+                        <td><code>downloadAllUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./download-all.php"</code></td>
+                        <td>Server endpoint for bulk download (zip)</td>
+                    </tr>
+                    <tr>
+                        <td><code>cleanupZipUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./cleanup-zip.php"</code></td>
+                        <td>Server endpoint for zip file cleanup</td>
+                    </tr>
+                    <tr>
+                        <td><code>copyFileUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./copy-file.php"</code></td>
+                        <td>Server endpoint for cross-uploader file copying</td>
+                    </tr>
+                    <tr>
+                        <td><code>configUrl</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"./get-config.php"</code></td>
+                        <td>Server endpoint for fetching server-side config</td>
+                    </tr>
+                    <tr>
+                        <td><code>uploadDir</code></td>
+                        <td><code>string</code></td>
+                        <td><code>""</code></td>
+                        <td>Server-side upload directory path</td>
+                    </tr>
+                    <tr>
+                        <td><code>additionalData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included in ALL POST requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>uploadData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included only in upload requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>deleteData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included only in delete requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>downloadData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included only in download requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>copyData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included only in copy file requests</td>
+                    </tr>
+                    <tr>
+                        <td><code>cleanupData</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Data included only in cleanup zip requests</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">limits - File Size Limits</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>perFileMaxSize</code></td>
+                        <td><code>number</code></td>
+                        <td><code>10485760</code></td>
+                        <td>Maximum size per file in bytes (10MB)</td>
+                    </tr>
+                    <tr>
+                        <td><code>totalMaxSize</code></td>
+                        <td><code>number</code></td>
+                        <td><code>104857600</code></td>
+                        <td>Maximum total size of all files in bytes (100MB)</td>
+                    </tr>
+                    <tr>
+                        <td><code>maxFiles</code></td>
+                        <td><code>number</code></td>
+                        <td><code>10</code></td>
+                        <td>Maximum number of files allowed</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">perTypeLimits - Per-Type Limits</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>perFileMaxSizePerType</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Max file size per type, e.g., <code>{ image: 5242880, video: 52428800 }</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>perTypeMaxTotalSize</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Max total size per type, e.g., <code>{ image: 20971520 }</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>perTypeMaxFileCount</code></td>
+                        <td><code>object</code></td>
+                        <td><code>{}</code></td>
+                        <td>Max file count per type, e.g., <code>{ image: 5, document: 3 }</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">fileTypes - Allowed File Types</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>allowedExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>[]</code></td>
+                        <td>Allowed file extensions (empty = all allowed)</td>
+                    </tr>
+                    <tr>
+                        <td><code>imageExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["jpg", "jpeg", "png", "gif", "webp", "svg"]</code></td>
+                        <td>Extensions classified as images</td>
+                    </tr>
+                    <tr>
+                        <td><code>videoExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["mp4", "mpeg", "mov", "avi", "webm"]</code></td>
+                        <td>Extensions classified as video</td>
+                    </tr>
+                    <tr>
+                        <td><code>audioExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["mp3", "wav", "ogg", "webm", "aac", "m4a", "flac"]</code></td>
+                        <td>Extensions classified as audio</td>
+                    </tr>
+                    <tr>
+                        <td><code>documentExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "csv"]</code></td>
+                        <td>Extensions classified as documents</td>
+                    </tr>
+                    <tr>
+                        <td><code>archiveExtensions</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["zip", "rar", "7z", "tar", "gz"]</code></td>
+                        <td>Extensions classified as archives</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">theme - Visual Theme</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>theme</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"auto"</code></td>
+                        <td>Theme mode: <code>"auto"</code>, <code>"light"</code>, or <code>"dark"</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">behavior - Upload Behavior</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>multiple</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Allow multiple file selection</td>
+                    </tr>
+                    <tr>
+                        <td><code>autoFetchConfig</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Automatically fetch server config on init</td>
+                    </tr>
+                    <tr>
+                        <td><code>confirmBeforeDelete</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>false</code></td>
+                        <td>Show confirmation dialog before deleting files</td>
+                    </tr>
+                    <tr>
+                        <td><code>preventDuplicates</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>false</code></td>
+                        <td>Prevent uploading duplicate files</td>
+                    </tr>
+                    <tr>
+                        <td><code>duplicateCheckBy</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"name-size"</code></td>
+                        <td>How to detect duplicates: <code>"name"</code>, <code>"size"</code>, or <code>"name-size"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>cleanupOnUnload</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Delete uploaded files when page unloads</td>
+                    </tr>
+                    <tr>
+                        <td><code>cleanupOnDestroy</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Delete uploaded files when uploader is destroyed</td>
+                    </tr>
+                    <tr>
+                        <td><code>showUploadProgress</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show upload progress bar on file preview</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">limitsDisplay - Limits UI</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>showLimits</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show limits section</td>
+                    </tr>
+                    <tr>
+                        <td><code>showProgressBar</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>false</code></td>
+                        <td>Show overall progress bar</td>
+                    </tr>
+                    <tr>
+                        <td><code>showTypeProgressBar</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show progress bar per file type</td>
+                    </tr>
+                    <tr>
+                        <td><code>showPerFileLimit</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show per-file size limit</td>
+                    </tr>
+                    <tr>
+                        <td><code>showTypeGroupSize</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show size used per type</td>
+                    </tr>
+                    <tr>
+                        <td><code>showTypeGroupCount</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show file count per type</td>
+                    </tr>
+                    <tr>
+                        <td><code>defaultLimitsView</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"concise"</code></td>
+                        <td>Default view mode: <code>"concise"</code> or <code>"detailed"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>allowLimitsViewToggle</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Allow toggling between concise/detailed views</td>
+                    </tr>
+                    <tr>
+                        <td><code>showLimitsToggle</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show limits toggle button</td>
+                    </tr>
+                    <tr>
+                        <td><code>defaultLimitsVisible</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Limits visible by default</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">buttons - Button Configuration</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>showDownloadAllButton</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show "Download All" button</td>
+                    </tr>
+                    <tr>
+                        <td><code>downloadAllButtonText</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"Download All"</code></td>
+                        <td>Text for download all button</td>
+                    </tr>
+                    <tr>
+                        <td><code>showClearAllButton</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show "Clear All" button</td>
+                    </tr>
+                    <tr>
+                        <td><code>clearAllButtonText</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"Clear All"</code></td>
+                        <td>Text for clear all button</td>
+                    </tr>
+                    <tr>
+                        <td><code>buttonSize</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"md"</code></td>
+                        <td>Button size: <code>"sm"</code>, <code>"md"</code>, or <code>"lg"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>collapsibleCaptureButtons</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>false</code></td>
+                        <td>Collapse capture buttons into dropdown</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">mediaCapture - Screen/Audio/Video Capture</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>enableFullPageCapture</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable full page screenshot capture</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableRegionCapture</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable region selection screenshot</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableScreenCapture</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable screen/window capture</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableVideoRecording</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable video recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableAudioRecording</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable audio-only recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>maxVideoRecordingDuration</code></td>
+                        <td><code>number</code></td>
+                        <td><code>300</code></td>
+                        <td>Max video recording duration in seconds</td>
+                    </tr>
+                    <tr>
+                        <td><code>maxAudioRecordingDuration</code></td>
+                        <td><code>number</code></td>
+                        <td><code>300</code></td>
+                        <td>Max audio recording duration in seconds</td>
+                    </tr>
+                    <tr>
+                        <td><code>recordingCountdownDuration</code></td>
+                        <td><code>number</code></td>
+                        <td><code>3</code></td>
+                        <td>Countdown seconds before recording starts</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableMicrophoneAudio</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Include microphone in video recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>enableSystemAudio</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Include system audio in video recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>showRecordingTime</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show elapsed time during recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>showRecordingLimit</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show time limit during recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>showRecordingSize</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show approximate file size during recording</td>
+                    </tr>
+                    <tr>
+                        <td><code>videoBitsPerSecond</code></td>
+                        <td><code>number</code></td>
+                        <td><code>2500000</code></td>
+                        <td>Video bitrate (2.5 Mbps)</td>
+                    </tr>
+                    <tr>
+                        <td><code>audioBitsPerSecond</code></td>
+                        <td><code>number</code></td>
+                        <td><code>128000</code></td>
+                        <td>Audio bitrate (128 kbps)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">carousel - File Preview Carousel</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>enableCarouselPreview</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable carousel/gallery preview</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselAutoPreload</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Automatically preload files for preview</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselVisibleTypes</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["image", "video", "audio", "pdf", "excel", "csv", "text"]</code></td>
+                        <td>File types visible in carousel</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselPreviewableTypes</code></td>
+                        <td><code>array</code></td>
+                        <td><code>["image", "video", "audio", "pdf", "csv", "excel", "text"]</code></td>
+                        <td>File types that can be previewed</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselMaxPreviewRows</code></td>
+                        <td><code>number</code></td>
+                        <td><code>100</code></td>
+                        <td>Max rows to show for CSV/Excel preview</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselMaxTextPreviewChars</code></td>
+                        <td><code>number</code></td>
+                        <td><code>50000</code></td>
+                        <td>Max characters for text file preview</td>
+                    </tr>
+                    <tr>
+                        <td><code>carouselShowDownloadButton</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Show download button in carousel</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">dragDrop - Cross-Uploader Drag & Drop</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>enableCrossUploaderDrag</code></td>
+                        <td><code>boolean</code></td>
+                        <td><code>true</code></td>
+                        <td>Enable dragging files between uploaders</td>
+                    </tr>
+                    <tr>
+                        <td><code>externalDropZone</code></td>
+                        <td><code>element|string|null</code></td>
+                        <td><code>null</code></td>
+                        <td>External drop zone element or selector</td>
+                    </tr>
+                    <tr>
+                        <td><code>externalDropZoneActiveClass</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"media-hub-drop-active"</code></td>
+                        <td>CSS class added when dragging over external zone</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">alerts - Toast Notifications</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>alertAnimation</code></td>
+                        <td><code>string</code></td>
+                        <td><code>"shake"</code></td>
+                        <td>Alert animation type</td>
+                    </tr>
+                    <tr>
+                        <td><code>alertDuration</code></td>
+                        <td><code>number</code></td>
+                        <td><code>5000</code></td>
+                        <td>Alert display duration in milliseconds</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">existingFiles - Pre-load Files</h3>
+            <table class="events-table">
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>existingFiles</code></td>
+                        <td><code>array</code></td>
+                        <td><code>[]</code></td>
+                        <td>Array of existing file objects to load on init (for edit forms)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-subtitle">Complete Example</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="code-lang">JavaScript</span>
+                    <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                </div>
+                <div class="code-content">
+<pre><span class="keyword">const</span> uploader = <span class="keyword">new</span> <span class="function">FileUploader</span>(<span class="string">'#file-uploader'</span>, {
+    <span class="property">urls</span>: {
+        <span class="property">uploadUrl</span>: <span class="string">'/api/upload.php'</span>,
+        <span class="property">deleteUrl</span>: <span class="string">'/api/delete.php'</span>,
+        <span class="property">downloadAllUrl</span>: <span class="string">'/api/download-all.php'</span>,
+        <span class="property">additionalData</span>: { <span class="property">csrf_token</span>: <span class="string">'abc123'</span> }
+    },
+    <span class="property">limits</span>: {
+        <span class="property">perFileMaxSize</span>: <span class="number">10485760</span>,
+        <span class="property">totalMaxSize</span>: <span class="number">52428800</span>,
+        <span class="property">maxFiles</span>: <span class="number">10</span>
+    },
+    <span class="property">perTypeLimits</span>: {
+        <span class="property">perFileMaxSizePerType</span>: { <span class="property">image</span>: <span class="number">5242880</span>, <span class="property">video</span>: <span class="number">52428800</span> },
+        <span class="property">perTypeMaxFileCount</span>: { <span class="property">image</span>: <span class="number">5</span>, <span class="property">document</span>: <span class="number">3</span> }
+    },
+    <span class="property">fileTypes</span>: {
+        <span class="property">allowedExtensions</span>: [<span class="string">'jpg'</span>, <span class="string">'png'</span>, <span class="string">'pdf'</span>, <span class="string">'mp4'</span>]
+    },
+    <span class="property">theme</span>: {
+        <span class="property">theme</span>: <span class="string">'auto'</span>
+    },
+    <span class="property">behavior</span>: {
+        <span class="property">multiple</span>: <span class="keyword">true</span>,
+        <span class="property">confirmBeforeDelete</span>: <span class="keyword">true</span>,
+        <span class="property">preventDuplicates</span>: <span class="keyword">true</span>
+    },
+    <span class="property">limitsDisplay</span>: {
+        <span class="property">showLimits</span>: <span class="keyword">true</span>,
+        <span class="property">defaultLimitsView</span>: <span class="string">'detailed'</span>
+    },
+    <span class="property">buttons</span>: {
+        <span class="property">showDownloadAllButton</span>: <span class="keyword">true</span>,
+        <span class="property">showClearAllButton</span>: <span class="keyword">true</span>
+    },
+    <span class="property">mediaCapture</span>: {
+        <span class="property">enableVideoRecording</span>: <span class="keyword">true</span>,
+        <span class="property">maxVideoRecordingDuration</span>: <span class="number">120</span>
+    },
+    <span class="property">carousel</span>: {
+        <span class="property">enableCarouselPreview</span>: <span class="keyword">true</span>
+    },
+    <span class="property">callbacks</span>: {
+        <span class="property">onUploadSuccess</span>: (file, response) => {
+            console.log(<span class="string">'Uploaded:'</span>, file.name);
+        },
+        <span class="property">onUploadError</span>: (file, error) => {
+            console.error(<span class="string">'Failed:'</span>, file.name, error);
+        }
+    }
+});</pre>
+                </div>
+            </div>
+        </section>
+
         <!-- Section: Events -->
         <section class="section" id="section-events" style="display: none;">
             <h2 class="section-title">Events & Callbacks</h2>
@@ -1323,6 +2073,16 @@ MediaHub.ConfigBuilder    <span class="comment">// Visual config builder</span><
                         <td><code>onDeleteError</code></td>
                         <td><code>(fileObj, error)</code></td>
                         <td>Called when file deletion fails</td>
+                    </tr>
+                    <tr>
+                        <td><code>onConfigFetched</code></td>
+                        <td><code>(config)</code></td>
+                        <td>Called when server config is successfully fetched</td>
+                    </tr>
+                    <tr>
+                        <td><code>onDuplicateFile</code></td>
+                        <td><code>(fileObj, existingFile)</code></td>
+                        <td>Called when a duplicate file is detected (if preventDuplicates is enabled)</td>
                     </tr>
                 </tbody>
             </table>
@@ -1513,6 +2273,7 @@ MediaHub.ConfigBuilder    <span class="comment">// Visual config builder</span><
             module: document.getElementById('section-module'),
             iife: document.getElementById('section-iife'),
             php: document.getElementById('section-php'),
+            config: document.getElementById('section-config'),
             events: document.getElementById('section-events'),
             demo: document.getElementById('section-demo')
         };
@@ -1551,29 +2312,39 @@ MediaHub.ConfigBuilder    <span class="comment">// Visual config builder</span><
         // Initialize demo
         function initDemo() {
             window.demoUploader = new FileUploader('#demo-uploader', {
-                uploadUrl: '../../api/upload.php',
-                deleteUrl: '../../api/delete.php',
-                downloadAllUrl: '../../api/download-all.php',
-                cleanupZipUrl: '../../api/cleanup-zip.php',
-                configUrl: '../../api/get-config.php',
-                multiple: true,
-                showLimits: true,
-                showDownloadAllButton: true,
-                confirmBeforeDelete: false,
-                onUploadStart: (fileObj) => {
-                    logEvent('onUploadStart', { name: fileObj.name, size: fileObj.size, type: fileObj.type });
+                urls: {
+                    uploadUrl: '../../api/upload.php',
+                    deleteUrl: '../../api/delete.php',
+                    downloadAllUrl: '../../api/download-all.php',
+                    cleanupZipUrl: '../../api/cleanup-zip.php',
+                    configUrl: '../../api/get-config.php',
                 },
-                onUploadSuccess: (fileObj, response) => {
-                    logEvent('onUploadSuccess', { file: fileObj.name, response });
+                behavior: {
+                    multiple: true,
+                    confirmBeforeDelete: false,
                 },
-                onUploadError: (fileObj, error) => {
-                    logEvent('onUploadError', { file: fileObj.name, error: error.message || error });
+                limitsDisplay: {
+                    showLimits: true,
                 },
-                onDeleteSuccess: (fileObj, response) => {
-                    logEvent('onDeleteSuccess', { file: fileObj.name, response });
+                buttons: {
+                    showDownloadAllButton: true,
                 },
-                onDeleteError: (fileObj, error) => {
-                    logEvent('onDeleteError', { file: fileObj.name, error: error.message || error });
+                callbacks: {
+                    onUploadStart: (fileObj) => {
+                        logEvent('onUploadStart', { name: fileObj.name, size: fileObj.size, type: fileObj.type });
+                    },
+                    onUploadSuccess: (fileObj, response) => {
+                        logEvent('onUploadSuccess', { file: fileObj.name, response });
+                    },
+                    onUploadError: (fileObj, error) => {
+                        logEvent('onUploadError', { file: fileObj.name, error: error.message || error });
+                    },
+                    onDeleteSuccess: (fileObj, response) => {
+                        logEvent('onDeleteSuccess', { file: fileObj.name, response });
+                    },
+                    onDeleteError: (fileObj, error) => {
+                        logEvent('onDeleteError', { file: fileObj.name, error: error.message || error });
+                    }
                 }
             });
 

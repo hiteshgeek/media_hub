@@ -185,14 +185,14 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background-color: var(--fu-primary-600);
+  background-color: var(--fu-color-primary-light);
   border-radius: var(--fu-radius-sm);
   flex-shrink: 0;
 
   svg {
     width: 18px;
     height: 18px;
-    fill: var(--fu-gray-50);
+    fill: var(--fu-color-primary);
   }
 }
 
@@ -356,14 +356,14 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background-color: var(--fu-primary-600);
+  background-color: var(--fu-color-primary-light);
   border-radius: var(--fu-radius-sm);
   flex-shrink: 0;
 
   svg {
     width: 20px;
     height: 20px;
-    fill: var(--fu-gray-50);
+    fill: var(--fu-color-primary);
   }
 }
 
