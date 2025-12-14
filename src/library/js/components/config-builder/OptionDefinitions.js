@@ -473,6 +473,14 @@ export function getOptionDefinitions() {
             config.enableVideoRecording ||
             config.enableAudioRecording,
         },
+        showAllowedExtensionsButton: {
+          type: "boolean",
+          default: true,
+          label: "Show Allowed Extensions Button",
+          hint: "Show a button to view allowed file types in a modal (only visible when allowedExtensions is set)",
+          showWhen: (config) =>
+            config.fileTypes?.allowedExtensions && config.fileTypes.allowedExtensions.length > 0,
+        },
         // Modal Buttons Group
         modalMediaButtons: {
           type: "multiSelect",

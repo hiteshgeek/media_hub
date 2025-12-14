@@ -520,11 +520,23 @@ export class UploadManager {
       return;
     }
 
-    if (this.uploader.options.behavior.confirmBeforeDelete) {
+    // Check if any files are existing (pre-uploaded) files
+    const existingFiles = uploadedFiles.filter((f) => f.isExisting);
+    const hasExistingFiles = existingFiles.length > 0;
+
+    // Always show confirmation - with stronger warning for existing files
+    if (this.uploader.options.behavior.confirmBeforeDelete || hasExistingFiles) {
+      let message = `Are you sure you want to delete all <strong>${uploadedFiles.length}</strong> file(s)?`;
+
+      // Add stronger warning if there are existing files
+      if (hasExistingFiles) {
+        message += `<br><br><strong style="color: #dc3545;">⚠️ ${existingFiles.length} existing file(s) will be permanently deleted. This action cannot be undone.</strong>`;
+      }
+
       const confirmed = await this.uploader.crossUploaderManager.showConfirmDialog({
-        title: "Clear All Files",
-        message: `Are you sure you want to delete all <strong>${uploadedFiles.length}</strong> file(s)?`,
-        confirmText: "Delete All",
+        title: hasExistingFiles ? "Permanently Delete All Files" : "Clear All Files",
+        message: message,
+        confirmText: hasExistingFiles ? "Delete All Permanently" : "Delete All",
       });
 
       if (!confirmed) {

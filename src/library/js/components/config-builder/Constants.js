@@ -77,6 +77,7 @@ export const OPTION_TO_GROUP = {
   collapsibleCaptureButtons: "buttons",
   modalMediaButtons: "buttons",
   enableModalDropZone: "buttons",
+  showAllowedExtensionsButton: "buttons",
   // Media Capture
   enableFullPageCapture: "mediaCapture",
   enableRegionCapture: "mediaCapture",

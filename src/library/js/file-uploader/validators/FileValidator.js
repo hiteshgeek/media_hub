@@ -59,7 +59,7 @@ export class FileValidator {
       this.options.fileTypes.allowedExtensions.length > 0 &&
       !this.options.fileTypes.allowedExtensions.includes(extension)
     ) {
-      const allowedExtensions = this.options.allowedExtensions
+      const allowedExtensions = this.options.fileTypes.allowedExtensions
         .slice(0, 5)
         .map((ext) => `.${ext}`);
       const moreCount = this.options.fileTypes.allowedExtensions.length - 5;

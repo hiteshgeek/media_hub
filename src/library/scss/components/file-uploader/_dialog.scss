@@ -135,3 +135,123 @@
     transform: translateY(0) scale(1);
   }
 }
+
+// ============================================================================
+// Allowed Extensions Button & Modal
+// ============================================================================
+
+.#{$component-prefix}-allowed-extensions-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--fu-color-border);
+  border-radius: var(--fu-radius-md);
+  background-color: var(--fu-color-bg);
+  color: var(--fu-color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+
+  &:hover {
+    background-color: var(--fu-color-bg-hover);
+    color: var(--fu-color-primary);
+    border-color: var(--fu-color-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--fu-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+// Extensions dialog specific styles
+.#{$component-prefix}-dialog-extensions {
+  min-width: 380px;
+  max-width: 500px;
+
+  .#{$component-prefix}-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .#{$component-prefix}-dialog-total {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fu-color-text-muted);
+    background-color: var(--fu-color-bg-hover);
+    padding: 4px 10px;
+    border-radius: var(--fu-radius-sm);
+  }
+}
+
+.#{$component-prefix}-ext-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fu-spacing-md);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.#{$component-prefix}-ext-group {
+  background-color: var(--fu-color-bg-light);
+  border-radius: var(--fu-radius-md);
+  padding: var(--fu-spacing-sm) var(--fu-spacing-md);
+}
+
+.#{$component-prefix}-ext-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.#{$component-prefix}-ext-group-icon {
+  width: 16px;
+  height: 16px;
+  fill: var(--fu-color-primary);
+  flex-shrink: 0;
+}
+
+.#{$component-prefix}-ext-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fu-color-text);
+}
+
+.#{$component-prefix}-ext-group-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fu-color-text-muted);
+  background-color: var(--fu-color-bg);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.#{$component-prefix}-ext-group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.#{$component-prefix}-ext-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fu-color-text);
+  background-color: var(--fu-color-bg);
+  padding: 3px 8px;
+  border-radius: var(--fu-radius-sm);
+  border: 1px solid var(--fu-color-border);
+}

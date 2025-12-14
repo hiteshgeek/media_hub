@@ -9,6 +9,7 @@
 
 import { getIcon } from "../../shared/icons.js";
 import TooltipManager from "../../utils/TooltipManager.js";
+import { getFileType } from "../utils/helpers.js";
 
 // ============================================================
 // UI BUILDER CLASS
@@ -115,6 +116,13 @@ export class UIBuilder {
     // Create action container
     this.uploader.actionContainer = document.createElement("div");
     this.uploader.actionContainer.className = "media-hub-action-container";
+
+    // Create allowed extensions button (before limits toggle)
+    const allowedExtensionsBtn = this.createAllowedExtensionsButton();
+    if (allowedExtensionsBtn) {
+      this.uploader.allowedExtensionsBtn = allowedExtensionsBtn;
+      this.uploader.actionContainer.appendChild(allowedExtensionsBtn);
+    }
 
     // Create limits toggle button (only if there are type-level limits to show)
     if (this.uploader.options.limitsDisplay.showLimits && this.uploader.options.limitsDisplay.showLimitsToggle && this.hasAnyTypeLevelLimits) {
@@ -370,5 +378,149 @@ export class UIBuilder {
     this.uploader.selectedActionContainer.appendChild(deleteSelectedBtn);
 
     this.uploader.actionContainer.appendChild(this.uploader.selectedActionContainer);
+  }
+
+  // ============================================================
+  // ALLOWED EXTENSIONS BUTTON
+  // ============================================================
+
+  /**
+   * Create the allowed extensions info button
+   * @returns {HTMLButtonElement} The button element
+   */
+  createAllowedExtensionsButton() {
+    if (!this.uploader.options.buttons.showAllowedExtensionsButton) {
+      return null;
+    }
+
+    const allowedExtensions = this.uploader.options.fileTypes.allowedExtensions;
+    if (!allowedExtensions || allowedExtensions.length === 0) {
+      return null;
+    }
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "media-hub-allowed-extensions-btn";
+    btn.innerHTML = getIcon("info");
+    btn.setAttribute("data-tooltip", "View allowed file types");
+    btn.setAttribute("data-tooltip-position", "left");
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.showAllowedExtensionsModal();
+    });
+
+    TooltipManager.init(btn);
+
+    return btn;
+  }
+
+  /**
+   * Show modal with allowed file extensions grouped by type
+   */
+  showAllowedExtensionsModal() {
+    const allowedExtensions = this.uploader.options.fileTypes.allowedExtensions;
+    if (!allowedExtensions || allowedExtensions.length === 0) {
+      return;
+    }
+
+    // Group extensions by type
+    const groups = {
+      image: { label: "Images", icon: "image", extensions: [] },
+      video: { label: "Videos", icon: "video", extensions: [] },
+      audio: { label: "Audio", icon: "audio", extensions: [] },
+      document: { label: "Documents", icon: "document", extensions: [] },
+      archive: { label: "Archives", icon: "archive", extensions: [] },
+      other: { label: "Other", icon: "other", extensions: [] },
+    };
+
+    // Categorize each extension
+    for (const ext of allowedExtensions) {
+      const type = getFileType(ext, this.uploader.options);
+      if (groups[type]) {
+        groups[type].extensions.push(ext);
+      } else {
+        groups.other.extensions.push(ext);
+      }
+    }
+
+    // Build modal content
+    let groupsHtml = "";
+    for (const [key, group] of Object.entries(groups)) {
+      if (group.extensions.length > 0) {
+        const extensionsHtml = group.extensions
+          .map((ext) => `<span class="media-hub-ext-tag">.${ext}</span>`)
+          .join("");
+        groupsHtml += `
+          <div class="media-hub-ext-group">
+            <div class="media-hub-ext-group-header">
+              ${getIcon(group.icon, { class: "media-hub-ext-group-icon" })}
+              <span class="media-hub-ext-group-label">${group.label}</span>
+              <span class="media-hub-ext-group-count">${group.extensions.length}</span>
+            </div>
+            <div class="media-hub-ext-group-tags">
+              ${extensionsHtml}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Create modal
+    const overlay = document.createElement("div");
+    overlay.className = "media-hub-dialog-overlay";
+
+    const dialog = document.createElement("div");
+    dialog.className = "media-hub-dialog media-hub-dialog-extensions";
+
+    dialog.innerHTML = `
+      <div class="media-hub-dialog-header">
+        <h4>Allowed File Types</h4>
+        <span class="media-hub-dialog-total">${allowedExtensions.length} types</span>
+      </div>
+      <div class="media-hub-dialog-body media-hub-ext-groups">
+        ${groupsHtml}
+      </div>
+      <div class="media-hub-dialog-footer">
+        <button type="button" class="media-hub-dialog-btn media-hub-dialog-btn-secondary" data-action="close">
+          Close
+        </button>
+      </div>
+    `;
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    // Focus close button
+    dialog.querySelector("button[data-action='close']").focus();
+
+    // Handle close
+    const handleClose = () => {
+      overlay.remove();
+      document.removeEventListener("keydown", handleKeydown);
+    };
+
+    const handleClick = (e) => {
+      const action = e.target.closest("button")?.dataset.action;
+      if (action === "close") {
+        handleClose();
+      }
+    };
+
+    const handleKeydown = (e) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    dialog.addEventListener("click", handleClick);
+    document.addEventListener("keydown", handleKeydown);
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        handleClose();
+      }
+    });
   }
 }

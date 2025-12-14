@@ -156,6 +156,7 @@ export const DEFAULT_OPTIONS = {
     collapsibleCaptureButtons: false,
     modalMediaButtons: [],
     enableModalDropZone: true,
+    showAllowedExtensionsButton: true, // Show button to view allowed file types
   },
 
   // ============================================================================
