@@ -524,12 +524,14 @@ include_once __DIR__ . '/../../includes/functions.php';
         let isRecordingAudio = false;
 
         function getConfig() {
+            // Convert seconds to milliseconds for maxDuration
+            const maxDurationSeconds = parseInt(document.getElementById('maxVideoDuration').value) || 300;
             return {
                 showRecordingUI: document.getElementById('showRecordingUI').checked,
                 videoRecorderOptions: {
-                    maxDuration: parseInt(document.getElementById('maxVideoDuration').value) || 300,
-                    includeSystemAudio: document.getElementById('includeSystemAudio').checked,
-                    includeMicrophone: document.getElementById('includeMicrophone').checked,
+                    maxDuration: maxDurationSeconds * 1000, // Convert to milliseconds
+                    systemAudioConstraints: document.getElementById('includeSystemAudio').checked,
+                    microphoneAudioConstraints: document.getElementById('includeMicrophone').checked,
                 },
                 screenCaptureOptions: {
                     format: document.getElementById('imageFormat').value,
@@ -630,9 +632,9 @@ include_once __DIR__ . '/../../includes/functions.php';
 
             code += `  <span class="comment">// Video recording options</span>\n`;
             code += `  <span class="property">videoRecorderOptions</span>: {\n`;
-            code += `    <span class="property">maxDuration</span>: <span class="number">${config.videoRecorderOptions.maxDuration}</span>,\n`;
-            code += `    <span class="property">includeSystemAudio</span>: <span class="boolean">${config.videoRecorderOptions.includeSystemAudio}</span>,\n`;
-            code += `    <span class="property">includeMicrophone</span>: <span class="boolean">${config.videoRecorderOptions.includeMicrophone}</span>,\n`;
+            code += `    <span class="property">maxDuration</span>: <span class="number">${config.videoRecorderOptions.maxDuration}</span>, <span class="comment">// milliseconds</span>\n`;
+            code += `    <span class="property">systemAudioConstraints</span>: <span class="boolean">${config.videoRecorderOptions.systemAudioConstraints}</span>,\n`;
+            code += `    <span class="property">microphoneAudioConstraints</span>: <span class="boolean">${config.videoRecorderOptions.microphoneAudioConstraints}</span>,\n`;
             code += `  },\n\n`;
 
             code += `  <span class="comment">// Screenshot options</span>\n`;
