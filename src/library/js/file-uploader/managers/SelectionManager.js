@@ -161,6 +161,7 @@ export class SelectionManager {
   /**
    * Delete selected files
    * Shows confirmation dialog if enabled
+   * Shows stronger warning for existing (pre-uploaded) files
    */
   async deleteSelected() {
     const selectedFileIds = Array.from(this.uploader.selectedFiles);
@@ -169,12 +170,30 @@ export class SelectionManager {
       return;
     }
 
-    // Confirm deletion if enabled
-    if (this.uploader.options.behavior.confirmBeforeDelete) {
+    // Check if any selected files are existing (pre-uploaded) files
+    const selectedFiles = selectedFileIds.map((id) =>
+      this.uploader.files.find((f) => f.id === id)
+    ).filter(Boolean);
+    const existingFiles = selectedFiles.filter((f) => f.isExisting);
+    const hasExistingFiles = existingFiles.length > 0;
+
+    // Always show confirmation for existing files, or if confirmBeforeDelete is enabled
+    if (hasExistingFiles || this.uploader.options.behavior.confirmBeforeDelete) {
+      let message = `Are you sure you want to delete <strong>${selectedFileIds.length}</strong> selected file(s)?`;
+      let title = "Delete Selected";
+      let confirmText = "Delete";
+
+      // Add stronger warning if there are existing files
+      if (hasExistingFiles) {
+        title = "Permanently Delete Files";
+        confirmText = "Delete Permanently";
+        message += `<br><br><strong style="color: #dc3545;">⚠️ ${existingFiles.length} existing file(s) will be permanently deleted from the server. This action cannot be undone.</strong>`;
+      }
+
       const confirmed = await this.uploader.crossUploaderManager.showConfirmDialog({
-        title: "Delete Selected",
-        message: `Are you sure you want to delete <strong>${selectedFileIds.length}</strong> selected file(s)?`,
-        confirmText: "Delete",
+        title,
+        message,
+        confirmText,
       });
       if (!confirmed) {
         return;

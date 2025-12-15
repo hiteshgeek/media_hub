@@ -333,6 +333,17 @@ export class UploadManager {
           baseData.uploadDir = this.uploader.options.urls.uploadDir;
         }
 
+        // Include additional data for existing files (needed for server-side permanent deletion)
+        if (fileObj.isExisting) {
+          baseData.isExisting = true;
+          if (fileObj.url) {
+            baseData.url = fileObj.url;
+          }
+          if (fileObj.meta) {
+            baseData.meta = fileObj.meta;
+          }
+        }
+
         const deleteData = this.buildRequestData("delete", baseData, { fileObj });
 
         const response = await fetch(this.uploader.options.urls.deleteUrl, {
