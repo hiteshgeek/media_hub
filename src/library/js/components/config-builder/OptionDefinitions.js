@@ -459,19 +459,24 @@ export function getOptionDefinitions() {
             { value: "md", label: "MD" },
             { value: "lg", label: "LG" },
           ],
-          showWhen: (config) => config.enableVideoRecording || config.enableAudioRecording,
+          showWhen: (config) => {
+            const mc = config.mediaCapture || {};
+            return mc.enableVideoRecording || mc.enableAudioRecording;
+          },
         },
         collapsibleCaptureButtons: {
           type: "boolean",
           default: false,
           label: "Collapsible Capture Buttons",
           hint: "Show capture buttons in a collapsible/expandable format with toggle button",
-          showWhen: (config) =>
-            config.enableFullPageCapture ||
-            config.enableRegionCapture ||
-            config.enableScreenCapture ||
-            config.enableVideoRecording ||
-            config.enableAudioRecording,
+          showWhen: (config) => {
+            const mc = config.mediaCapture || {};
+            return mc.enableFullPageCapture ||
+              mc.enableRegionCapture ||
+              mc.enableScreenCapture ||
+              mc.enableVideoRecording ||
+              mc.enableAudioRecording;
+          },
         },
         showAllowedExtensionsButton: {
           type: "boolean",
@@ -497,16 +502,18 @@ export function getOptionDefinitions() {
           },
           filterOptions: (config) => {
             const available = [];
-            if (config.enableFullPageCapture) available.push("fullpage");
-            if (config.enableRegionCapture) available.push("region");
-            if (config.enableScreenCapture) available.push("screenshot");
-            if (config.enableVideoRecording) available.push("video");
-            if (config.enableAudioRecording) available.push("audio");
+            const mediaCapture = config.mediaCapture || {};
+            if (mediaCapture.enableFullPageCapture) available.push("fullpage");
+            if (mediaCapture.enableRegionCapture) available.push("region");
+            if (mediaCapture.enableScreenCapture) available.push("screenshot");
+            if (mediaCapture.enableVideoRecording) available.push("video");
+            if (mediaCapture.enableAudioRecording) available.push("audio");
             return available;
           },
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
           group: "Modal Buttons",
         },
         enableModalDropZone: {
@@ -514,9 +521,10 @@ export function getOptionDefinitions() {
           default: true,
           label: "Enable Drop Zone on Button",
           hint: "Allow drag and drop files directly onto the modal trigger button",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
           group: "Modal Buttons",
         },
       },
@@ -955,9 +963,10 @@ export function getOptionDefinitions() {
           label: "Modal Button Text",
           hint: "Text for the button that opens the modal",
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
         },
         modalButtonIcon: {
           type: "select",
@@ -971,9 +980,10 @@ export function getOptionDefinitions() {
             { value: "none", label: "No Icon" },
           ],
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
         },
         modalTitle: {
           type: "text",
@@ -981,9 +991,10 @@ export function getOptionDefinitions() {
           label: "Modal Title",
           hint: "Title shown in the modal header",
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
         },
         modalSize: {
           type: "select",
@@ -997,9 +1008,10 @@ export function getOptionDefinitions() {
             { value: "xl", label: "Extra Large" },
           ],
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
         },
         bootstrapVersion: {
           type: "select",
@@ -1012,9 +1024,10 @@ export function getOptionDefinitions() {
             { value: "5", label: "Bootstrap 5" },
           ],
           dependsOn: "displayMode",
-          showWhen: (config) =>
-            config.displayMode === "modal-minimal" ||
-            config.displayMode === "modal-detailed",
+          showWhen: (config) => {
+            const dm = config.displayMode?.displayMode;
+            return dm === "modal-minimal" || dm === "modal-detailed";
+          },
         },
       },
     },

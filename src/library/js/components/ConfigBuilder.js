@@ -234,9 +234,8 @@ export default class ConfigBuilder {
    * @param {any} value - The value to set
    */
   setConfigValue(categoryKey, optionKey, value) {
-    // Special case: theme and displayMode are top-level values, not nested
-    // When categoryKey matches optionKey (e.g., displayMode.displayMode), store as top-level
-    if (categoryKey === "theme" || !categoryKey || categoryKey === optionKey) {
+    // Special case: theme is a top-level string value
+    if (categoryKey === "theme" || !categoryKey) {
       this.config[optionKey] = value;
       return;
     }
@@ -258,9 +257,8 @@ export default class ConfigBuilder {
    * @returns {any} The config value
    */
   getConfigValue(categoryKey, optionKey, defaultValue = undefined) {
-    // Special case: theme and displayMode are top-level values, not nested
-    // When categoryKey matches optionKey (e.g., displayMode.displayMode), read from top-level
-    if (categoryKey === "theme" || !categoryKey || categoryKey === optionKey) {
+    // Special case: theme is a top-level string value
+    if (categoryKey === "theme" || !categoryKey) {
       return this.config[optionKey] ?? defaultValue;
     }
 
@@ -4920,9 +4918,10 @@ export default class ConfigBuilder {
 
     // Check if any uploader has modal display mode
     const hasModalMode = Object.values(this.uploaderInstances).some(
-      (data) =>
-        data.config.displayMode === "modal-minimal" ||
-        data.config.displayMode === "modal-detailed"
+      (data) => {
+        const dm = data.config.displayMode?.displayMode;
+        return dm === "modal-minimal" || dm === "modal-detailed";
+      }
     );
 
     // Show/hide modal tab button
@@ -4961,7 +4960,7 @@ export default class ConfigBuilder {
     uploaders.forEach(([id, data]) => {
       // Skip uploaders without modal mode for modal subtabs
       if (type.startsWith("modal-")) {
-        const displayMode = data.config.displayMode || "inline";
+        const displayMode = data.config.displayMode?.displayMode || "inline";
         if (
           displayMode !== "modal-minimal" &&
           displayMode !== "modal-detailed"
@@ -5078,7 +5077,7 @@ export default class ConfigBuilder {
    */
   renderModalCodeSection(id, data, section) {
     const isActive = id === this.activeUploaderId;
-    const displayMode = data.config.displayMode || "inline";
+    const displayMode = data.config.displayMode?.displayMode || "inline";
     const isMinimal = displayMode === "modal-minimal";
 
     // Generate variable name from uploader name
@@ -5157,15 +5156,17 @@ export default class ConfigBuilder {
    * Generate only the HTML portion of modal code (without CSS/JS)
    */
   generateModalHtmlOnly(varName, config) {
-    const displayMode = config.displayMode;
-    const buttonText = config.modalButtonText || "Upload Files";
-    const buttonIcon = config.modalButtonIcon || "upload";
-    const modalTitle = config.modalTitle || "Upload Files";
-    const modalSize = config.modalSize || "lg";
-    const bootstrapVersion = config.bootstrapVersion || "5";
+    const displayModeConfig = config.displayMode || {};
+    const buttonsConfig = config.buttons || {};
+    const displayMode = displayModeConfig.displayMode || "inline";
+    const buttonText = displayModeConfig.modalButtonText || "Upload Files";
+    const buttonIcon = displayModeConfig.modalButtonIcon || "upload";
+    const modalTitle = displayModeConfig.modalTitle || "Upload Files";
+    const modalSize = displayModeConfig.modalSize || "lg";
+    const bootstrapVersion = displayModeConfig.bootstrapVersion || "5";
     // Filter media buttons to only include those whose capture option is enabled
     const mediaButtons = this.filterEnabledMediaButtons(
-      config.modalMediaButtons || [],
+      buttonsConfig.modalMediaButtons || [],
       config
     );
 
@@ -5193,15 +5194,17 @@ export default class ConfigBuilder {
    * Generate only the JS portion of modal code (without HTML/CSS)
    */
   generateModalJsOnly(varName, config, changedConfig) {
-    const displayMode = config.displayMode;
-    const bootstrapVersion = config.bootstrapVersion || "5";
+    const displayModeConfig = config.displayMode || {};
+    const buttonsConfig = config.buttons || {};
+    const displayMode = displayModeConfig.displayMode || "inline";
+    const bootstrapVersion = displayModeConfig.bootstrapVersion || "5";
     const isMinimal = displayMode === "modal-minimal";
     // Filter media buttons to only include those whose capture option is enabled
     const mediaButtons = this.filterEnabledMediaButtons(
-      config.modalMediaButtons || [],
+      buttonsConfig.modalMediaButtons || [],
       config
     );
-    const enableModalDropZone = config.enableModalDropZone !== false;
+    const enableModalDropZone = buttonsConfig.enableModalDropZone !== false;
 
     const modalId = `${varName}Modal`;
     const containerId = `${varName}Container`;
@@ -5405,7 +5408,7 @@ export default class ConfigBuilder {
    */
   getModalSectionCode(uploaderId, uploaderData, section) {
     const config = uploaderData.config;
-    const displayMode = config.displayMode || "inline";
+    const displayMode = config.displayMode?.displayMode || "inline";
     const isMinimal = displayMode === "modal-minimal";
 
     const varName =
@@ -5436,7 +5439,7 @@ export default class ConfigBuilder {
    */
   generateSingleUploaderJsCode(id, data, includeDefaults = false) {
     const changedConfig = this.getChangedConfig(data.config);
-    const displayMode = data.config.displayMode || "inline";
+    const displayMode = data.config.displayMode?.displayMode || "inline";
 
     // Generate variable name from uploader name
     const varName =
@@ -5852,7 +5855,7 @@ export default class ConfigBuilder {
    */
   generateSingleUploaderModalCode(id, data) {
     const changedConfig = this.getChangedConfig(data.config);
-    const displayMode = data.config.displayMode || "inline";
+    const displayMode = data.config.displayMode?.displayMode || "inline";
 
     // Only generate for modal modes
     if (displayMode !== "modal-minimal" && displayMode !== "modal-detailed") {
@@ -5874,18 +5877,20 @@ export default class ConfigBuilder {
    */
   generateModalCode(varName, data, changedConfig) {
     const config = data.config;
-    const displayMode = config.displayMode;
-    const buttonText = config.modalButtonText || "Upload Files";
-    const buttonIcon = config.modalButtonIcon || "upload";
-    const modalTitle = config.modalTitle || "Upload Files";
-    const modalSize = config.modalSize || "lg";
-    const bootstrapVersion = config.bootstrapVersion || "5";
+    const displayModeConfig = config.displayMode || {};
+    const buttonsConfig = config.buttons || {};
+    const displayMode = displayModeConfig.displayMode || "inline";
+    const buttonText = displayModeConfig.modalButtonText || "Upload Files";
+    const buttonIcon = displayModeConfig.modalButtonIcon || "upload";
+    const modalTitle = displayModeConfig.modalTitle || "Upload Files";
+    const modalSize = displayModeConfig.modalSize || "lg";
+    const bootstrapVersion = displayModeConfig.bootstrapVersion || "5";
     // Filter media buttons to only include those whose capture option is enabled
     const mediaButtons = this.filterEnabledMediaButtons(
-      config.modalMediaButtons || [],
+      buttonsConfig.modalMediaButtons || [],
       config
     );
-    const enableModalDropZone = config.enableModalDropZone !== false;
+    const enableModalDropZone = buttonsConfig.enableModalDropZone !== false;
 
     const modalId = `${varName}Modal`;
     const containerId = `${varName}Container`;
@@ -6635,12 +6640,13 @@ export default class ConfigBuilder {
    */
   filterEnabledMediaButtons(buttons, config) {
     if (!buttons || buttons.length === 0) return [];
+    const mediaCapture = config.mediaCapture || {};
     return buttons.filter((btn) => {
-      if (btn === "screenshot") return config.enableScreenCapture !== false;
-      if (btn === "fullpage") return config.enableFullPageCapture !== false;
-      if (btn === "region") return config.enableRegionCapture !== false;
-      if (btn === "video") return config.enableVideoRecording !== false;
-      if (btn === "audio") return config.enableAudioRecording !== false;
+      if (btn === "screenshot") return mediaCapture.enableScreenCapture !== false;
+      if (btn === "fullpage") return mediaCapture.enableFullPageCapture !== false;
+      if (btn === "region") return mediaCapture.enableRegionCapture !== false;
+      if (btn === "video") return mediaCapture.enableVideoRecording !== false;
+      if (btn === "audio") return mediaCapture.enableAudioRecording !== false;
       return false;
     });
   }
@@ -7908,7 +7914,7 @@ export default class ConfigBuilder {
 
         if (existingWrapper) {
           // Check if we need to rebuild the entire wrapper (displayMode changed)
-          const currentDisplayMode = activeData.config.displayMode || "inline";
+          const currentDisplayMode = activeData.config.displayMode?.displayMode || "inline";
           const isModalMode =
             currentDisplayMode === "modal-minimal" ||
             currentDisplayMode === "modal-detailed";
@@ -8009,7 +8015,7 @@ export default class ConfigBuilder {
   createUploaderPreview(previewEl, id, data) {
     const isActive = id === this.activeUploaderId;
     const containerId = `preview-${id}-${Date.now()}`;
-    const displayMode = data.config.displayMode || "inline";
+    const displayMode = data.config.displayMode?.displayMode || "inline";
     const isModalMode =
       displayMode === "modal-minimal" || displayMode === "modal-detailed";
 
@@ -8022,16 +8028,18 @@ export default class ConfigBuilder {
     // For modal mode, create a button + modal preview
     if (isModalMode) {
       const modalId = `preview-modal-${id}-${Date.now()}`;
-      const buttonText = data.config.modalButtonText || "Upload Files";
-      const buttonIcon = data.config.modalButtonIcon || "upload";
-      const modalTitle = data.config.modalTitle || "Upload Files";
-      const modalSize = data.config.modalSize || "lg";
-      const bootstrapVersion = data.config.bootstrapVersion || "5";
+      const displayModeConfig = data.config.displayMode || {};
+      const buttonsConfig = data.config.buttons || {};
+      const buttonText = displayModeConfig.modalButtonText || "Upload Files";
+      const buttonIcon = displayModeConfig.modalButtonIcon || "upload";
+      const modalTitle = displayModeConfig.modalTitle || "Upload Files";
+      const modalSize = displayModeConfig.modalSize || "lg";
+      const bootstrapVersion = displayModeConfig.bootstrapVersion || "5";
       const isMinimal = displayMode === "modal-minimal";
 
       // Filter media buttons to only include those whose capture option is enabled
       const mediaButtons = this.filterEnabledMediaButtons(
-        data.config.modalMediaButtons || [],
+        buttonsConfig.modalMediaButtons || [],
         data.config
       );
 
@@ -8039,7 +8047,7 @@ export default class ConfigBuilder {
       const buttonIconSvg = this.getModalButtonIcon(buttonIcon);
 
       // Generate media capture buttons HTML using the reusable function
-      const buttonSize = data.config.buttonSize || "md";
+      const buttonSize = buttonsConfig.buttonSize || "md";
       const mediaButtonsHtml = this.getMediaCaptureButtonsHtml(
         mediaButtons,
         id,

@@ -60,7 +60,7 @@ export class CaptureButtonBuilder {
 
     // Append capture buttons to action container
     if (this.uploader.captureButtonContainer.children.length > 0) {
-      if (this.uploader.options.mediaCapture.collapsibleCaptureButtons) {
+      if (this.uploader.options.buttons.collapsibleCaptureButtons) {
         this.createCollapsibleContainer();
       } else {
         this.uploader.actionContainer.appendChild(this.uploader.captureButtonContainer);
